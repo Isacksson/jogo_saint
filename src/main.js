@@ -7,12 +7,13 @@ import { GameMap } from './map.js';
 import { MAP_DEFS } from './maps.js';
 import { Camera } from './camera.js';
 import { Player } from './player.js';
-import { Imundo, ImundoChefe, Amon, Serpe } from './enemies.js';
+import { Imundo, ImundoChefe, Amon, Dragao, Serpe } from './enemies.js';
+import { initAudio, updateMusic, setMood, toggleMute, sfx } from './audio.js';
 import { Npc } from './npc.js';
 import { Fx } from './fx.js';
 import { MIRACLES } from './miracles.js';
 import {
-  renderHud, renderTitle, renderDeath, renderVictory,
+  renderHud, renderDeath, renderVictory,
   renderLocation, renderDialogue, renderMiracles, renderBossBar,
 } from './hud.js';
 import { renderInventory } from './inventory.js';
@@ -37,7 +38,10 @@ function getMap(id) {
   return gameMaps[id];
 }
 
-const ENEMY_TYPES = { imundo: Imundo, serpe: Serpe, chefe: ImundoChefe, amon: Amon };
+const ENEMY_TYPES = { imundo: Imundo, serpe: Serpe, chefe: ImundoChefe, amon: Amon, dragao: Dragao };
+
+// o navegador só libera áudio após o primeiro gesto do usuário
+window.addEventListener('keydown', initAudio, { once: true });
 
 const world = {
   mapId: null,
@@ -157,6 +161,7 @@ let invSel = 0;
 let dlg = null;
 let locName = '';
 let locTime = 0;
+let gameState = 'title'; // title | play
 let last = performance.now();
 
 const saved = loadSave();
@@ -186,6 +191,7 @@ function tryInteract() {
   for (const a of world.altars) {
     if (Math.hypot(p.x - a.x, p.y - a.y) < 60) {
       p.hp = p.hpMax;
+      sfx('pray');
       const ok = saveGame(world);
       world.fx.text(a.x, a.y - 70, ok ? '✝ Jornada salva' : '✝ Restaurado', '#f8d860');
       world.fx.burst(a.x, a.y - 30, '#f0c040', 18, 160);
@@ -289,13 +295,72 @@ function renderDarkness(cam, mode) {
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
 }
 
+// tela de título
+function renderTitleScreen() {
+  ctx.fillStyle = '#0c0a08';
+  ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+  ctx.save();
+  ctx.textAlign = 'center';
+  // a cruz atrás do título
+  ctx.globalAlpha = 0.12 + 0.03 * Math.sin(elapsed * 1.5);
+  ctx.fillStyle = '#e8c860';
+  ctx.fillRect(VIEW_W / 2 - 22, 60, 44, 300);
+  ctx.fillRect(VIEW_W / 2 - 100, 130, 200, 44);
+  ctx.globalAlpha = 1;
+
+  ctx.fillStyle = '#8a7442';
+  ctx.font = 'italic 16px Georgia, serif';
+  ctx.fillText('Capadócia, século III', VIEW_W / 2, 150);
+  ctx.fillStyle = '#e8c860';
+  ctx.font = 'bold 52px Georgia, serif';
+  ctx.fillText('A LENDA ÁUREA', VIEW_W / 2, 205);
+  ctx.fillStyle = '#d8ccaa';
+  ctx.font = 'italic 22px Georgia, serif';
+  ctx.fillText('Jorge e o Dragão', VIEW_W / 2, 240);
+
+  const pulse = 0.55 + 0.45 * Math.sin(elapsed * 3);
+  ctx.globalAlpha = pulse;
+  ctx.fillStyle = '#f0e0b0';
+  ctx.font = 'bold 18px Georgia, serif';
+  ctx.fillText(saved ? 'ENTER — continuar a jornada' : 'ENTER — começar a jornada', VIEW_W / 2, 330);
+  ctx.globalAlpha = 1;
+
+  ctx.fillStyle = '#9a8a62';
+  ctx.font = '13px Georgia, serif';
+  ctx.fillText('WASD mover · J espada · K lança · ESPAÇO esquiva · L fúria · 1-2 milagres', VIEW_W / 2, 400);
+  ctx.fillText('E falar/orar · Q poção · I bolsa · M silenciar', VIEW_W / 2, 422);
+  ctx.restore();
+}
+
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
   elapsed += dt;
   locTime = Math.max(0, locTime - dt);
 
+  if (gameState === 'title') {
+    if (input.wasPressed('interact')) {
+      gameState = 'play';
+      locTime = 3.5;
+    }
+    renderTitleScreen();
+    input.endFrame();
+    requestAnimationFrame(frame);
+    return;
+  }
+
   const player = world.player;
+
+  // --- trilha sonora: chefe por perto manda na música ---
+  updateMusic();
+  if (input.wasPressed('mute')) {
+    const m = toggleMute();
+    world.fx.text(player.x, player.y - 60, m ? 'Silêncio' : 'Música', '#c0b090');
+  }
+  const bossNear = world.enemies.some(
+    (e) => e.isBoss && e.alive && Math.hypot(e.x - player.x, e.y - player.y) < 620
+  );
+  setMood(bossNear ? 'boss' : (MAP_DEFS[world.mapId].mood || 'peace'));
 
   // --- update ---
   if (dlg) {
@@ -382,8 +447,8 @@ function frame(now) {
   world.fx.render(ctx, cam);
   world.fx.renderTexts(ctx, cam);
 
-  if (world.mapId === 'catacumbas') renderDarkness(cam, 'torch');
-  if (world.mapId === 'fossa_ira') renderDarkness(cam, 'hell');
+  const darkMode = MAP_DEFS[world.mapId].dark;
+  if (darkMode) renderDarkness(cam, darkMode);
 
   renderHud(ctx, world.player, world, elapsed);
   renderMiracles(ctx, world.player, world, MIRACLES);
@@ -391,7 +456,6 @@ function frame(now) {
   if (boss && Math.hypot(boss.x - world.player.x, boss.y - world.player.y) < 620) {
     renderBossBar(ctx, boss);
   }
-  renderTitle(ctx, Math.min(1, Math.max(0, (6 - elapsed) / 2)));
   renderLocation(ctx, locName, locTime);
   if (world.total > 0 && world.kills >= world.total) renderVictory(ctx, elapsed);
   if (!world.player.alive) renderDeath(ctx, deathTime);

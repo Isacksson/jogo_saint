@@ -2,6 +2,7 @@
 
 import { SCALE } from './constants.js';
 import { makeSprite } from './sprites.js';
+import { sfx } from './audio.js';
 
 export const RARITY = [
   { name: 'Comum', color: '#e8e0d0' },
@@ -203,6 +204,7 @@ export class GroundItem {
     if (dist > 26) return;
 
     const it = this.item;
+    if (it.kind !== 'equip' || p.inventory.length < 10) sfx('pickup');
     if (it.kind === 'chave') {
       world.flags.temChave = true;
       world.fx.text(p.x, p.y - 54, '✝ Chave das Catacumbas!', '#f0c040');

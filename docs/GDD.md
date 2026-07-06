@@ -135,7 +135,7 @@ Cada turno termina com **commit + push** — o trabalho nunca fica pela metade n
 - [x] **Turno 3** — Loot (raridades, drops), inventário/equipamento, XP/níveis, altares (save).
 - [x] **Turno 4** — Ato I: vila de Silena, NPCs e diálogos, pântano, catacumbas (dungeon 1 com chave/porta).
 - [x] **Turno 5** — Milagres/Relíquias (Raio do Trovão, Chuva de Setas), Fossa da Ira com o príncipe Amon.
-- [ ] **Turno 6** — Boss Dragão de Silena, áudio, tela de título/morte, polish, balanceamento.
+- [x] **Turno 6** — Boss Dragão de Silena, áudio (Web Audio), tela de título, polish.
 - [ ] **Turnos 7+** — Fossas restantes, Ato III, Serpente Antiga, epílogo.
 
 ---

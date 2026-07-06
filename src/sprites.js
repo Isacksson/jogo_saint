@@ -241,6 +241,76 @@ export function buildEnemySprites() {
   return enemyCache;
 }
 
+// ---------- O Dragão de Silena (32x24, asas em 2 poses) ----------
+
+const DRAGON_PAL = {
+  D: '#101a0c', // contorno
+  G: '#3e7030', // escamas
+  g: '#2c501f', // escamas escuras
+  Y: '#d8c878', // ventre
+  R: '#a83028', // membrana das asas
+  r: '#701c14', // membrana escura
+  E: '#f0d030', // olho
+  H: '#d8c8a8', // chifres e garras
+};
+
+const DRAGON_A = [
+  '....DD..........DDDD............',
+  '...DHHD........DRRRRDD..........',
+  '...DHHD.......DRRRRRRRDD........',
+  '..DGGGGD......DRRRRRRRRRDD......',
+  '..DGEGGGD.....DRrrRRRRRRRRD.....',
+  '..DGGGGGGD.....DRrrrRRRRRRD.....',
+  '...DGYGGGGD.....DRrrrrRRRD......',
+  '....DGYGGGGDD....DDrrrrRDD......',
+  '.....DGYGGGGGDDDDDGGDDDDD.......',
+  '.....DGYGGGGGGGGGGGGGD..........',
+  '....DGYYGGGGGGGGGGGGGGDD........',
+  '....DGYYGGGGGGGGGGGGGGGGDDD.....',
+  '....DGYYGGGGGGGGgGGGGGGGGGGDD...',
+  '.....DGYYGGGGGGGgggGGGGGGGGGGDD.',
+  '......DGYYYGGGGGGgggGGGDDDGGGGD.',
+  '.......DGYYYYGGGGGGggGD...DDGGD.',
+  '........DDGGGGGGGGGGGD.....DDD..',
+  '.........DGGDDGGGDDGGD..........',
+  '.........DGGD.DGGD.DGGD.........',
+  '.........DHHD.DHHD.DHHD.........',
+  '..........DD...DD...DD..........',
+];
+
+const DRAGON_B = [
+  '....DD..........................',
+  '...DHHD.........................',
+  '...DHHD..........DDDD...........',
+  '..DGGGGD........DRRRRDD.........',
+  '..DGEGGGD.......DRRRRRRDD.......',
+  '..DGGGGGGD......DRrrRRRRRD......',
+  '...DGYGGGGD......DRrrrRRRRD.....',
+  '....DGYGGGGDD.....DDrrrrRRD.....',
+  '.....DGYGGGGGDDDDDGGDDDDDD......',
+  '.....DGYGGGGGGGGGGGGGD..........',
+  '....DGYYGGGGGGGGGGGGGGDD........',
+  '....DGYYGGGGGGGGGGGGGGGGDDD.....',
+  '....DGYYGGGGGGGGgGGGGGGGGGGDD...',
+  '.....DGYYGGGGGGGgggGGGGGGGGGGDD.',
+  '......DGYYYGGGGGGgggGGGDDDGGGGD.',
+  '.......DGYYYYGGGGGGggGD...DDGGD.',
+  '........DDGGGGGGGGGGGD.....DDD..',
+  '.........DGGDDGGGDDGGD..........',
+  '.........DGGD.DGGD.DGGD.........',
+  '.........DHHD.DHHD.DHHD.........',
+  '..........DD...DD...DD..........',
+];
+
+let dragonCache = null;
+
+export function buildDragonSprites() {
+  if (!dragonCache) {
+    dragonCache = [makeSprite(DRAGON_A, DRAGON_PAL), makeSprite(DRAGON_B, DRAGON_PAL)];
+  }
+  return dragonCache;
+}
+
 // ---------- Altar (cruz de pedra) ----------
 
 const ALTAR_PAL = {

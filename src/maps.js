@@ -9,6 +9,7 @@ export const MAP_DEFS = {
   capadocia: {
     name: 'Clareira da Capadócia',
     w: 48, h: 36,
+    mood: 'peace',
     generate(m) {
       const rand = rng(2026);
       m.border(2, T.TREE);
@@ -73,6 +74,7 @@ export const MAP_DEFS = {
   silena: {
     name: 'Silena, a Cidade do Dragão',
     w: 44, h: 30,
+    mood: 'peace',
     generate(m) {
       const rand = rng(313);
       m.border(2, T.TREE);
@@ -108,9 +110,17 @@ export const MAP_DEFS = {
       {
         tx: 25, ty: 17, name: 'Princesa Sabra',
         palette: { W: '#c8a8e0', R: '#8a5cb8', H: '#3a2a18', A: '#e8c860' },
-        lines: (flags) => flags.catacumbasAbertas
-          ? ['As catacumbas estão abertas... Os mártires te esperam, cavaleiro. Que tua lança não hesite.']
-          : flags.temChave
+        lines: (flags) => flags.dragaoDerrotado
+          ? [
+            'O Dragão... tombou? Silena está livre do tributo!',
+            'Que as rosas floresçam onde teu sangue caiu, cavaleiro. Mas eu sinto... isto ainda não é o fim. As Portas continuam abertas lá embaixo.',
+          ]
+          : flags.catacumbasAbertas
+            ? [
+              'As catacumbas estão abertas... Os mártires te esperam, cavaleiro.',
+              'E mais uma coisa: os batedores viram a besta pousar no covil, a LESTE do pântano. Quando estiveres pronto — e armado dos milagres — vai até lá.',
+            ]
+            : flags.temChave
             ? ['A chave! Deus seja louvado. Desce ao fundo do pântano: o portão das catacumbas cederá a ela.']
             : [
               'Cavaleiro... eu sou Sabra. Meu nome foi sorteado: sou o próximo tributo do Dragão.',
@@ -152,6 +162,7 @@ export const MAP_DEFS = {
     w: 44, h: 34,
     base: T.MUD,
     outside: T.DEADTREE,
+    mood: 'dark',
     generate(m) {
       const rand = rng(666);
       m.border(2, T.DEADTREE);
@@ -183,6 +194,12 @@ export const MAP_DEFS = {
       m.set(23, 30, T.GATE);
       m.fillRect(22, 31, 2, 1, T.STONE);
 
+      // trilha para o covil do Dragão, a leste
+      for (let x = 24; x < m.w; x++) {
+        m.set(x, 16, T.PATH);
+        m.set(x, 17, T.PATH);
+      }
+
       // área livre na chegada
       m.fillRect(21, 2, 4, 3, T.PATH);
     },
@@ -197,6 +214,46 @@ export const MAP_DEFS = {
     portals: [
       { x: 21, y: 0, w: 4, h: 1, to: 'silena', tx: 22, ty: 27 },
       { x: 22, y: 31, w: 2, h: 1, to: 'catacumbas', tx: 17, ty: 3 },
+      { x: 43, y: 15, w: 1, h: 4, to: 'covil', tx: 4, ty: 12 },
+    ],
+  },
+
+  // ---------- o covil do Dragão ----------
+  covil: {
+    name: 'Covil do Dragão',
+    w: 32, h: 26,
+    base: T.CWALL,
+    outside: T.CWALL,
+    dark: 'torch',
+    mood: 'dark',
+    generate(m) {
+      const rand = rng(999);
+      // caverna oval
+      const cx = 17, cy = 13, rx = 12, ry = 9;
+      for (let y = 0; y < m.h; y++) {
+        for (let x = 0; x < m.w; x++) {
+          const dx = (x - cx) / rx;
+          const dy = (y - cy) / ry;
+          if (dx * dx + dy * dy <= 1) m.set(x, y, T.STONE);
+        }
+      }
+      // túnel de entrada, a oeste
+      m.fillRect(2, 11, 6, 3, T.STONE);
+      // poças de fogo
+      m.fillRect(12, 6, 3, 2, T.LAVA);
+      m.fillRect(22, 19, 3, 2, T.LAVA);
+      // ossadas das vítimas
+      for (let i = 0; i < 26; i++) {
+        const x = Math.floor(rand() * m.w);
+        const y = Math.floor(rand() * m.h);
+        if (m.get(x, y) === T.STONE && rand() < 0.7) m.set(x, y, T.BONES);
+      }
+    },
+    spawns: [['dragao', 21, 13]],
+    altars: [[4, 10]],
+    npcs: [],
+    portals: [
+      { x: 2, y: 11, w: 1, h: 3, to: 'pantano', tx: 41, ty: 16 },
     ],
   },
 
@@ -206,6 +263,8 @@ export const MAP_DEFS = {
     w: 36, h: 30,
     base: T.CWALL,
     outside: T.CWALL,
+    dark: 'torch',
+    mood: 'dark',
     generate(m) {
       const rand = rng(777);
       // sala de entrada
@@ -266,6 +325,8 @@ export const MAP_DEFS = {
     base: T.HELLWALL,
     outside: T.HELLWALL,
     gateFloor: T.HELLFLOOR,
+    dark: 'hell',
+    mood: 'dark',
     generate(m) {
       const rand = rng(1313);
       // antecâmara (chegada da escada)

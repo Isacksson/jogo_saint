@@ -1,8 +1,9 @@
 // Demônios: Imundo (bando, corpo a corpo) e Serpe (cospe veneno à distância)
 
 import { TILE_PX, SCALE } from './constants.js';
-import { buildEnemySprites } from './sprites.js';
+import { buildEnemySprites, buildDragonSprites } from './sprites.js';
 import { rollDrop, GroundItem } from './items.js';
+import { sfx } from './audio.js';
 
 const SPRITE_PX = 16 * SCALE;
 
@@ -69,9 +70,11 @@ class Enemy {
     this.hurtTimer = 2.5;
     this.kbX = kbX;
     this.kbY = kbY;
+    sfx('hit');
     world.fx.burst(this.x, this.y - 12, this.blood, 8, 150);
     world.fx.text(this.x, this.y - 36, String(Math.round(dmg)), '#f8f0dc');
     if (this.hp <= 0) {
+      sfx('die');
       this.dead = true;
       world.kills++;
       world.player.gainFury(12);
@@ -85,6 +88,7 @@ class Enemy {
         world.fx.text(this.x, this.y - 60, 'Os selos da fossa se rompem!', '#e8dcb8');
         world.fx.addShake(6);
       }
+      this.onDeath?.(world);
       const drop = rollDrop();
       if (drop) world.groundItems.push(new GroundItem(this.x, this.y, drop));
       world.fx.burst(this.x, this.y - 12, this.blood, 18, 220);
@@ -408,6 +412,247 @@ export class Serpe extends Enemy {
     const sprites = buildEnemySprites().serpe;
     const frame = sprites[Math.floor(this.animTime * 4) % 2];
     this.renderSprite(ctx, cam, frame);
+  }
+}
+
+// ---------- O Dragão de Silena: chefe do Ato I ----------
+
+const DRAGON_PX = 32 * SCALE;
+
+export class Dragao extends Enemy {
+  constructor(tx, ty) {
+    super(tx, ty);
+    this.hpMax = 550;
+    this.hp = 550;
+    this.dmg = 20;
+    this.xpValue = 400;
+    this.blood = '#2c501f';
+    this.hbW = 20 * SCALE;
+    this.hbH = 10 * SCALE;
+    this.isBoss = true;
+    this.bossName = 'O Dragão de Silena';
+    this.state = 'chase'; // chase | spit | rise | hover | crash
+    this.actT = 0;
+    this.spitCd = 2;
+    this.flyCd = 5;
+    this.biteCd = 0;
+    this.altitude = 0; // altura do voo, em px
+    this.roared = false;
+  }
+
+  get enraged() {
+    return this.hp <= this.hpMax * 0.3;
+  }
+
+  get airborne() {
+    return this.altitude > 20;
+  }
+
+  takeDamage(dmg, kbX, kbY, world) {
+    if (this.airborne) {
+      world.fx.text(this.x, this.y - 80, 'Fora de alcance!', '#c0b090');
+      return;
+    }
+    // pesado demais para ser arremessado
+    super.takeDamage(dmg, kbX * 0.15, kbY * 0.15, world);
+  }
+
+  onDeath(world) {
+    world.flags.dragaoDerrotado = true;
+    sfx('roar');
+    world.fx.addShake(10);
+    world.fx.burst(this.x, this.y - 20, '#f08030', 40, 300);
+    world.fx.burst(this.x, this.y - 20, '#2c501f', 30, 240);
+    world.fx.text(this.x, this.y - 90, 'O DRAGÃO TOMBOU!', '#f8d860');
+    // o tesouro do covil
+    const drop = rollDrop();
+    world.groundItems.push(new GroundItem(this.x, this.y, { kind: 'gold', amount: 150 }));
+    world.groundItems.push(new GroundItem(this.x + 20, this.y, { kind: 'potion' }));
+    if (drop && drop.kind === 'equip') {
+      drop.rarity = 2;
+      world.groundItems.push(new GroundItem(this.x - 20, this.y, drop));
+    }
+  }
+
+  update(dt, world) {
+    if (!this.alive) return;
+    this.updateCommon(dt, world);
+    this.animTime += dt;
+    this.actT += dt;
+    this.spitCd = Math.max(0, this.spitCd - dt);
+    this.flyCd = Math.max(0, this.flyCd - dt);
+    this.biteCd = Math.max(0, this.biteCd - dt);
+
+    const p = world.player;
+    const dx = p.x - this.x;
+    const dy = p.y - this.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    if (this.state !== 'crash') this.facingLeft = dx < 0;
+
+    switch (this.state) {
+      case 'chase': {
+        if (!p.alive) { this.wander(dt, world, 24); break; }
+        // levanta voo a partir de 60% de vida
+        if (this.hp <= this.hpMax * 0.6 && this.flyCd <= 0 && dist < 500) {
+          this.setAct('rise');
+          sfx('roar');
+          world.fx.text(this.x, this.y - 80, 'O Dragão alça voo!', '#e88060');
+          break;
+        }
+        if (this.spitCd <= 0 && dist < 420 && dist > 70) {
+          this.setAct('spit');
+          break;
+        }
+        if (dist > 60) {
+          const spd = this.enraged ? 105 : 70;
+          this.move(world.map, (dx / dist) * spd, (dy / dist) * spd, dt);
+        } else if (this.biteCd <= 0 && p.alive) {
+          p.takeDamage(this.dmg, this.x, this.y, world);
+          this.biteCd = 1.2;
+        }
+        break;
+      }
+      case 'spit': {
+        // pausa e cospe um leque de fogo
+        if (this.actT >= 0.45) {
+          const n = this.enraged ? 5 : 3;
+          const base = Math.atan2(dy, dx);
+          for (let i = 0; i < n; i++) {
+            const a = base + (i - (n - 1) / 2) * 0.22;
+            world.projectiles.push(new Fireball(this.x + Math.cos(a) * 40, this.y - 24, Math.cos(a), Math.sin(a)));
+          }
+          this.spitCd = this.enraged ? 1.5 : 2.6;
+          this.setAct('chase');
+        }
+        break;
+      }
+      case 'rise': {
+        this.altitude = Math.min(90, this.altitude + 160 * dt);
+        if (this.actT >= 0.8) this.setAct('hover');
+        break;
+      }
+      case 'hover': {
+        // paira e persegue a sombra do cavaleiro
+        const spd = 240;
+        if (dist > 12) {
+          this.x += (dx / dist) * spd * dt; // voa por cima de tudo
+          this.y += (dy / dist) * spd * dt;
+        }
+        if (this.actT >= 1.3) {
+          this.setAct('crash');
+          world.fx.text(this.x, this.y - 100, '!', '#e88060');
+        }
+        break;
+      }
+      case 'crash': {
+        this.altitude = Math.max(0, this.altitude - 300 * dt);
+        if (this.altitude <= 0) {
+          // impacto devastador em área
+          world.fx.addShake(9);
+          sfx('heavy');
+          world.fx.burst(this.x, this.y, '#c8a060', 24, 260);
+          if (p.alive && Math.hypot(p.x - this.x, p.y - this.y) < 110) {
+            p.takeDamage(26, this.x, this.y, world);
+          }
+          this.flyCd = this.enraged ? 4 : 7;
+          this.spitCd = 1;
+          this.setAct('chase');
+        }
+        break;
+      }
+    }
+  }
+
+  setAct(s) {
+    this.state = s;
+    this.actT = 0;
+  }
+
+  render(ctx, cam) {
+    if (!this.alive) return;
+    const frames = buildDragonSprites();
+    const wingSpeed = this.airborne ? 10 : 4;
+    const sprite = frames[Math.floor(this.animTime * wingSpeed) % 2];
+
+    // sombra no chão (encolhe quando voa)
+    const shScale = 1 - this.altitude / 240;
+    ctx.fillStyle = `rgba(0, 0, 0, ${0.35 * shScale})`;
+    ctx.beginPath();
+    ctx.ellipse(this.x - cam.x, this.y - cam.y + 4, 34 * shScale, 12 * shScale, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    const sx = Math.round(this.x - cam.x - DRAGON_PX / 2);
+    const sy = Math.round(this.y - cam.y - DRAGON_PX * 0.75 - this.altitude);
+    ctx.save();
+    if (this.flash > 0) ctx.filter = 'brightness(2.6) saturate(0.3)';
+    else if (this.enraged) ctx.filter = 'saturate(1.5) hue-rotate(-18deg)';
+    if (!this.facingLeft) {
+      // a arte nativa olha para a esquerda
+      ctx.translate(sx + DRAGON_PX, sy);
+      ctx.scale(-1, 1);
+      ctx.drawImage(sprite, 0, 0, DRAGON_PX, DRAGON_PX * (sprite.height / sprite.width));
+    } else {
+      ctx.drawImage(sprite, sx, sy, DRAGON_PX, DRAGON_PX * (sprite.height / sprite.width));
+    }
+    ctx.restore();
+
+    if (this.hurtTimer > 0) {
+      const w = 60;
+      const bx = this.x - cam.x - w / 2;
+      const by = this.y - cam.y - DRAGON_PX * 0.8 - this.altitude - 8;
+      ctx.fillStyle = 'rgba(10, 6, 2, 0.8)';
+      ctx.fillRect(bx - 1, by - 1, w + 2, 5);
+      ctx.fillStyle = '#a8281e';
+      ctx.fillRect(bx, by, (this.hp / this.hpMax) * w, 3);
+    }
+  }
+}
+
+// ---------- Bola de fogo do Dragão ----------
+
+export class Fireball {
+  constructor(x, y, dirX, dirY) {
+    this.x = x;
+    this.y = y;
+    this.vx = dirX * 290;
+    this.vy = dirY * 290;
+    this.dmg = 14;
+    this.life = 2.4;
+    this.dead = false;
+  }
+
+  update(dt, world) {
+    this.life -= dt;
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
+    if (Math.random() < dt * 30) world.fx.spark(this.x, this.y, '#f08030');
+    if (this.life <= 0 || world.map.isSolidAt(this.x, this.y)) {
+      this.splash(world);
+      return;
+    }
+    const p = world.player;
+    if (p.alive && Math.hypot(p.x - this.x, (p.y - 14) - this.y) < 22) {
+      p.takeDamage(this.dmg, this.x, this.y, world);
+      this.splash(world);
+    }
+  }
+
+  splash(world) {
+    this.dead = true;
+    world.fx.burst(this.x, this.y, '#f08030', 8, 130);
+  }
+
+  render(ctx, cam) {
+    const x = this.x - cam.x;
+    const y = this.y - cam.y;
+    ctx.fillStyle = '#c84010';
+    ctx.beginPath();
+    ctx.arc(x, y, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#f8a838';
+    ctx.beginPath();
+    ctx.arc(x - 1, y - 1, 4, 0, Math.PI * 2);
+    ctx.fill();
   }
 }
 

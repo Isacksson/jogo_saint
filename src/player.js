@@ -4,6 +4,7 @@ import { TILE_PX, SCALE, PLAYER_SPEED } from './constants.js';
 import { input } from './input.js';
 import { buildPlayerSprites } from './sprites.js';
 import { MIRACLES } from './miracles.js';
+import { sfx } from './audio.js';
 
 const SPRITE_PX = 16 * SCALE;
 
@@ -114,6 +115,7 @@ export class Player {
       this.level++;
       this.refreshStats();
       this.hp = this.hpMax;
+      sfx('level');
       world.fx.text(this.x, this.y - 70, `NÍVEL ${this.level}!`, '#f8d860');
       world.fx.burst(this.x, this.cy, '#f0c040', 20, 200);
       world.fx.addShake(3);
@@ -142,6 +144,7 @@ export class Player {
     }
     this.faith -= m.cost;
     this.castCd = 0.5;
+    sfx('cast');
     m.cast(world, this);
     world.fx.text(this.x, this.y - 62, m.name + '!', '#a8c8f8');
   }
@@ -192,6 +195,7 @@ export class Player {
     }
     if (input.wasPressed('fury') && this.furyTime <= 0 && this.fury >= this.furyMax) {
       this.furyTime = FURY_DURATION;
+      sfx('fury');
       world.fx.burst(this.x, this.cy, '#f0c040', 26, 240);
       world.fx.text(this.x, this.y - 62, 'FÚRIA SAGRADA!', '#f8d860');
       world.fx.addShake(6);
@@ -237,6 +241,7 @@ export class Player {
     } else if (input.wasPressed('heavy')) {
       this.setState('heavy');
       this.didHit = false;
+      sfx('heavy');
     } else if (input.wasPressed('dodge') && this.dodgeCd <= 0) {
       const v = this.moving
         ? { x: dx / Math.hypot(dx, dy), y: dy / Math.hypot(dx, dy) }
@@ -253,6 +258,7 @@ export class Player {
     this.didHit = false;
     this.queuedAttack = false;
     this.setState('attack');
+    sfx('swing');
   }
 
   setState(s) {
@@ -345,6 +351,7 @@ export class Player {
     if (!this.alive || this.invuln > 0 || this.state === 'dodge') return;
     const dmg = Math.max(1, rawDmg - this.defense);
     this.hp -= dmg;
+    sfx('hurt');
     this.hurtFlash = 0.16;
     this.invuln = 0.9;
     this.gainFury(dmg * 1.2);

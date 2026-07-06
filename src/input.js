@@ -16,6 +16,7 @@ const KEYMAP = {
   KeyI: 'inventory', Escape: 'inventory',
   KeyQ: 'potion',
   Digit1: 'mir1', Digit2: 'mir2',
+  KeyM: 'mute',
 };
 
 window.addEventListener('keydown', (e) => {
