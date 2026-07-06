@@ -13,6 +13,8 @@ const KEYMAP = {
   Space: 'dodge', ShiftLeft: 'dodge', ShiftRight: 'dodge',
   KeyL: 'fury', KeyC: 'fury',
   KeyE: 'interact', Enter: 'interact',
+  KeyI: 'inventory', Escape: 'inventory',
+  KeyQ: 'potion',
 };
 
 window.addEventListener('keydown', (e) => {

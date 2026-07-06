@@ -21,13 +21,16 @@ python3 -m http.server 8000
 | Ataque pesado (lança Ascalon) | K / X |
 | Esquiva (i-frames) | Espaço / Shift |
 | Fúria Sagrada (com a barra cheia) | L / C |
+| Beber poção | Q |
+| Inventário | I / Esc |
+| Orar no altar (cura + salva o jogo) | E |
 | Reerguer-se após cair | Enter |
 
 ## 📜 Design
 
 O documento completo de design (história, atos, sistemas, inimigos, roadmap) está em [`docs/GDD.md`](docs/GDD.md).
 
-## 🗺️ Estado atual — Turno 2
+## 🗺️ Estado atual — Turno 3
 
 - [x] Game Design Document
 - [x] Motor: game loop, input, câmera com follow suave
@@ -39,5 +42,9 @@ O documento completo de design (história, atos, sistemas, inimigos, roadmap) es
 - [x] **Demônios com IA**: Imundos (caçam em bando e dão botes) e Serpes (recuam e cospem veneno)
 - [x] Números de dano, partículas, tremor de tela, barra de vida dos inimigos
 - [x] Morte e renascimento pela fé (Enter), contador de demônios abatidos
+- [x] **Loot estilo Diablo**: drops com raridades (Comum / Abençoado / Consagrado), magnetismo de coleta, denários e poções
+- [x] **Inventário e equipamento**: 4 slots (arma, escudo, armadura, medalha) que alteram dano, defesa, vida máxima e ganho de fúria
+- [x] **XP e níveis**: demônios dão experiência; subir de nível cura e fortalece
+- [x] **Altares**: orar (E) cura por completo e salva a jornada no navegador; a morte preserva o progresso, mas o mal renasce
 
-Próximo (**Turno 3**): loot com raridades, inventário/equipamento, XP/níveis e altares de save.
+Próximo (**Turno 4**): Ato I — vila de Silena, NPCs e diálogos, pântano e a primeira dungeon (catacumbas).

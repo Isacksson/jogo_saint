@@ -37,13 +37,23 @@ export function renderHud(ctx, player, world, elapsed) {
     furyFull || player.furyTime > 0
   );
 
-  // contador de demônios
+  // XP e nível
+  bar(ctx, 16, 70, 140, 7, player.xp / player.xpNext, '#b8a058', '');
+  ctx.fillStyle = '#e0cda0';
+  ctx.font = 'bold 11px Georgia, serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(`Nv. ${player.level}`, 162, 74);
+
+  // contador de demônios / bolso
   ctx.textAlign = 'right';
   ctx.font = 'bold 13px Georgia, serif';
   ctx.fillStyle = 'rgba(20, 14, 8, 0.6)';
-  ctx.fillRect(VIEW_W - 190, 8, 182, 22);
+  ctx.fillRect(VIEW_W - 190, 8, 182, 44);
   ctx.fillStyle = '#e0cda0';
   ctx.fillText(`Demônios abatidos: ${world.kills} / ${world.total}`, VIEW_W - 16, 20);
+  ctx.fillStyle = '#f0d060';
+  ctx.font = '12px Georgia, serif';
+  ctx.fillText(`${player.gold} denários · ${player.potions} poções (Q) · bolsa I`, VIEW_W - 16, 40);
 }
 
 // banner de abertura, com fade controlado por quem chama

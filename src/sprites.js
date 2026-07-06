@@ -236,6 +236,38 @@ export function buildEnemySprites() {
   return enemyCache;
 }
 
+// ---------- Altar (cruz de pedra) ----------
+
+const ALTAR_PAL = {
+  D: '#2a2620',
+  S: '#b8b4a8',
+  s: '#8a867a',
+};
+
+const ALTAR = [
+  '......DDDD......',
+  '.....DSSSSD.....',
+  '.....DSSSSD.....',
+  '..DDDDSSSSDDDD..',
+  '..DSSSSSSSSSSD..',
+  '..DDDDSSSSDDDD..',
+  '.....DSSSSD.....',
+  '.....DSSSSD.....',
+  '.....DSSSSD.....',
+  '....DDSSSSDD....',
+  '...DSSSSSSSSD...',
+  '..DSssssssssSD..',
+  '..DSSSSSSSSSSD..',
+  '..DDDDDDDDDDDD..',
+];
+
+let altarCache = null;
+
+export function buildAltarSprite() {
+  if (!altarCache) altarCache = makeSprite(ALTAR, ALTAR_PAL);
+  return altarCache;
+}
+
 // ---------- Tiles ----------
 
 function grassBase(ctx, rand) {

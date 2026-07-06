@@ -2,6 +2,7 @@
 
 import { TILE_PX, SCALE } from './constants.js';
 import { buildEnemySprites } from './sprites.js';
+import { rollDrop, GroundItem } from './items.js';
 
 const SPRITE_PX = 16 * SCALE;
 
@@ -73,6 +74,9 @@ class Enemy {
       this.dead = true;
       world.kills++;
       world.player.gainFury(12);
+      world.player.addXp(this.xpValue, world);
+      const drop = rollDrop();
+      if (drop) world.groundItems.push(new GroundItem(this.x, this.y, drop));
       world.fx.burst(this.x, this.y - 12, this.blood, 18, 220);
       world.fx.burst(this.x, this.y - 12, '#e8c860', 6, 120);
     }
@@ -135,6 +139,7 @@ export class Imundo extends Enemy {
     this.hp = 30;
     this.speed = 105;
     this.dmg = 8;
+    this.xpValue = 12;
     this.blood = '#7c1810';
     this.windup = 0;
     this.lungeT = 0;
@@ -212,6 +217,7 @@ export class Serpe extends Enemy {
     this.hpMax = 20;
     this.hp = 20;
     this.speed = 70;
+    this.xpValue = 10;
     this.blood = '#3c6428';
     this.shootCd = 1 + Math.random();
   }

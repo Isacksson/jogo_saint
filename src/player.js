@@ -40,6 +40,16 @@ export class Player {
     this.faith = 40; this.faithMax = 100;
     this.fury = 0; this.furyMax = 100;
 
+    // progressão e posses
+    this.level = 1;
+    this.xp = 0;
+    this.xpNext = 40;
+    this.gold = 0;
+    this.potions = 0;
+    this.inventory = [];
+    this.equip = {}; // arma / escudo / armadura / medalha
+    this.refreshStats();
+
     // máquina de estados de combate
     this.state = 'normal'; // normal | attack | heavy | dodge | dead
     this.stateTime = 0;
@@ -68,11 +78,63 @@ export class Player {
 
   gainFury(n) {
     if (this.furyTime > 0) return;
-    this.fury = Math.min(this.furyMax, this.fury + n);
+    this.fury = Math.min(this.furyMax, this.fury + n * this.furyMult);
   }
 
   get dmgMult() {
     return this.furyTime > 0 ? 2 : 1;
+  }
+
+  // ---------- progressão e equipamento ----------
+
+  get attackBonus() {
+    return (this.equip.arma?.value || 0) + (this.level - 1);
+  }
+
+  get defense() {
+    return this.equip.escudo?.value || 0;
+  }
+
+  get furyMult() {
+    return 1 + (this.equip.medalha?.value || 0) / 100;
+  }
+
+  refreshStats() {
+    this.hpMax = 90 + this.level * 10 + (this.equip.armadura?.value || 0);
+    this.hp = Math.min(this.hp, this.hpMax);
+  }
+
+  addXp(n, world) {
+    this.xp += n;
+    while (this.xp >= this.xpNext) {
+      this.xp -= this.xpNext;
+      this.xpNext = Math.round(this.xpNext * 1.35);
+      this.level++;
+      this.refreshStats();
+      this.hp = this.hpMax;
+      world.fx.text(this.x, this.y - 70, `NÍVEL ${this.level}!`, '#f8d860');
+      world.fx.burst(this.x, this.cy, '#f0c040', 20, 200);
+      world.fx.addShake(3);
+    }
+  }
+
+  equipItem(idx, world) {
+    const item = this.inventory[idx];
+    if (!item) return;
+    const prev = this.equip[item.slot];
+    this.equip[item.slot] = item;
+    this.inventory.splice(idx, 1);
+    if (prev) this.inventory.push(prev);
+    this.refreshStats();
+    world.fx.text(this.x, this.y - 58, `Equipado: ${item.name}`, '#e8dcb8');
+  }
+
+  usePotion(world) {
+    if (this.potions <= 0 || this.hp >= this.hpMax || !this.alive) return;
+    this.potions--;
+    this.hp = Math.min(this.hpMax, this.hp + 40);
+    world.fx.text(this.x, this.y - 58, '+40', '#78d060');
+    world.fx.burst(this.x, this.cy, '#78d060', 10, 130);
   }
 
   update(dt, world) {
@@ -206,7 +268,7 @@ export class Player {
       if (Math.abs(e.x - cx) < half + 14 && Math.abs((e.y - 10) - cy) < half + 14) {
         hitAny = true;
         e.takeDamage(
-          spec.dmg * this.dmgMult,
+          (spec.dmg + this.attackBonus) * this.dmgMult,
           v.x * spec.kb + (e.x - this.x) * 0.6,
           v.y * spec.kb + (e.y - this.y) * 0.6,
           world
@@ -231,7 +293,7 @@ export class Player {
         if (!e.alive) continue;
         if (Math.abs(e.x - cx) < alongX && Math.abs((e.y - 10) - cy) < alongY) {
           hitAny = true;
-          e.takeDamage(HEAVY.dmg * this.dmgMult, v.x * HEAVY.kb, v.y * HEAVY.kb, world);
+          e.takeDamage((HEAVY.dmg + this.attackBonus) * this.dmgMult, v.x * HEAVY.kb, v.y * HEAVY.kb, world);
           this.gainFury(8);
         }
       }
@@ -252,8 +314,9 @@ export class Player {
     }
   }
 
-  takeDamage(dmg, srcX, srcY, world) {
+  takeDamage(rawDmg, srcX, srcY, world) {
     if (!this.alive || this.invuln > 0 || this.state === 'dodge') return;
+    const dmg = Math.max(1, rawDmg - this.defense);
     this.hp -= dmg;
     this.hurtFlash = 0.16;
     this.invuln = 0.9;
