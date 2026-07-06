@@ -2,7 +2,8 @@
 
 const KEY = 'lenda-aurea-save';
 
-export function serializePlayer(p) {
+export function serializeWorld(world) {
+  const p = world.player;
   return {
     level: p.level,
     xp: p.xp,
@@ -13,6 +14,8 @@ export function serializePlayer(p) {
     equip: p.equip,
     x: p.x,
     y: p.y,
+    mapId: world.mapId,
+    flags: world.flags,
   };
 }
 
@@ -32,9 +35,9 @@ export function applyPlayer(p, data, keepPos = false) {
   p.hp = p.hpMax;
 }
 
-export function saveGame(player) {
+export function saveGame(world) {
   try {
-    localStorage.setItem(KEY, JSON.stringify(serializePlayer(player)));
+    localStorage.setItem(KEY, JSON.stringify(serializeWorld(world)));
     return true;
   } catch {
     return false;

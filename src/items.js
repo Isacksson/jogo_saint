@@ -83,6 +83,20 @@ const ARMOR = [
   '....DDDDDDDD....',
 ];
 
+const KEY = [
+  '....DDDD........',
+  '...DGGGGD.......',
+  '...DGyyGD.......',
+  '...DGGGGD.......',
+  '....DGGD........',
+  '....DGGD........',
+  '....DGGDD.......',
+  '....DGGGGD......',
+  '....DGGDD.......',
+  '....DGGGGD......',
+  '.....DDDD.......',
+];
+
 const MEDAL = [
   '.....DrrrrD.....',
   '.....Dr..rD.....',
@@ -107,6 +121,7 @@ export function buildItemSprites() {
       escudo: makeSprite(SHIELD, PAL),
       armadura: makeSprite(ARMOR, PAL),
       medalha: makeSprite(MEDAL, PAL),
+      chave: makeSprite(KEY, PAL),
     };
   }
   return iconCache;
@@ -188,7 +203,12 @@ export class GroundItem {
     if (dist > 26) return;
 
     const it = this.item;
-    if (it.kind === 'gold') {
+    if (it.kind === 'chave') {
+      world.flags.temChave = true;
+      world.fx.text(p.x, p.y - 54, '✝ Chave das Catacumbas!', '#f0c040');
+      world.fx.burst(this.x, this.y, '#f0c040', 14, 160);
+      this.dead = true;
+    } else if (it.kind === 'gold') {
       p.gold += it.amount;
       world.fx.text(p.x, p.y - 54, `+${it.amount} denários`, '#f0d060');
       this.dead = true;
@@ -216,7 +236,7 @@ export class GroundItem {
     // brilho no chão, na cor da raridade
     const color = this.item.kind === 'equip'
       ? RARITY[this.item.rarity].color
-      : this.item.kind === 'gold' ? '#f0d060' : '#f08060';
+      : this.item.kind === 'potion' ? '#f08060' : '#f0d060';
     ctx.save();
     ctx.globalAlpha = 0.35 + 0.15 * Math.sin(this.t * 5);
     ctx.fillStyle = color;

@@ -30,7 +30,7 @@ python3 -m http.server 8000
 
 O documento completo de design (história, atos, sistemas, inimigos, roadmap) está em [`docs/GDD.md`](docs/GDD.md).
 
-## 🗺️ Estado atual — Turno 3
+## 🗺️ Estado atual — Turno 4
 
 - [x] Game Design Document
 - [x] Motor: game loop, input, câmera com follow suave
@@ -46,5 +46,9 @@ O documento completo de design (história, atos, sistemas, inimigos, roadmap) es
 - [x] **Inventário e equipamento**: 4 slots (arma, escudo, armadura, medalha) que alteram dano, defesa, vida máxima e ganho de fúria
 - [x] **XP e níveis**: demônios dão experiência; subir de nível cura e fortalece
 - [x] **Altares**: orar (E) cura por completo e salva a jornada no navegador; a morte preserva o progresso, mas o mal renasce
+- [x] **Ato I — quatro mapas conectados por portais**: Clareira da Capadócia → Silena → Pântano Envenenado → Catacumbas dos Mártires
+- [x] **NPCs e diálogos estilo Lufia**: Princesa Sabra (a quest da chave), Padre Anastácio, Mira e o Ancião Teodoro
+- [x] **Quest da chave**: Gólgor, o Ladrão da Chave (mini-chefe do pântano), o portão trancado das catacumbas
+- [x] **Catacumbas**: dungeon na escuridão, iluminada só pela tocha de Jorge, com a Relíquia de Santa Bárbara aguardando
 
-Próximo (**Turno 4**): Ato I — vila de Silena, NPCs e diálogos, pântano e a primeira dungeon (catacumbas).
+Próximo (**Turno 5**): Milagres/Relíquias dos santos, as primeiras Fossas do Ato II e seus mini-chefes.

@@ -50,10 +50,72 @@ export function renderHud(ctx, player, world, elapsed) {
   ctx.fillStyle = 'rgba(20, 14, 8, 0.6)';
   ctx.fillRect(VIEW_W - 190, 8, 182, 44);
   ctx.fillStyle = '#e0cda0';
-  ctx.fillText(`Demônios abatidos: ${world.kills} / ${world.total}`, VIEW_W - 16, 20);
+  ctx.fillText(
+    world.total > 0 ? `Demônios abatidos: ${world.kills} / ${world.total}` : 'Silena está em paz... por ora',
+    VIEW_W - 16, 20
+  );
   ctx.fillStyle = '#f0d060';
   ctx.font = '12px Georgia, serif';
-  ctx.fillText(`${player.gold} denários · ${player.potions} poções (Q) · bolsa I`, VIEW_W - 16, 40);
+  const chave = world.flags.temChave && !world.flags.catacumbasAbertas ? ' · ✝chave' : '';
+  ctx.fillText(`${player.gold} denários · ${player.potions} poções (Q)${chave}`, VIEW_W - 16, 40);
+}
+
+// nome do local, exibido ao entrar num mapa
+export function renderLocation(ctx, name, alpha) {
+  if (alpha <= 0) return;
+  ctx.save();
+  ctx.globalAlpha = Math.min(1, alpha);
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 20px Georgia, serif';
+  ctx.strokeStyle = 'rgba(10, 6, 2, 0.9)';
+  ctx.lineWidth = 4;
+  ctx.fillStyle = '#e8c860';
+  ctx.strokeText(name, VIEW_W / 2, 96);
+  ctx.fillText(name, VIEW_W / 2, 96);
+  ctx.restore();
+}
+
+// caixa de diálogo estilo Lufia
+export function renderDialogue(ctx, dlg) {
+  const w = 760, h = 108;
+  const x = (VIEW_W - w) / 2;
+  const y = VIEW_H - h - 24;
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(14, 9, 5, 0.93)';
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = '#8a7442';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x + 3, y + 3, w - 6, h - 6);
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#e8c860';
+  ctx.font = 'bold 15px Georgia, serif';
+  ctx.fillText(dlg.name, x + 18, y + 26);
+
+  // quebra de linha simples
+  ctx.fillStyle = '#e8dcc0';
+  ctx.font = '14px Georgia, serif';
+  const words = dlg.lines[dlg.idx].split(' ');
+  let line = '';
+  let ly = y + 50;
+  for (const word of words) {
+    const test = line ? line + ' ' + word : word;
+    if (ctx.measureText(test).width > w - 40) {
+      ctx.fillText(line, x + 18, ly);
+      line = word;
+      ly += 20;
+    } else {
+      line = test;
+    }
+  }
+  ctx.fillText(line, x + 18, ly);
+
+  ctx.textAlign = 'right';
+  ctx.fillStyle = '#9a8a62';
+  ctx.font = 'italic 12px Georgia, serif';
+  ctx.fillText(dlg.idx < dlg.lines.length - 1 ? 'E — continuar ▸' : 'E — fechar ✕', x + w - 14, y + h - 12);
+  ctx.restore();
 }
 
 // banner de abertura, com fade controlado por quem chama
@@ -98,10 +160,10 @@ export function renderVictory(ctx, elapsed) {
   ctx.globalAlpha = glow;
   ctx.fillStyle = '#e8c860';
   ctx.font = 'bold 22px Georgia, serif';
-  ctx.fillText('✝ A clareira foi purificada! ✝', VIEW_W / 2, VIEW_H - 52);
+  ctx.fillText('✝ Este lugar foi purificado! ✝', VIEW_W / 2, VIEW_H - 52);
   ctx.globalAlpha = 1;
   ctx.fillStyle = '#d8ccaa';
   ctx.font = 'italic 14px Georgia, serif';
-  ctx.fillText('As estradas para Silena aguardam o cavaleiro... (Turno 4)', VIEW_W / 2, VIEW_H - 32);
+  ctx.fillText('O mal recua... por enquanto.', VIEW_W / 2, VIEW_H - 32);
   ctx.restore();
 }

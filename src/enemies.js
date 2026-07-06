@@ -22,6 +22,7 @@ class Enemy {
     this.dirY = 0;
     this.dead = false;
     this.facingLeft = false;
+    this.scale = 1;
   }
 
   get alive() {
@@ -75,6 +76,9 @@ class Enemy {
       world.kills++;
       world.player.gainFury(12);
       world.player.addXp(this.xpValue, world);
+      if (this.keyCarrier && !world.flags.temChave) {
+        world.groundItems.push(new GroundItem(this.x, this.y, { kind: 'chave' }));
+      }
       const drop = rollDrop();
       if (drop) world.groundItems.push(new GroundItem(this.x, this.y, drop));
       world.fx.burst(this.x, this.y - 12, this.blood, 18, 220);
@@ -98,30 +102,32 @@ class Enemy {
   }
 
   renderSprite(ctx, cam, sprite) {
+    const px = SPRITE_PX * this.scale;
+
     // sombra
     ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
     ctx.beginPath();
-    ctx.ellipse(this.x - cam.x, this.y - cam.y + 2, 10, 4, 0, 0, Math.PI * 2);
+    ctx.ellipse(this.x - cam.x, this.y - cam.y + 2, 10 * this.scale, 4 * this.scale, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    const sx = Math.round(this.x - cam.x - SPRITE_PX / 2);
-    const sy = Math.round(this.y - cam.y - SPRITE_PX + this.hbH / 2);
+    const sx = Math.round(this.x - cam.x - px / 2);
+    const sy = Math.round(this.y - cam.y - px + this.hbH / 2);
     ctx.save();
     if (this.flash > 0) ctx.filter = 'brightness(2.6) saturate(0.3)';
     if (this.facingLeft) {
-      ctx.translate(sx + SPRITE_PX, sy);
+      ctx.translate(sx + px, sy);
       ctx.scale(-1, 1);
-      ctx.drawImage(sprite, 0, 0, SPRITE_PX, SPRITE_PX);
+      ctx.drawImage(sprite, 0, 0, px, px);
     } else {
-      ctx.drawImage(sprite, sx, sy, SPRITE_PX, SPRITE_PX);
+      ctx.drawImage(sprite, sx, sy, px, px);
     }
     ctx.restore();
 
     // barra de vida (só quando ferido recentemente)
     if (this.hurtTimer > 0 && this.alive) {
-      const w = 30;
+      const w = 30 * this.scale;
       const bx = this.x - cam.x - w / 2;
-      const by = this.y - cam.y - SPRITE_PX - 4;
+      const by = this.y - cam.y - px - 4;
       ctx.fillStyle = 'rgba(10, 6, 2, 0.8)';
       ctx.fillRect(bx - 1, by - 1, w + 2, 5);
       ctx.fillStyle = '#a8281e';
@@ -205,6 +211,38 @@ export class Imundo extends Enemy {
       ctx.restore();
     } else {
       this.renderSprite(ctx, cam, frame);
+    }
+  }
+}
+
+// ---------- Imundo Chefe: o ladrão da chave das catacumbas ----------
+
+export class ImundoChefe extends Imundo {
+  constructor(tx, ty) {
+    super(tx, ty);
+    this.hpMax = 120;
+    this.hp = 120;
+    this.speed = 90;
+    this.dmg = 14;
+    this.xpValue = 60;
+    this.scale = 1.6;
+    this.hbW = 13 * SCALE;
+    this.hbH = 7 * SCALE;
+    this.keyCarrier = true;
+  }
+
+  render(ctx, cam) {
+    super.render(ctx, cam);
+    // o nome do chefe paira sobre ele
+    if (this.alive) {
+      ctx.font = 'bold 12px Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.strokeStyle = 'rgba(10, 6, 2, 0.9)';
+      ctx.lineWidth = 3;
+      ctx.fillStyle = '#e88060';
+      const y = this.y - cam.y - SPRITE_PX * this.scale - 12;
+      ctx.strokeText('Gólgor, o Ladrão da Chave', this.x - cam.x, y);
+      ctx.fillText('Gólgor, o Ladrão da Chave', this.x - cam.x, y);
     }
   }
 }

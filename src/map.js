@@ -1,9 +1,10 @@
-// Mapa da clareira da Capadócia — área inicial do protótipo
+// GameMap genérico: grade de tiles com colisão e helpers de construção.
+// Os mapas do jogo em si são definidos em maps.js.
 
-import { MAP_W, MAP_H, T, SOLID, TILE_PX } from './constants.js';
+import { T, SOLID, TILE_PX } from './constants.js';
 
-// RNG determinístico para o mapa ser sempre o mesmo
-function rng(seed) {
+// RNG determinístico para os mapas serem sempre os mesmos
+export function rng(seed) {
   return function () {
     seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
     let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
@@ -13,15 +14,16 @@ function rng(seed) {
 }
 
 export class GameMap {
-  constructor() {
-    this.w = MAP_W;
-    this.h = MAP_H;
-    this.tiles = new Uint8Array(this.w * this.h).fill(T.GRASS);
-    this.generate();
+  constructor(def) {
+    this.w = def.w;
+    this.h = def.h;
+    this.outside = def.outside ?? T.TREE; // o que existe "fora" do mapa
+    this.tiles = new Uint8Array(this.w * this.h).fill(def.base ?? T.GRASS);
+    def.generate(this);
   }
 
   get(x, y) {
-    if (x < 0 || y < 0 || x >= this.w || y >= this.h) return T.TREE;
+    if (x < 0 || y < 0 || x >= this.w || y >= this.h) return this.outside;
     return this.tiles[y * this.w + x];
   }
 
@@ -39,68 +41,36 @@ export class GameMap {
     return this.isSolidTile(Math.floor(px / TILE_PX), Math.floor(py / TILE_PX));
   }
 
-  generate() {
-    const rand = rng(2026);
+  // ---------- helpers de construção ----------
 
-    // borda de floresta (2 tiles de espessura)
+  fillRect(x, y, w, h, t) {
+    for (let j = y; j < y + h; j++) {
+      for (let i = x; i < x + w; i++) this.set(i, j, t);
+    }
+  }
+
+  border(thick, t) {
     for (let y = 0; y < this.h; y++) {
       for (let x = 0; x < this.w; x++) {
-        if (x < 2 || y < 2 || x >= this.w - 2 || y >= this.h - 2) {
-          this.set(x, y, T.TREE);
+        if (x < thick || y < thick || x >= this.w - thick || y >= this.h - thick) {
+          this.set(x, y, t);
         }
       }
     }
+  }
 
-    // lago no nordeste, com margem de areia
-    const lakeCX = 36, lakeCY = 9, lakeRX = 6, lakeRY = 4;
-    for (let y = 2; y < this.h - 2; y++) {
-      for (let x = 2; x < this.w - 2; x++) {
-        const dx = (x - lakeCX) / lakeRX;
-        const dy = (y - lakeCY) / lakeRY;
-        const d = dx * dx + dy * dy;
-        if (d <= 1) this.set(x, y, T.WATER);
-        else if (d <= 1.7) this.set(x, y, T.SAND);
-      }
+  scatter(rand, t, count, over = T.GRASS, margin = 3) {
+    for (let i = 0; i < count; i++) {
+      const x = margin + Math.floor(rand() * (this.w - margin * 2));
+      const y = margin + Math.floor(rand() * (this.h - margin * 2));
+      if (this.get(x, y) === over) this.set(x, y, t);
     }
+  }
 
-    // estrada em cruz: leste-oeste e uma descida ao sul
-    for (let x = 2; x < this.w - 2; x++) {
-      this.set(x, 18, T.PATH);
-      this.set(x, 19, T.PATH);
-    }
-    for (let y = 19; y < this.h - 2; y++) {
-      this.set(12, y, T.PATH);
-      this.set(13, y, T.PATH);
-    }
-
-    // bosques espalhados (evitando estrada, lago e areia)
-    for (let i = 0; i < 26; i++) {
-      const cx = 3 + Math.floor(rand() * (this.w - 6));
-      const cy = 3 + Math.floor(rand() * (this.h - 6));
-      for (let j = 0; j < 4; j++) {
-        const x = cx + Math.floor(rand() * 3) - 1;
-        const y = cy + Math.floor(rand() * 3) - 1;
-        if (this.get(x, y) === T.GRASS) this.set(x, y, T.TREE);
-      }
-    }
-
-    // pedras e flores
-    for (let i = 0; i < 14; i++) {
-      const x = 3 + Math.floor(rand() * (this.w - 6));
-      const y = 3 + Math.floor(rand() * (this.h - 6));
-      if (this.get(x, y) === T.GRASS) this.set(x, y, T.ROCK);
-    }
-    for (let i = 0; i < 30; i++) {
-      const x = 3 + Math.floor(rand() * (this.w - 6));
-      const y = 3 + Math.floor(rand() * (this.h - 6));
-      if (this.get(x, y) === T.GRASS) this.set(x, y, T.FLOWER);
-    }
-
-    // garante área livre em volta do spawn (cruzamento das estradas)
-    for (let y = 16; y <= 22; y++) {
-      for (let x = 10; x <= 16; x++) {
-        if (this.isSolidTile(x, y)) this.set(x, y, T.GRASS);
-      }
-    }
+  // casa estilo Lufia: telhado sólido com porta decorativa na frente
+  house(x, y, w, h) {
+    this.fillRect(x, y, w, h - 1, T.ROOF);
+    this.fillRect(x, y + h - 1, w, 1, T.WALL);
+    this.set(x + Math.floor(w / 2), y + h - 1, T.DOOR);
   }
 }

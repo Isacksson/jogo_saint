@@ -1,6 +1,6 @@
-// Câmera com follow suave, presa aos limites do mapa
+// Câmera com follow suave, presa aos limites do mapa atual
 
-import { MAP_W, MAP_H, TILE_PX, VIEW_W, VIEW_H } from './constants.js';
+import { TILE_PX, VIEW_W, VIEW_H } from './constants.js';
 
 export class Camera {
   constructor() {
@@ -8,7 +8,7 @@ export class Camera {
     this.y = 0;
   }
 
-  follow(targetX, targetY, dt, snap = false) {
+  follow(targetX, targetY, dt, map, snap = false) {
     const goalX = targetX - VIEW_W / 2;
     const goalY = targetY - VIEW_H / 2;
     if (snap) {
@@ -20,8 +20,8 @@ export class Camera {
       this.x += (goalX - this.x) * k;
       this.y += (goalY - this.y) * k;
     }
-    const maxX = MAP_W * TILE_PX - VIEW_W;
-    const maxY = MAP_H * TILE_PX - VIEW_H;
+    const maxX = map.w * TILE_PX - VIEW_W;
+    const maxY = map.h * TILE_PX - VIEW_H;
     this.x = Math.max(0, Math.min(maxX, this.x));
     this.y = Math.max(0, Math.min(maxY, this.y));
   }

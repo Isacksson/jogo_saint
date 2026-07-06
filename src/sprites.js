@@ -136,6 +136,11 @@ export function buildPlayerSprites() {
   };
 }
 
+// Aldeões: mesmo corpo do Jorge com outras cores (túnica, cabelo, pele)
+export function makeVillagerSprite(overrides = {}) {
+  return makeSprite([...BODY_DOWN, ...LEGS_IDLE], { ...PAL, ...overrides });
+}
+
 // ---------- Demônios ----------
 
 const IMUNDO_PAL = {
@@ -376,7 +381,164 @@ function tileFlower(seed) {
   return c;
 }
 
-// Retorna { [tipoDeTile]: [frames...] } — a maioria tem 1 frame, água tem 2.
+function tileMud(seed) {
+  const c = makeCanvas();
+  const ctx = c.getContext('2d');
+  const rand = rng(seed);
+  ctx.fillStyle = '#6a5230';
+  ctx.fillRect(0, 0, TILE, TILE);
+  for (let i = 0; i < 9; i++) {
+    ctx.fillStyle = rand() < 0.5 ? '#5a4426' : '#7a6038';
+    ctx.fillRect((rand() * TILE) | 0, (rand() * TILE) | 0, 2, 1);
+  }
+  return c;
+}
+
+// charco venenoso animado (2 fases de bolhas)
+function tilePoison(phase) {
+  const c = makeCanvas();
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#3c6420';
+  ctx.fillRect(0, 0, TILE, TILE);
+  ctx.fillStyle = '#548430';
+  const off = phase === 0 ? 0 : 3;
+  for (let y = 2; y < TILE; y += 5) {
+    ctx.fillRect((2 + off) % TILE, y, 2, 2);
+    ctx.fillRect((9 + off) % TILE, y + 2, 2, 2);
+  }
+  ctx.fillStyle = '#78a848';
+  ctx.fillRect((5 + off) % TILE, 6, 1, 1);
+  ctx.fillRect((12 + off) % TILE, 11, 1, 1);
+  return c;
+}
+
+function tileDeadTree(seed) {
+  const c = makeCanvas();
+  const ctx = c.getContext('2d');
+  const rand = rng(seed);
+  ctx.fillStyle = '#5a4a30';
+  ctx.fillRect(0, 0, TILE, TILE);
+  for (let i = 0; i < 6; i++) {
+    ctx.fillStyle = '#4c3e26';
+    ctx.fillRect((rand() * TILE) | 0, (rand() * TILE) | 0, 2, 1);
+  }
+  // tronco retorcido e galhos secos
+  ctx.fillStyle = '#3a3028';
+  ctx.fillRect(7, 6, 3, 9);
+  ctx.fillRect(5, 3, 2, 4);
+  ctx.fillRect(10, 2, 2, 5);
+  ctx.fillRect(3, 2, 3, 2);
+  ctx.fillRect(11, 1, 4, 2);
+  ctx.fillStyle = '#524438';
+  ctx.fillRect(8, 7, 1, 7);
+  return c;
+}
+
+function tileRoof(seed) {
+  const c = makeCanvas();
+  const ctx = c.getContext('2d');
+  const rand = rng(seed);
+  ctx.fillStyle = '#a05838';
+  ctx.fillRect(0, 0, TILE, TILE);
+  ctx.fillStyle = '#8a4830';
+  for (let y = 3; y < TILE; y += 4) ctx.fillRect(0, y, TILE, 1);
+  ctx.fillStyle = '#b06844';
+  for (let i = 0; i < 5; i++) {
+    ctx.fillRect((rand() * TILE) | 0, (rand() * TILE) | 0, 2, 1);
+  }
+  return c;
+}
+
+function tileWall() {
+  const c = makeCanvas();
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#c8b088';
+  ctx.fillRect(0, 0, TILE, TILE);
+  ctx.fillStyle = '#a89068';
+  for (let y = 0; y < TILE; y += 4) {
+    ctx.fillRect(0, y, TILE, 1);
+    for (let x = (y / 4) % 2 === 0 ? 4 : 8; x < TILE; x += 8) {
+      ctx.fillRect(x, y, 1, 4);
+    }
+  }
+  return c;
+}
+
+function tileDoorHouse() {
+  const c = tileWall();
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#3a2a18';
+  ctx.fillRect(4, 4, 8, 12);
+  ctx.fillStyle = '#5a4228';
+  ctx.fillRect(5, 5, 6, 11);
+  ctx.fillStyle = '#d8a020';
+  ctx.fillRect(9, 10, 1, 1);
+  return c;
+}
+
+function tileStone(seed) {
+  const c = makeCanvas();
+  const ctx = c.getContext('2d');
+  const rand = rng(seed);
+  ctx.fillStyle = '#5a5a58';
+  ctx.fillRect(0, 0, TILE, TILE);
+  for (let i = 0; i < 8; i++) {
+    ctx.fillStyle = rand() < 0.5 ? '#4e4e4c' : '#666664';
+    ctx.fillRect((rand() * TILE) | 0, (rand() * TILE) | 0, 2, 1);
+  }
+  ctx.fillStyle = '#454543';
+  ctx.fillRect(0, 7, TILE, 1);
+  ctx.fillRect(8, 0, 1, 7);
+  ctx.fillRect(4, 8, 1, 8);
+  return c;
+}
+
+function tileCatacombWall() {
+  const c = makeCanvas();
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#32323a';
+  ctx.fillRect(0, 0, TILE, TILE);
+  ctx.fillStyle = '#26262c';
+  for (let y = 0; y < TILE; y += 4) {
+    ctx.fillRect(0, y, TILE, 1);
+    for (let x = (y / 4) % 2 === 0 ? 4 : 8; x < TILE; x += 8) {
+      ctx.fillRect(x, y, 1, 4);
+    }
+  }
+  ctx.fillStyle = '#3e3e48';
+  ctx.fillRect(2, 2, 2, 1);
+  ctx.fillRect(10, 9, 2, 1);
+  return c;
+}
+
+function tileGate() {
+  const c = makeCanvas();
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#26262c';
+  ctx.fillRect(0, 0, TILE, TILE);
+  ctx.fillStyle = '#6a6a72';
+  for (let x = 2; x < TILE; x += 4) ctx.fillRect(x, 0, 2, TILE);
+  ctx.fillStyle = '#8a8a92';
+  ctx.fillRect(0, 3, TILE, 2);
+  ctx.fillRect(0, 11, TILE, 2);
+  ctx.fillStyle = '#d8a020';
+  ctx.fillRect(7, 7, 2, 2);
+  return c;
+}
+
+function tileBones(seed) {
+  const c = tileStone(seed);
+  const ctx = c.getContext('2d');
+  const rand = rng(seed + 99);
+  ctx.fillStyle = '#c8c0a8';
+  ctx.fillRect(3, 5, 4, 1);
+  ctx.fillRect(9, 10, 1, 4);
+  ctx.fillRect(11, 3, 2, 2);
+  if (rand() < 0.5) ctx.fillRect(5, 12, 3, 1);
+  return c;
+}
+
+// Retorna { [tipoDeTile]: [frames...] } — a maioria tem 1 frame, líquidos têm 2.
 export function buildTiles() {
   return {
     [T.GRASS]: [tileGrass(11), tileGrass(23), tileGrass(37)],
@@ -386,5 +548,15 @@ export function buildTiles() {
     [T.TREE]: [tileTree(13)],
     [T.ROCK]: [tileRock(17)],
     [T.FLOWER]: [tileFlower(29)],
+    [T.MUD]: [tileMud(41), tileMud(43)],
+    [T.POISON]: [tilePoison(0), tilePoison(1)],
+    [T.DEADTREE]: [tileDeadTree(47)],
+    [T.ROOF]: [tileRoof(53)],
+    [T.WALL]: [tileWall()],
+    [T.DOOR]: [tileDoorHouse()],
+    [T.STONE]: [tileStone(59), tileStone(61)],
+    [T.CWALL]: [tileCatacombWall()],
+    [T.GATE]: [tileGate()],
+    [T.BONES]: [tileBones(67)],
   };
 }
