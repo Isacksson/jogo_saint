@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Lenda Áurea: Jorge e o Dragão</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      background: #12100d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      font-family: Georgia, 'Times New Roman', serif;
+      color: #d8c68a;
+    }
+    #game {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      border: 3px solid #4a3820;
+      box-shadow: 0 0 40px rgba(216, 168, 64, 0.15);
+      max-width: 96vw;
+      max-height: 86vh;
+    }
+    #footer {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #8a7a52;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game" width="960" height="540"></canvas>
+  <div id="footer">A LENDA ÁUREA — protótipo · WASD/Setas para mover</div>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
