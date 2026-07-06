@@ -21,14 +21,15 @@ function makeCanvas(w = TILE, h = TILE) {
   return c;
 }
 
-// Converte um grid de caracteres numa imagem, usando a paleta char->cor
+// Converte um grid de caracteres numa imagem, usando a paleta char->cor.
+// Linhas mais curtas são tratadas como completadas com '.' (transparente).
 export function makeSprite(rows, palette) {
   const h = rows.length;
-  const w = rows[0].length;
+  const w = Math.max(...rows.map((r) => r.length));
   const c = makeCanvas(w, h);
   const ctx = c.getContext('2d');
   for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
+    for (let x = 0; x < rows[y].length; x++) {
       const ch = rows[y][x];
       if (ch === '.') continue;
       ctx.fillStyle = palette[ch];
@@ -133,6 +134,106 @@ export function buildPlayerSprites() {
     up: frames(BODY_UP),
     right: frames(BODY_RIGHT),
   };
+}
+
+// ---------- Demônios ----------
+
+const IMUNDO_PAL = {
+  D: '#1a100c', // contorno
+  R: '#9c3424', // pele
+  r: '#7c2418', // sombra
+  E: '#f0d848', // olhos
+  H: '#d8c8a0', // chifres
+  C: '#e8e0d0', // garras
+};
+
+const IMUNDO_BODY = [
+  '...DD......DD...',
+  '..DHHD....DHHD..',
+  '..DDRRD..DRRDD..',
+  '...DRRRRRRRRD...',
+  '..DRRRRRRRRRRD..',
+  '..DREDRRRRDERD..',
+  '..DRRRRRRRRRRD..',
+  '...DRDDDDDDRD...',
+  '...DRRRRRRRRD...',
+  '..DRRRRRRRRRRD..',
+  '..DCRRRrrRRRCD..',
+  '...DRRrrrrRRD...',
+  '....DRRDDRRD....',
+];
+
+const IMUNDO_LEGS_A = [
+  '....DRD..DRD....',
+  '...DCCD..DCCD...',
+  '................',
+];
+
+const IMUNDO_LEGS_B = [
+  '.....DRDDRD.....',
+  '....DCCDDCCD....',
+  '................',
+];
+
+const SERPE_PAL = {
+  D: '#14200f', // contorno
+  G: '#4a9038', // escamas
+  g: '#35682a', // sombra
+  Y: '#cad584', // ventre
+  E: '#e04828', // olhos
+  T: '#c03838', // língua
+};
+
+const SERPE_A = [
+  '.....DDDD.......',
+  '....DGGGGD......',
+  '...DGEGGEGD.....',
+  '...DGGGGGGD.....',
+  '....DGYYGD......',
+  '....DGYYGD......',
+  '...DGGYYGGD.....',
+  '..DGGGYYGGGD....',
+  '.DGgGGYYGGgGD...',
+  '.DGggGYYGGggGD..',
+  '.DGgGGGGGGGgGD..',
+  '..DGgggggggGD...',
+  '...DDGGGGGDD....',
+  '.....DDDDD......',
+];
+
+const SERPE_B = [
+  '.....DDDD.......',
+  '....DGGGGD......',
+  '...DGEGGEGD.....',
+  'TT.DGGGGGGD.....',
+  '....DGYYGD......',
+  '....DGYYGD......',
+  '...DGGYYGGD.....',
+  '..DGGGYYGGGD....',
+  '.DGgGGYYGGgGD...',
+  '.DGggGYYGGggGD..',
+  '.DGgGGGGGGGgGD..',
+  '..DGgggggggGD...',
+  '...DDGGGGGDD....',
+  '.....DDDDD......',
+];
+
+let enemyCache = null;
+
+export function buildEnemySprites() {
+  if (!enemyCache) {
+    enemyCache = {
+      imundo: [
+        makeSprite([...IMUNDO_BODY, ...IMUNDO_LEGS_A], IMUNDO_PAL),
+        makeSprite([...IMUNDO_BODY, ...IMUNDO_LEGS_B], IMUNDO_PAL),
+      ],
+      serpe: [
+        makeSprite(SERPE_A, SERPE_PAL),
+        makeSprite(SERPE_B, SERPE_PAL),
+      ],
+    };
+  }
+  return enemyCache;
 }
 
 // ---------- Tiles ----------

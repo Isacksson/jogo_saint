@@ -131,7 +131,7 @@ Século III. O Império Romano persegue os cristãos, mas algo pior desperta sob
 Cada turno termina com **commit + push** — o trabalho nunca fica pela metade no repositório.
 
 - [x] **Turno 1** — GDD + protótipo: mapa, câmera, colisão, Jorge andando (4 direções, animado), HUD básico.
-- [ ] **Turno 2** — Combate: combo de espada, lança, esquiva com i-frames, inimigos (Imundo, Serpe) com IA, dano/morte, Fúria Sagrada.
+- [x] **Turno 2** — Combate: combo de espada, lança, esquiva com i-frames, inimigos (Imundo, Serpe) com IA, dano/morte, Fúria Sagrada.
 - [ ] **Turno 3** — Loot (raridades, drops), inventário/equipamento, XP/níveis, altares (save).
 - [ ] **Turno 4** — Ato I: vila de Silena, NPCs e diálogos, pântano, catacumbas (dungeon 1 com chave/porta).
 - [ ] **Turno 5** — Milagres/Relíquias, 2–3 fossas do Ato II, mini-bosses.
