@@ -538,6 +538,71 @@ function tileBones(seed) {
   return c;
 }
 
+function tileHellWall() {
+  const c = makeCanvas();
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#42262a';
+  ctx.fillRect(0, 0, TILE, TILE);
+  ctx.fillStyle = '#301a1e';
+  for (let y = 0; y < TILE; y += 4) {
+    ctx.fillRect(0, y, TILE, 1);
+    for (let x = (y / 4) % 2 === 0 ? 4 : 8; x < TILE; x += 8) {
+      ctx.fillRect(x, y, 1, 4);
+    }
+  }
+  ctx.fillStyle = '#582e30';
+  ctx.fillRect(3, 6, 2, 1);
+  ctx.fillRect(11, 13, 2, 1);
+  return c;
+}
+
+function tileHellFloor(seed) {
+  const c = makeCanvas();
+  const ctx = c.getContext('2d');
+  const rand = rng(seed);
+  ctx.fillStyle = '#38282a';
+  ctx.fillRect(0, 0, TILE, TILE);
+  for (let i = 0; i < 8; i++) {
+    ctx.fillStyle = rand() < 0.6 ? '#2e2022' : '#443034';
+    ctx.fillRect((rand() * TILE) | 0, (rand() * TILE) | 0, 2, 1);
+  }
+  // brasas
+  if (rand() < 0.5) {
+    ctx.fillStyle = '#c85820';
+    ctx.fillRect((rand() * TILE) | 0, (rand() * TILE) | 0, 1, 1);
+  }
+  return c;
+}
+
+function tileLava(phase) {
+  const c = makeCanvas();
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#a83c10';
+  ctx.fillRect(0, 0, TILE, TILE);
+  ctx.fillStyle = '#d86018';
+  const off = phase === 0 ? 0 : 3;
+  for (let y = 1; y < TILE; y += 4) {
+    ctx.fillRect((2 + off) % TILE, y, 4, 2);
+    ctx.fillRect((10 + off) % TILE, y + 2, 3, 1);
+  }
+  ctx.fillStyle = '#f8a838';
+  ctx.fillRect((5 + off) % TILE, 5, 2, 1);
+  ctx.fillRect((12 + off) % TILE, 11, 2, 1);
+  return c;
+}
+
+function tileStairs() {
+  const c = makeCanvas();
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#1a1214';
+  ctx.fillRect(0, 0, TILE, TILE);
+  for (let i = 0; i < 4; i++) {
+    ctx.fillStyle = ['#5a5a58', '#4a4a48', '#3a3a38', '#2a2a28'][i];
+    ctx.fillRect(2, 2 + i * 3, 12, 3);
+  }
+  return c;
+}
+
 // Retorna { [tipoDeTile]: [frames...] } — a maioria tem 1 frame, líquidos têm 2.
 export function buildTiles() {
   return {
@@ -558,5 +623,9 @@ export function buildTiles() {
     [T.CWALL]: [tileCatacombWall()],
     [T.GATE]: [tileGate()],
     [T.BONES]: [tileBones(67)],
+    [T.HELLWALL]: [tileHellWall()],
+    [T.HELLFLOOR]: [tileHellFloor(71), tileHellFloor(73)],
+    [T.LAVA]: [tileLava(0), tileLava(1)],
+    [T.STAIRS]: [tileStairs()],
   };
 }

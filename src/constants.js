@@ -26,12 +26,17 @@ export const T = {
   CWALL: 14,    // parede das catacumbas
   GATE: 15,     // portão trancado
   BONES: 16,    // ossadas no piso
+  HELLWALL: 17, // rocha das fossas
+  HELLFLOOR: 18,// cinzas das fossas
+  LAVA: 19,     // fogo líquido (sólido)
+  STAIRS: 20,   // escada descendo
 };
 
 // Tiles que bloqueiam movimento
 export const SOLID = new Set([
   T.WATER, T.TREE, T.ROCK, T.POISON, T.DEADTREE,
   T.ROOF, T.WALL, T.DOOR, T.CWALL, T.GATE,
+  T.HELLWALL, T.LAVA,
 ]);
 
 export const PLAYER_SPEED = 150; // px de tela por segundo

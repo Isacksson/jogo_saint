@@ -15,6 +15,7 @@ const KEYMAP = {
   KeyE: 'interact', Enter: 'interact',
   KeyI: 'inventory', Escape: 'inventory',
   KeyQ: 'potion',
+  Digit1: 'mir1', Digit2: 'mir2',
 };
 
 window.addEventListener('keydown', (e) => {

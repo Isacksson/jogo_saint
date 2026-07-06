@@ -7,12 +7,13 @@ import { GameMap } from './map.js';
 import { MAP_DEFS } from './maps.js';
 import { Camera } from './camera.js';
 import { Player } from './player.js';
-import { Imundo, ImundoChefe, Serpe } from './enemies.js';
+import { Imundo, ImundoChefe, Amon, Serpe } from './enemies.js';
 import { Npc } from './npc.js';
 import { Fx } from './fx.js';
+import { MIRACLES } from './miracles.js';
 import {
   renderHud, renderTitle, renderDeath, renderVictory,
-  renderLocation, renderDialogue,
+  renderLocation, renderDialogue, renderMiracles, renderBossBar,
 } from './hud.js';
 import { renderInventory } from './inventory.js';
 import { serializeWorld, applyPlayer, saveGame, loadSave } from './save.js';
@@ -36,7 +37,7 @@ function getMap(id) {
   return gameMaps[id];
 }
 
-const ENEMY_TYPES = { imundo: Imundo, serpe: Serpe, chefe: ImundoChefe };
+const ENEMY_TYPES = { imundo: Imundo, serpe: Serpe, chefe: ImundoChefe, amon: Amon };
 
 const world = {
   mapId: null,
@@ -45,6 +46,7 @@ const world = {
   player: null,
   enemies: [],
   projectiles: [],
+  spells: [],
   groundItems: [],
   altars: [],
   npcs: [],
@@ -90,10 +92,11 @@ function enterMap(id, tx, ty) {
     return { x: (fx0 + 0.5) * TILE_PX, y: (fy0 + 0.5) * TILE_PX };
   });
   world.projectiles = [];
+  world.spells = [];
   world.total = (def.spawns || []).length;
 
   // o portão das catacumbas permanece aberto se já foi destrancado
-  if (id === 'pantano' && world.flags.catacumbasAbertas) openGate(map);
+  if (id === 'pantano' && world.flags.catacumbasAbertas) map.openGates();
 
   const st = world.mapStates[id];
   if (st) {
@@ -117,14 +120,6 @@ function enterMap(id, tx, ty) {
   camera.follow(world.player.x, world.player.y, 0, map, true);
   locName = def.name;
   locTime = 3.5;
-}
-
-function openGate(map) {
-  for (let y = 0; y < map.h; y++) {
-    for (let x = 0; x < map.w; x++) {
-      if (map.get(x, y) === T.GATE) map.set(x, y, T.STONE);
-    }
-  }
 }
 
 // portão trancado: interação e aviso
@@ -182,7 +177,7 @@ function tryInteract() {
   // conversar com quem estiver perto
   for (const npc of world.npcs) {
     if (npc.isNear(p)) {
-      dlg = { name: npc.name, lines: npc.getLines(world), idx: 0 };
+      dlg = { name: npc.name, lines: npc.getLines(world), idx: 0, grant: npc.grant };
       return;
     }
   }
@@ -198,11 +193,12 @@ function tryInteract() {
     }
   }
 
-  // destrancar o portão das catacumbas
+  // destrancar o portão das catacumbas (o da fossa só abre com a queda de Amon)
+  if (world.mapId !== 'pantano') return;
   const gate = gateCenter();
   if (gate && Math.hypot(p.x - gate.x, p.y - gate.y) < 130) {
     if (world.flags.temChave) {
-      openGate(world.map);
+      world.map.openGates();
       world.flags.catacumbasAbertas = true;
       world.fx.text(gate.x, gate.y - 40, 'O portão range e cede...', '#e8dcb8');
       world.fx.burst(gate.x, gate.y, '#c8c8d0', 16, 140);
@@ -237,7 +233,7 @@ function renderMap(cam) {
       const type = map.get(tx, ty);
       const frames = tiles[type];
       let frame;
-      if (type === T.WATER || type === T.POISON) {
+      if (type === T.WATER || type === T.POISON || type === T.LAVA) {
         frame = frames[Math.floor(elapsed * 1.6) % frames.length]; // ondulação
       } else {
         frame = frames[(tx * 7 + ty * 13) % frames.length]; // variação fixa
@@ -277,16 +273,18 @@ function renderAltars(cam) {
   }
 }
 
-// escuridão das catacumbas: só a luz da tocha em volta do cavaleiro
-function renderDarkness(cam) {
+// escuridão das profundezas: tocha nas catacumbas, brasa avermelhada nas fossas
+function renderDarkness(cam, mode) {
   const p = world.player;
   const x = p.x - cam.x;
   const y = p.y - cam.y - 12;
   const flicker = 6 * Math.sin(elapsed * 9) + 4 * Math.sin(elapsed * 23);
-  const g = ctx.createRadialGradient(x, y, 60, x, y, 240 + flicker);
-  g.addColorStop(0, 'rgba(4, 3, 8, 0)');
-  g.addColorStop(0.55, 'rgba(4, 3, 8, 0.45)');
-  g.addColorStop(1, 'rgba(4, 3, 8, 0.93)');
+  const dark = mode === 'hell' ? '20, 5, 4' : '4, 3, 8';
+  const radius = mode === 'hell' ? 300 : 240;
+  const g = ctx.createRadialGradient(x, y, 60, x, y, radius + flicker);
+  g.addColorStop(0, `rgba(${dark}, 0)`);
+  g.addColorStop(0.55, `rgba(${dark}, 0.4)`);
+  g.addColorStop(1, `rgba(${dark}, ${mode === 'hell' ? 0.82 : 0.93})`);
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
 }
@@ -304,7 +302,17 @@ function frame(now) {
     // diálogo aberto: só avançar/fechar
     if (input.wasPressed('interact') || input.wasPressed('attack')) {
       dlg.idx++;
-      if (dlg.idx >= dlg.lines.length) dlg = null;
+      if (dlg.idx >= dlg.lines.length) {
+        // relíquias e espíritos concedem seu milagre ao fim da conversa
+        if (dlg.grant && !world.flags.milagres?.[dlg.grant]) {
+          world.flags.milagres = world.flags.milagres || {};
+          world.flags.milagres[dlg.grant] = true;
+          const m = MIRACLES[dlg.grant];
+          world.fx.text(player.x, player.y - 66, `✝ ${m.name} (${m.key})`, '#a8c8f8');
+          world.fx.burst(player.x, player.y - 20, '#a8c8f8', 20, 200);
+        }
+        dlg = null;
+      }
     }
   } else if (invOpen) {
     // inventário aberto: navegação da bolsa
@@ -333,6 +341,8 @@ function frame(now) {
     for (const e of world.enemies) e.update(dt, world);
     for (const p of world.projectiles) p.update(dt, world);
     world.projectiles = world.projectiles.filter((p) => !p.dead);
+    for (const s of world.spells) s.update(dt, world);
+    world.spells = world.spells.filter((s) => !s.dead);
     for (const g of world.groundItems) g.update(dt, world);
     world.groundItems = world.groundItems.filter((g) => !g.dead);
     world.fx.update(dt);
@@ -368,12 +378,19 @@ function frame(now) {
   }
 
   for (const p of world.projectiles) p.render(ctx, cam);
+  for (const s of world.spells) s.render(ctx, cam);
   world.fx.render(ctx, cam);
   world.fx.renderTexts(ctx, cam);
 
-  if (world.mapId === 'catacumbas') renderDarkness(cam);
+  if (world.mapId === 'catacumbas') renderDarkness(cam, 'torch');
+  if (world.mapId === 'fossa_ira') renderDarkness(cam, 'hell');
 
   renderHud(ctx, world.player, world, elapsed);
+  renderMiracles(ctx, world.player, world, MIRACLES);
+  const boss = world.enemies.find((e) => e.isBoss && e.alive);
+  if (boss && Math.hypot(boss.x - world.player.x, boss.y - world.player.y) < 620) {
+    renderBossBar(ctx, boss);
+  }
   renderTitle(ctx, Math.min(1, Math.max(0, (6 - elapsed) / 2)));
   renderLocation(ctx, locName, locTime);
   if (world.total > 0 && world.kills >= world.total) renderVictory(ctx, elapsed);

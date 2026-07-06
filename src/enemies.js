@@ -76,8 +76,14 @@ class Enemy {
       world.kills++;
       world.player.gainFury(12);
       world.player.addXp(this.xpValue, world);
+      world.player.faith = Math.min(world.player.faithMax, world.player.faith + 6);
       if (this.keyCarrier && !world.flags.temChave) {
         world.groundItems.push(new GroundItem(this.x, this.y, { kind: 'chave' }));
+      }
+      if (this.opensGate) {
+        world.map.openGates();
+        world.fx.text(this.x, this.y - 60, 'Os selos da fossa se rompem!', '#e8dcb8');
+        world.fx.addShake(6);
       }
       const drop = rollDrop();
       if (drop) world.groundItems.push(new GroundItem(this.x, this.y, drop));
@@ -244,6 +250,117 @@ export class ImundoChefe extends Imundo {
       ctx.strokeText('Gólgor, o Ladrão da Chave', this.x - cam.x, y);
       ctx.fillText('Gólgor, o Ladrão da Chave', this.x - cam.x, y);
     }
+  }
+}
+
+// ---------- Amon, o Furioso: príncipe da Fossa da Ira ----------
+
+export class Amon extends Enemy {
+  constructor(tx, ty) {
+    super(tx, ty);
+    this.hpMax = 300;
+    this.hp = 300;
+    this.speed = 85;
+    this.dmg = 18;
+    this.xpValue = 150;
+    this.scale = 2.3;
+    this.hbW = 15 * SCALE;
+    this.hbH = 8 * SCALE;
+    this.blood = '#5c0c08';
+    this.isBoss = true;
+    this.bossName = 'Amon, o Furioso — Príncipe da Ira';
+    this.opensGate = true;
+    this.windup = 0;
+    this.chargeT = 0;
+    this.chargeX = 0;
+    this.chargeY = 0;
+    this.chargeCd = 2;
+    this.summoned = false;
+    this.hitInCharge = false;
+    this.atkTick = 0;
+  }
+
+  get enraged() {
+    return this.hp <= this.hpMax * 0.3;
+  }
+
+  update(dt, world) {
+    if (!this.alive) return;
+    this.updateCommon(dt, world);
+    this.animTime += dt * (this.enraged ? 1.6 : 1);
+    this.chargeCd = Math.max(0, this.chargeCd - dt);
+
+    const p = world.player;
+    const dx = p.x - this.x;
+    const dy = p.y - this.y;
+    const dist = Math.hypot(dx, dy) || 1;
+
+    // aos 50% de vida, convoca seus servos (uma única vez)
+    if (!this.summoned && this.hp <= this.hpMax * 0.5) {
+      this.summoned = true;
+      world.fx.text(this.x, this.y - 70, 'LEVANTAI-VOS, IMUNDOS!', '#e88060');
+      world.fx.addShake(6);
+      for (let i = 0; i < 3; i++) {
+        const a = (i / 3) * Math.PI * 2;
+        const m = new Imundo(0, 0);
+        m.x = this.x + Math.cos(a) * 70;
+        m.y = this.y + Math.sin(a) * 70;
+        world.enemies.push(m);
+        world.fx.burst(m.x, m.y - 10, '#7c1810', 10, 150);
+      }
+    }
+
+    // preparando a investida: para e ruge
+    if (this.windup > 0) {
+      this.windup -= dt;
+      if (this.windup <= 0) {
+        this.chargeT = 0.55;
+        this.hitInCharge = false;
+        this.chargeX = dx / dist;
+        this.chargeY = dy / dist;
+      }
+      return;
+    }
+
+    // investida devastadora
+    if (this.chargeT > 0) {
+      this.chargeT -= dt;
+      this.move(world.map, this.chargeX * 480, this.chargeY * 480, dt);
+      if (!this.hitInCharge && dist < 52 && p.alive) {
+        this.hitInCharge = true;
+        p.takeDamage(24, this.x, this.y, world);
+      }
+      if (this.chargeT <= 0) this.chargeCd = this.enraged ? 1.6 : 3;
+      return;
+    }
+
+    if (p.alive && dist < 420) {
+      if (dist > 90 && this.chargeCd <= 0) {
+        this.windup = 0.55;
+        world.fx.text(this.x, this.y - 64, '!', '#e88060');
+      } else {
+        const spd = this.enraged ? 135 : this.speed;
+        this.move(world.map, (dx / dist) * spd, (dy / dist) * spd, dt);
+        if (dist < 50 && p.alive && this.atkTick <= 0) {
+          p.takeDamage(this.dmg, this.x, this.y, world);
+          this.atkTick = 1.1;
+        }
+      }
+    } else {
+      this.wander(dt, world, 30);
+    }
+    this.atkTick = Math.max(0, this.atkTick - dt);
+  }
+
+  render(ctx, cam) {
+    if (!this.alive) return;
+    const sprites = buildEnemySprites().imundo;
+    const frame = sprites[Math.floor(this.animTime * 6) % 2];
+    ctx.save();
+    if (this.enraged) ctx.filter = 'saturate(1.8) brightness(1.1)';
+    if (this.windup > 0) ctx.translate((Math.random() - 0.5) * 5, 0);
+    this.renderSprite(ctx, cam, frame);
+    ctx.restore();
   }
 }
 

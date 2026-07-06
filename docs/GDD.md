@@ -134,7 +134,7 @@ Cada turno termina com **commit + push** — o trabalho nunca fica pela metade n
 - [x] **Turno 2** — Combate: combo de espada, lança, esquiva com i-frames, inimigos (Imundo, Serpe) com IA, dano/morte, Fúria Sagrada.
 - [x] **Turno 3** — Loot (raridades, drops), inventário/equipamento, XP/níveis, altares (save).
 - [x] **Turno 4** — Ato I: vila de Silena, NPCs e diálogos, pântano, catacumbas (dungeon 1 com chave/porta).
-- [ ] **Turno 5** — Milagres/Relíquias, 2–3 fossas do Ato II, mini-bosses.
+- [x] **Turno 5** — Milagres/Relíquias (Raio do Trovão, Chuva de Setas), Fossa da Ira com o príncipe Amon.
 - [ ] **Turno 6** — Boss Dragão de Silena, áudio, tela de título/morte, polish, balanceamento.
 - [ ] **Turnos 7+** — Fossas restantes, Ato III, Serpente Antiga, epílogo.
 

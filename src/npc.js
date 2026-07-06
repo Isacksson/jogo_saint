@@ -11,6 +11,7 @@ export class Npc {
     this.y = (def.ty + 0.5) * TILE_PX;
     this.name = def.name;
     this.relic = !!def.relic;
+    this.grant = def.grant;
     this.lines = def.lines;
     this.sprite = this.relic ? buildAltarSprite() : makeVillagerSprite(def.palette || {});
   }

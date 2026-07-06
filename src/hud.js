@@ -60,6 +60,80 @@ export function renderHud(ctx, player, world, elapsed) {
   ctx.fillText(`${player.gold} denários · ${player.potions} poções (Q)${chave}`, VIEW_W - 16, 40);
 }
 
+// milagres desbloqueados (canto inferior esquerdo)
+export function renderMiracles(ctx, player, world, miracles) {
+  const unlocked = Object.entries(miracles).filter(([id]) => world.flags.milagres?.[id]);
+  if (unlocked.length === 0) return;
+  let x = 16;
+  const y = VIEW_H - 64;
+  ctx.save();
+  for (const [id, m] of unlocked) {
+    const can = player.faith >= m.cost;
+    ctx.fillStyle = 'rgba(14, 9, 5, 0.8)';
+    ctx.fillRect(x, y, 48, 48);
+    ctx.strokeStyle = can ? '#8a7442' : '#4a3f2c';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x + 1, y + 1, 46, 46);
+    ctx.globalAlpha = can ? 1 : 0.35;
+    // ícone desenhado à mão
+    ctx.lineCap = 'round';
+    if (id === 'raio') {
+      ctx.strokeStyle = '#f8e880';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x + 28, y + 8);
+      ctx.lineTo(x + 18, y + 24);
+      ctx.lineTo(x + 26, y + 24);
+      ctx.lineTo(x + 18, y + 40);
+      ctx.stroke();
+    } else if (id === 'setas') {
+      ctx.strokeStyle = '#d8c8a0';
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(x + 14 + i * 9, y + 10);
+        ctx.lineTo(x + 10 + i * 9, y + 34);
+        ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#e8dcb8';
+    ctx.font = 'bold 11px Georgia, serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(m.key, x + 4, y + 12);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = can ? '#6a9ee0' : '#4a5a74';
+    ctx.fillText(m.cost, x + 44, y + 43);
+    x += 56;
+  }
+  ctx.restore();
+}
+
+// barra de vida do chefe (topo da tela)
+export function renderBossBar(ctx, boss) {
+  const w = 420;
+  const x = (VIEW_W - w) / 2;
+  const y = 30;
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 14px Georgia, serif';
+  ctx.strokeStyle = 'rgba(10, 6, 2, 0.9)';
+  ctx.lineWidth = 3;
+  ctx.fillStyle = '#e88060';
+  ctx.strokeText(boss.bossName, VIEW_W / 2, y - 6);
+  ctx.fillText(boss.bossName, VIEW_W / 2, y - 6);
+  ctx.fillStyle = 'rgba(14, 9, 5, 0.85)';
+  ctx.fillRect(x - 2, y - 2, w + 4, 16);
+  ctx.strokeStyle = '#8a4432';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x - 1.5, y - 1.5, w + 3, 15);
+  ctx.fillStyle = '#8a1810';
+  ctx.fillRect(x, y, w, 12);
+  ctx.fillStyle = '#d83020';
+  ctx.fillRect(x, y, Math.max(0, boss.hp / boss.hpMax) * w, 12);
+  ctx.restore();
+}
+
 // nome do local, exibido ao entrar num mapa
 export function renderLocation(ctx, name, alpha) {
   if (alpha <= 0) return;

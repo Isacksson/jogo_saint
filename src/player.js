@@ -3,6 +3,7 @@
 import { TILE_PX, SCALE, PLAYER_SPEED } from './constants.js';
 import { input } from './input.js';
 import { buildPlayerSprites } from './sprites.js';
+import { MIRACLES } from './miracles.js';
 
 const SPRITE_PX = 16 * SCALE;
 
@@ -65,6 +66,7 @@ export class Player {
     this.furyTime = 0;
     this.kbX = 0;
     this.kbY = 0;
+    this.castCd = 0;
   }
 
   get alive() {
@@ -129,6 +131,21 @@ export class Player {
     world.fx.text(this.x, this.y - 58, `Equipado: ${item.name}`, '#e8dcb8');
   }
 
+  tryCast(id, world) {
+    if (this.castCd > 0) return;
+    const m = MIRACLES[id];
+    if (!world.flags.milagres?.[id]) return;
+    if (this.faith < m.cost) {
+      world.fx.text(this.x, this.y - 58, 'Fé insuficiente...', '#8098c0');
+      this.castCd = 0.3;
+      return;
+    }
+    this.faith -= m.cost;
+    this.castCd = 0.5;
+    m.cast(world, this);
+    world.fx.text(this.x, this.y - 62, m.name + '!', '#a8c8f8');
+  }
+
   usePotion(world) {
     if (this.potions <= 0 || this.hp >= this.hpMax || !this.alive) return;
     this.potions--;
@@ -144,6 +161,16 @@ export class Player {
     this.hurtFlash = Math.max(0, this.hurtFlash - dt);
     this.dodgeCd = Math.max(0, this.dodgeCd - dt);
     this.comboWindow = Math.max(0, this.comboWindow - dt);
+    this.castCd = Math.max(0, this.castCd - dt);
+
+    // a Fé se recompõe devagar
+    this.faith = Math.min(this.faithMax, this.faith + 2.5 * dt);
+
+    // milagres (teclas 1-2)
+    if (this.state === 'normal') {
+      if (input.wasPressed('mir1')) this.tryCast('raio', world);
+      if (input.wasPressed('mir2')) this.tryCast('setas', world);
+    }
 
     // empurrão recebido
     if (Math.abs(this.kbX) + Math.abs(this.kbY) > 2) {

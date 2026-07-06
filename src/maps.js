@@ -221,6 +221,10 @@ export const MAP_DEFS = {
       m.fillRect(17, 16, 2, 6, T.STONE);
       // santuário dos mártires
       m.fillRect(10, 22, 16, 6, T.STONE);
+      // a escada que desce à Primeira Fossa
+      m.fillRect(26, 24, 4, 2, T.STONE);
+      m.set(29, 24, T.STAIRS);
+      m.set(29, 25, T.STAIRS);
 
       // ossadas espalhadas
       for (let i = 0; i < 30; i++) {
@@ -239,14 +243,72 @@ export const MAP_DEFS = {
       {
         tx: 18, ty: 24, name: 'Relíquia de Santa Bárbara',
         relic: true,
-        lines: (flags) => [
-          'Sobre o pedestal repousa uma relíquia. Um trovão distante ecoa quando tua mão se aproxima...',
-          '"Aguenta firme, cavaleiro. Quando a tempestade vier, eu serei o raio na tua mão." (Turno 5)',
-        ],
+        grant: 'raio',
+        lines: (flags) => flags.milagres?.raio
+          ? ['O pedestal está vazio. O trovão agora habita tua mão.']
+          : [
+            'Sobre o pedestal repousa uma relíquia. Um trovão distante ecoa quando tua mão se aproxima...',
+            '"Aguenta firme, cavaleiro. Quando a tempestade vier, eu serei o raio na tua mão."',
+            '✝ Milagre recebido: RAIO DO TROVÃO — tecla 1 (30 de Fé)',
+          ],
       },
     ],
     portals: [
       { x: 14, y: 2, w: 8, h: 1, to: 'pantano', tx: 22, ty: 28 },
+      { x: 29, y: 24, w: 1, h: 2, to: 'fossa_ira', tx: 4, ty: 3 },
+    ],
+  },
+
+  // ---------- Primeira Fossa: a Ira ----------
+  fossa_ira: {
+    name: 'Primeira Fossa — A Ira',
+    w: 34, h: 32,
+    base: T.HELLWALL,
+    outside: T.HELLWALL,
+    gateFloor: T.HELLFLOOR,
+    generate(m) {
+      const rand = rng(1313);
+      // antecâmara (chegada da escada)
+      m.fillRect(2, 2, 8, 5, T.HELLFLOOR);
+      // descida serpenteante
+      m.fillRect(8, 6, 3, 6, T.HELLFLOOR);
+      m.fillRect(8, 11, 12, 4, T.HELLFLOOR);
+      m.fillRect(18, 14, 3, 6, T.HELLFLOOR);
+      // arena de Amon
+      m.fillRect(8, 19, 20, 9, T.HELLFLOOR);
+      // rios de fogo na arena (com vau diante do portão selado)
+      m.fillRect(8, 19, 2, 9, T.LAVA);
+      m.fillRect(26, 19, 2, 9, T.LAVA);
+      m.fillRect(26, 23, 2, 2, T.HELLFLOOR);
+      m.fillRect(13, 11, 2, 2, T.LAVA);
+      // alcova selada do espírito
+      m.fillRect(29, 22, 4, 4, T.HELLFLOOR);
+      m.set(28, 23, T.GATE);
+      m.set(28, 24, T.GATE);
+    },
+    spawns: [
+      ['imundo', 9, 12], ['imundo', 12, 13], ['serpe', 17, 12],
+      ['imundo', 19, 16], ['serpe', 19, 18],
+      ['amon', 18, 23],
+    ],
+    altars: [[4, 4]],
+    npcs: [
+      {
+        tx: 31, ty: 23, name: 'Espírito de São Sebastião',
+        palette: { W: '#c8d8e8', R: '#8098b0', H: '#e8e0d0', S: '#d8e0e8' },
+        grant: 'setas',
+        lines: (flags) => flags.milagres?.setas
+          ? ['"Vai, cavaleiro. Minhas setas voam contigo."']
+          : [
+            'Um vulto translúcido se ergue entre as brasas: um jovem soldado, o corpo marcado por cem flechas.',
+            '"Fui alvejado por ordem do imperador, e sobrevivi para ser alvejado de novo. Conheço a ira — e a venci com paciência."',
+            '"Toma minhas setas, irmão de armas. Que elas caiam sobre os malignos como caíram sobre mim."',
+            '✝ Milagre recebido: CHUVA DE SETAS — tecla 2 (25 de Fé)',
+          ],
+      },
+    ],
+    portals: [
+      { x: 2, y: 2, w: 1, h: 2, to: 'catacumbas', tx: 27, ty: 24 },
     ],
   },
 };
