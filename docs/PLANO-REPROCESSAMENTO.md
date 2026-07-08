@@ -25,14 +25,16 @@ os padrões criados nele (portais, mapas, diálogo) são reaproveitados por todo
 ## BLOCO A — Fundação & Qualidade
 *Reprocessa o que já existe e cria os padrões que a v0.2 vai reutilizar. Sessões curtas.*
 
-- [ ] **A1 — Portais visíveis e reversíveis** *(corrige o bug relatado)*
-  Hoje as entradas são visíveis, mas as **saídas** (voltar das catacumbas e de
-  TODAS as fossas) não têm marcador — o jogador atravessa uma parede de memória.
-  - Desenhar um marcador em **todo** portal, nos dois sentidos: escada/arco/porta
-    no tile de saída, não só na entrada.
-  - Rótulo de proximidade contextual: `▼ Descer`, `▲ Subir`, `◄ Voltar a <lugar>`.
-  - Varrer catacumbas + as 6 fossas (Ira, Inveja, Gula, Avareza, Luxúria, Preguiça).
-  - Critério de aceite: em cada mapa subterrâneo dá para *ver* por onde se sai.
+- [x] **A1 — Portais visíveis e reversíveis** *(corrige o bug relatado)* ✔ feito
+  Marcador universal para TODO portal (`renderPortals` em `main.js`), desenhado
+  depois da escuridão para brilhar através dela: limiar dourado pulsante + setas
+  deslizando no sentido da saída (direção inferida pelo formato do portal) +
+  rótulo com o nome do destino (`◄ Catacumbas dos Mártires`, `▼ Pântano...`).
+  Testado nas catacumbas, na Fossa da Ira e em Silena — voltar já é visível e
+  funcional nos dois sentidos.
+  - *Observação para A2*: os portais de volta das fossas são alvos pequenos (1×2
+    no canto). O marcador resolve a visibilidade; ao refatorar mapas, vale
+    aumentar a zona de gatilho desses portais para facilitar o acerto.
 
 - [ ] **A2 — Refatoração de mapas e portais**
   As 6 fossas são quase copy-paste. Extrair um `makeFossa({...})` e helpers de

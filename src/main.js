@@ -342,6 +342,89 @@ function renderAltars(cam) {
   }
 }
 
+// Marca TODO portal com um limiar luminoso + seta de direção, para que toda
+// saída seja visível — inclusive as de volta das catacumbas e das fossas, que
+// antes eram piso comum colado na parede. Desenhado depois da escuridão para
+// brilhar através dela.
+function renderPortals(cam) {
+  const map = world.map;
+  const p = world.player;
+  for (const portal of world.portals) {
+    const rx = portal.x * TILE_PX - cam.x;
+    const ry = portal.y * TILE_PX - cam.y;
+    const rw = portal.w * TILE_PX;
+    const rh = portal.h * TILE_PX;
+    const cx = rx + rw / 2;
+    const cy = ry + rh / 2;
+
+    // direção da saída pelo FORMATO do portal: faixa vertical (mais alta que
+    // larga) é uma porta lateral (◄►); faixa horizontal, uma porta cima/baixo (▲▼).
+    // O sentido é dado pela borda do mapa que aquele eixo encosta.
+    const dL = portal.x, dR = map.w - (portal.x + portal.w);
+    const dT = portal.y, dB = map.h - (portal.y + portal.h);
+    let ax = 0, ay = 0, arrow = '▼';
+    if (portal.h >= portal.w) {
+      if (dL <= dR) { ax = -1; arrow = '◄'; } else { ax = 1; arrow = '►'; }
+    } else {
+      if (dT <= dB) { ay = -1; arrow = '▲'; } else { ay = 1; arrow = '▼'; }
+    }
+
+    const wcx = (portal.x + portal.w / 2) * TILE_PX;
+    const wcy = (portal.y + portal.h / 2) * TILE_PX;
+    const near = p.alive && Math.hypot(p.x - wcx, p.y - wcy) < 120;
+    const pulse = 0.22 + 0.1 * Math.sin(elapsed * 3);
+
+    ctx.save();
+    // limiar luminoso sobre os tiles do portal
+    ctx.globalAlpha = near ? 0.5 : pulse;
+    ctx.fillStyle = '#f0d060';
+    ctx.fillRect(rx, ry, rw, rh);
+    ctx.globalAlpha = near ? 0.95 : 0.45 + pulse;
+    ctx.strokeStyle = '#f8e8a0';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(rx + 1, ry + 1, rw - 2, rh - 2);
+
+    // setas deslizando para fora, indicando o sentido da passagem
+    ctx.globalAlpha = 0.85;
+    ctx.strokeStyle = '#fff4c8';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    const slide = (elapsed * 36) % 18;
+    for (let i = 0; i < 2; i++) {
+      const off = i * 12 + slide - 18;
+      const bx = cx + ax * off;
+      const by = cy + ay * off;
+      ctx.beginPath();
+      if (ax !== 0) {
+        ctx.moveTo(bx - ax * 6, by - 8);
+        ctx.lineTo(bx, by);
+        ctx.lineTo(bx - ax * 6, by + 8);
+      } else {
+        ctx.moveTo(bx - 8, by - ay * 6);
+        ctx.lineTo(bx, by);
+        ctx.lineTo(bx + 8, by - ay * 6);
+      }
+      ctx.stroke();
+    }
+
+    // rótulo com o destino, posicionado longe da parede que o portal encosta
+    const name = MAP_DEFS[portal.to]?.name || 'Passagem';
+    let lx = cx, ly;
+    if (ay < 0) ly = ry + rh + 18;      // saída em cima → rótulo abaixo (dentro da sala)
+    else if (ay > 0) ly = ry - 8;        // saída embaixo → rótulo acima
+    else ly = cy - 14;                   // saída lateral → rótulo acima do centro
+    ctx.globalAlpha = near ? 1 : 0.75;
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 12px Georgia, serif';
+    ctx.strokeStyle = 'rgba(10, 6, 2, 0.9)';
+    ctx.lineWidth = 3;
+    ctx.strokeText(`${arrow} ${name}`, lx, ly);
+    ctx.fillStyle = '#f8e8b0';
+    ctx.fillText(`${arrow} ${name}`, lx, ly);
+    ctx.restore();
+  }
+}
+
 // escuridão das profundezas: tocha nas catacumbas, brasa avermelhada nas fossas
 function renderDarkness(cam, mode) {
   const p = world.player;
@@ -512,6 +595,9 @@ function frame(now) {
 
   const darkMode = MAP_DEFS[world.mapId].dark;
   if (darkMode) renderDarkness(cam, darkMode);
+
+  // marcadores de portal por cima da escuridão: exits sempre visíveis
+  renderPortals(cam);
 
   // clarão da Luz que Cega
   if (world.fx.whiteFlash > 0) {
