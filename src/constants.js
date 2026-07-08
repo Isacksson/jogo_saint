@@ -31,6 +31,7 @@ export const T = {
   LAVA: 19,     // fogo líquido (sólido)
   STAIRS: 20,   // escada descendo
   ENVYFLOOR: 21,// pedra esverdeada da Fossa da Inveja
+  FEASTFLOOR: 22,// salão dourado da Fossa da Gula
 };
 
 // Tiles que bloqueiam movimento

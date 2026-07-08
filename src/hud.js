@@ -95,6 +95,19 @@ export function renderMiracles(ctx, player, world, miracles) {
         ctx.lineTo(x + 10 + i * 9, y + 34);
         ctx.stroke();
       }
+    } else if (id === 'jejum') {
+      // escudo
+      ctx.strokeStyle = '#b8d8f0';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x + 24, y + 9);
+      ctx.lineTo(x + 34, y + 14);
+      ctx.lineTo(x + 34, y + 24);
+      ctx.quadraticCurveTo(x + 34, y + 34, x + 24, y + 39);
+      ctx.quadraticCurveTo(x + 14, y + 34, x + 14, y + 24);
+      ctx.lineTo(x + 14, y + 14);
+      ctx.closePath();
+      ctx.stroke();
     } else if (id === 'luz') {
       // sol radiante
       ctx.strokeStyle = '#f8f0c0';

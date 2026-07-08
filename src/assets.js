@@ -18,6 +18,8 @@ const FILES = {
   invejoso: 'assets/invejoso.png',
   leviata: 'assets/leviata.png',
   luzia: 'assets/luzia.png',
+  possesso: 'assets/possesso.png',
+  belzebu: 'assets/belzebu.png',
   coin: 'assets/coin.png',
   potion: 'assets/potion.png',
   key: 'assets/key.png',

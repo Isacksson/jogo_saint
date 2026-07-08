@@ -172,10 +172,19 @@ function castLuz(world, player) {
   }
 }
 
+// ---------- Jejum que Fortalece (Santo Antão) ----------
+
+function castJejum(world, player) {
+  player.shieldT = 9;
+  world.fx.burst(player.x, player.y - 20, '#b8d8f0', 18, 180);
+  world.fx.text(player.x, player.y - 78, 'A carne renuncia; o espírito resiste.', '#b8d8f0');
+}
+
 // ---------- registro ----------
 
 export const MIRACLES = {
   raio: { key: '1', name: 'Raio do Trovão', saint: 'Santa Bárbara', cost: 30, cast: castRaio },
   setas: { key: '2', name: 'Chuva de Setas', saint: 'São Sebastião', cost: 25, cast: castSetas },
   luz: { key: '3', name: 'Luz que Cega', saint: 'Santa Luzia', cost: 35, cast: castLuz },
+  jejum: { key: '4', name: 'Jejum que Fortalece', saint: 'Santo Antão', cost: 30, cast: castJejum },
 };

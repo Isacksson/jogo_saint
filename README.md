@@ -22,7 +22,7 @@ python3 -m http.server 8000
 | Esquiva (i-frames) | Espaço / Shift |
 | Fúria Sagrada (com a barra cheia) | L / C |
 | Beber poção | Q |
-| Milagres (após receber a relíquia) | 1 / 2 / 3 |
+| Milagres (após receber a relíquia) | 1 / 2 / 3 / 4 |
 | Silenciar música e sons | M |
 | Inventário | I / Esc |
 | Orar no altar (cura + salva o jogo) | E |
@@ -65,4 +65,6 @@ Os gráficos usam o **[Ninja Adventure Asset Pack](https://pixel-boy.itch.io/nin
 
 - [x] **T8 — Fossa da Inveja**: galeria verde-cobiça sob a Fossa da Ira, Invejosos, o príncipe **Leviatã** (invoca ao perder metade da vida) e o espírito de **Santa Luzia** com a *Luz que Cega* (tecla 3 — atordoa todos os malignos próximos com um clarão)
 
-O roadmap detalhado dos passos T9–T15 (um por sessão, cada um com commit) está no [`docs/GDD.md`](docs/GDD.md). Próximo: **T9 — Fossa da Gula** (príncipe Belzebu + Santo Antão).
+- [x] **T9 — Fossa da Gula**: o salão do banquete com a mesa interminável e caldeirões de fogo, Possessos que explodem em miasma ao morrer, o príncipe **Belzebu** e o espírito de **Santo Antão** com o *Jejum que Fortalece* (tecla 4 — escudo de +6 de defesa por 9s)
+
+O roadmap detalhado dos passos T10–T15 (um por sessão, cada um com commit) está no [`docs/GDD.md`](docs/GDD.md). Próximo: **T10 — Fossa da Avareza** (príncipe Mamon + São Lourenço).

@@ -411,6 +411,48 @@ export class Leviata extends Amon {
   }
 }
 
+// ---------- Possesso: lento e voraz; explode em miasma ao morrer ----------
+
+export class Possesso extends Imundo {
+  constructor(tx, ty) {
+    super(tx, ty);
+    this.hpMax = 70;
+    this.hp = 70;
+    this.speed = 58;
+    this.dmg = 12;
+    this.xpValue = 26;
+    this.blood = '#5a7a30';
+    this.sheetName = 'possesso';
+  }
+
+  onDeath(world) {
+    // o miasma da gula
+    world.fx.burst(this.x, this.y - 10, '#8ab040', 22, 200);
+    world.fx.addShake(3);
+    const p = world.player;
+    if (p.alive && Math.hypot(p.x - this.x, p.y - this.y) < 84) {
+      p.takeDamage(14, this.x, this.y, world);
+    }
+  }
+}
+
+// ---------- Belzebu: príncipe da Fossa da Gula ----------
+
+export class Belzebu extends Amon {
+  constructor(tx, ty) {
+    super(tx, ty);
+    this.hpMax = 440;
+    this.hp = 440;
+    this.dmg = 22;
+    this.xpValue = 260;
+    this.blood = '#6a5020';
+    this.bossName = 'Belzebu — Príncipe da Gula';
+    this.sheetName = 'belzebu';
+    this.minionType = Possesso;
+    this.summonCry = 'DEVORAI TUDO!';
+  }
+}
+
 // ---------- Serpe: cria do Dragão, mantém distância e cospe veneno ----------
 
 export class Serpe extends Enemy {

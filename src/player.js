@@ -68,6 +68,7 @@ export class Player {
     this.kbX = 0;
     this.kbY = 0;
     this.castCd = 0;
+    this.shieldT = 0; // Jejum que Fortalece
   }
 
   get alive() {
@@ -95,7 +96,7 @@ export class Player {
   }
 
   get defense() {
-    return this.equip.escudo?.value || 0;
+    return (this.equip.escudo?.value || 0) + (this.shieldT > 0 ? 6 : 0);
   }
 
   get furyMult() {
@@ -165,6 +166,7 @@ export class Player {
     this.dodgeCd = Math.max(0, this.dodgeCd - dt);
     this.comboWindow = Math.max(0, this.comboWindow - dt);
     this.castCd = Math.max(0, this.castCd - dt);
+    this.shieldT = Math.max(0, this.shieldT - dt);
 
     // a Fé se recompõe devagar
     this.faith = Math.min(this.faithMax, this.faith + 2.5 * dt);
@@ -174,6 +176,7 @@ export class Player {
       if (input.wasPressed('mir1')) this.tryCast('raio', world);
       if (input.wasPressed('mir2')) this.tryCast('setas', world);
       if (input.wasPressed('mir3')) this.tryCast('luz', world);
+      if (input.wasPressed('mir4')) this.tryCast('jejum', world);
     }
 
     // empurrão recebido
@@ -402,6 +405,18 @@ export class Player {
     ctx.beginPath();
     ctx.ellipse(this.x - camera.x, this.y - camera.y + 2, 7 * SCALE / 2, 3 * SCALE / 2, 0, 0, Math.PI * 2);
     ctx.fill();
+
+    // anel do Jejum que Fortalece
+    if (this.shieldT > 0 && this.alive) {
+      ctx.save();
+      ctx.globalAlpha = Math.min(0.6, this.shieldT * 0.4) * (0.7 + 0.3 * Math.sin(this.shieldT * 6));
+      ctx.strokeStyle = '#b8d8f0';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(this.x - camera.x, this.cy - camera.y, 30, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
 
     // aura da Fúria Sagrada
     if (this.furyTime > 0) {

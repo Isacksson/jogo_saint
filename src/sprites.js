@@ -84,6 +84,8 @@ export function buildEnemySprites() {
       amon: sheetDirs(images.amon),
       invejoso: sheetDirs(images.invejoso),
       leviata: sheetDirs(images.leviata),
+      possesso: sheetDirs(images.possesso),
+      belzebu: sheetDirs(images.belzebu),
     };
   }
   return enemyCache;
@@ -158,6 +160,7 @@ const SHEET_TILES = {
   [T.STONE]: [[17, 33], [16, 31]],
   [T.HELLFLOOR]: [[3, 33], [2, 31]],
   [T.ENVYFLOOR]: [[24, 33], [23, 31]],
+  [T.FEASTFLOOR]: [[20, 11]],
   [T.GATE]: [[16, 37]],
 };
 

@@ -8,7 +8,10 @@ import { GameMap } from './map.js';
 import { MAP_DEFS } from './maps.js';
 import { Camera } from './camera.js';
 import { Player } from './player.js';
-import { Imundo, ImundoChefe, Amon, Dragao, Serpe, Invejoso, Leviata } from './enemies.js';
+import {
+  Imundo, ImundoChefe, Amon, Dragao, Serpe,
+  Invejoso, Leviata, Possesso, Belzebu,
+} from './enemies.js';
 import { initAudio, updateMusic, setMood, toggleMute, sfx } from './audio.js';
 import { Npc } from './npc.js';
 import { Fx } from './fx.js';
@@ -91,6 +94,7 @@ const ENEMY_TYPES = {
   imundo: Imundo, serpe: Serpe, chefe: ImundoChefe,
   amon: Amon, dragao: Dragao,
   invejoso: Invejoso, leviata: Leviata,
+  possesso: Possesso, belzebu: Belzebu,
 };
 
 // o navegador só libera áudio após o primeiro gesto do usuário

@@ -143,7 +143,7 @@ Cada turno termina com **commit + push** — o trabalho nunca fica pela metade n
 Cada fossa segue a mesma receita (~1 sessão): mapa novo + 1 inimigo temático + 1 príncipe (chefe) + espírito do santo com milagre + teste + commit. Os sprites dos príncipes já estão em `assets/` (baixados no Turno 8 para poupar redescoberta).
 
 - [x] **T8 — Fossa da Inveja**: príncipe Leviatã, Invejosos (mobs), milagre *Luz que Cega* de Santa Luzia (tecla 3, atordoa os malignos).
-- [ ] **T9 — Fossa da Gula**: príncipe Belzebu (`assets/belzebu.png`), milagre *Jejum que Fortalece* de Santo Antão (tecla 4, escudo temporário).
+- [x] **T9 — Fossa da Gula**: príncipe Belzebu, Possessos (explodem em miasma), milagre *Jejum que Fortalece* de Santo Antão (tecla 4, escudo temporário).
 - [ ] **T10 — Fossa da Avareza**: príncipe Mamon (`assets/mamon.png`), milagre *Fogo que Purifica* de São Lourenço (tecla 5, nova de fogo).
 - [ ] **T11 — Fossa da Luxúria**: príncipe Asmodeu (`assets/asmodeu.png`), milagre *Cordeiro Guardião* de Santa Inês (tecla 6, aliado invocado).
 - [ ] **T12 — Fossa da Preguiça**: príncipe Belfegor (`assets/belfegor.png`), milagre *Vade Retro* de São Bento (tecla 7, repele os malignos); fecho do Ato II.

@@ -409,6 +409,11 @@ export const MAP_DEFS = {
       m.fillRect(29, 22, 4, 4, T.ENVYFLOOR);
       m.set(28, 23, T.GATE);
       m.set(28, 24, T.GATE);
+
+      // a escada que desce à Terceira Fossa
+      m.fillRect(30, 26, 2, 3, T.ENVYFLOOR);
+      m.set(30, 29, T.STAIRS);
+      m.set(31, 29, T.STAIRS);
     },
     spawns: [
       ['invejoso', 8, 8], ['invejoso', 9, 13], ['serpe', 14, 14],
@@ -434,6 +439,65 @@ export const MAP_DEFS = {
     ],
     portals: [
       { x: 2, y: 2, w: 1, h: 2, to: 'fossa_ira', tx: 30, ty: 27 },
+      { x: 30, y: 29, w: 2, h: 1, to: 'fossa_gula', tx: 4, ty: 3 },
+    ],
+  },
+
+  // ---------- Terceira Fossa: a Gula ----------
+  fossa_gula: {
+    name: 'Terceira Fossa — A Gula',
+    w: 34, h: 32,
+    base: T.HELLWALL,
+    outside: T.HELLWALL,
+    gateFloor: T.FEASTFLOOR,
+    dark: 'hell',
+    mood: 'dark',
+    generate(m) {
+      // antecâmara (chegada da escada)
+      m.fillRect(2, 2, 7, 5, T.FEASTFLOOR);
+      // corredor das migalhas
+      m.fillRect(8, 6, 3, 6, T.FEASTFLOOR);
+      m.fillRect(8, 11, 16, 4, T.FEASTFLOOR);
+      m.fillRect(21, 14, 3, 5, T.FEASTFLOOR);
+      // caldeirões ferventes
+      m.fillRect(12, 12, 2, 2, T.LAVA);
+      m.fillRect(18, 11, 2, 2, T.LAVA);
+      // o salão do banquete (arena de Belzebu)
+      m.fillRect(8, 19, 20, 9, T.FEASTFLOOR);
+      m.fillRect(8, 19, 2, 9, T.LAVA);
+      m.fillRect(26, 19, 2, 9, T.LAVA);
+      m.fillRect(26, 22, 2, 2, T.FEASTFLOOR);
+      // a mesa interminável (obstáculos no salão)
+      m.fillRect(13, 22, 8, 1, T.CWALL);
+      // alcova selada de Santo Antão
+      m.fillRect(29, 21, 4, 4, T.FEASTFLOOR);
+      m.set(28, 22, T.GATE);
+      m.set(28, 23, T.GATE);
+    },
+    spawns: [
+      ['possesso', 9, 8], ['possesso', 10, 13], ['serpe', 16, 13],
+      ['possesso', 20, 12], ['invejoso', 22, 16],
+      ['possesso', 12, 25], ['belzebu', 18, 25],
+    ],
+    altars: [[4, 4]],
+    npcs: [
+      {
+        tx: 31, ty: 22, name: 'Espírito de Santo Antão',
+        sprite: 'espirito',
+        ghost: true,
+        grant: 'jejum',
+        lines: (flags) => flags.milagres?.jejum
+          ? ['"Que o teu pão seja a Palavra, cavaleiro. O resto é migalha."']
+          : [
+            'Junto ao banquete apodrecido, um eremita de hábito branco ora de olhos fechados, indiferente ao festim.',
+            '"No deserto, os demônios me ofereceram mesas fartas. Recusei — e cada recusa me fez mais forte que a fome."',
+            '"Aprende o meu Jejum: quando a carne renuncia, nem o dente da besta a atravessa."',
+            '✝ Milagre recebido: JEJUM QUE FORTALECE — tecla 4 (30 de Fé)',
+          ],
+      },
+    ],
+    portals: [
+      { x: 2, y: 2, w: 1, h: 2, to: 'fossa_inveja', tx: 30, ty: 27 },
     ],
   },
 };
