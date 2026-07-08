@@ -453,6 +453,35 @@ export class Belzebu extends Amon {
   }
 }
 
+// ---------- Mamon: príncipe da Fossa da Avareza ----------
+
+export class Mamon extends Amon {
+  constructor(tx, ty) {
+    super(tx, ty);
+    this.hpMax = 500;
+    this.hp = 500;
+    this.dmg = 24;
+    this.xpValue = 300;
+    this.blood = '#6a5a20';
+    this.bossName = 'Mamon — Príncipe da Avareza';
+    this.sheetName = 'mamon';
+    this.minionType = Invejoso;
+    this.summonCry = 'TUDO TEM PREÇO!';
+  }
+
+  takeDamage(dmg, kbX, kbY, world) {
+    const wasAlive = this.alive;
+    super.takeDamage(dmg, kbX, kbY, world);
+    // a avareza sangra ouro
+    if (wasAlive && Math.random() < 0.35) {
+      world.groundItems.push(new GroundItem(this.x, this.y, {
+        kind: 'gold',
+        amount: 3 + Math.floor(Math.random() * 6),
+      }));
+    }
+  }
+}
+
 // ---------- Serpe: cria do Dragão, mantém distância e cospe veneno ----------
 
 export class Serpe extends Enemy {

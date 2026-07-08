@@ -180,6 +180,67 @@ function castJejum(world, player) {
   world.fx.text(player.x, player.y - 78, 'A carne renuncia; o espírito resiste.', '#b8d8f0');
 }
 
+// ---------- Fogo que Purifica (São Lourenço) ----------
+
+class FireNova {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.t = 0;
+    this.dur = 0.6;
+    this.hit = false;
+    this.dead = false;
+  }
+
+  update(dt, world) {
+    this.t += dt;
+    if (!this.hit && this.t >= 0.12) {
+      this.hit = true;
+      world.fx.addShake(5);
+      for (const e of world.enemies) {
+        if (!e.alive) continue;
+        const dx = e.x - this.x;
+        const dy = e.y - this.y;
+        const d = Math.hypot(dx, dy) || 1;
+        if (d < 190) {
+          e.takeDamage(28, (dx / d) * 260, (dy / d) * 260, world);
+        }
+      }
+    }
+    // brasas voando no anel
+    const r = (this.t / this.dur) * 200;
+    if (Math.random() < dt * 60) {
+      const a = Math.random() * Math.PI * 2;
+      world.fx.spark(this.x + Math.cos(a) * r, this.y + Math.sin(a) * r * 0.7, '#f08030');
+    }
+    if (this.t >= this.dur) this.dead = true;
+  }
+
+  render(ctx, cam) {
+    const p = this.t / this.dur;
+    const r = p * 200;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, 1 - p);
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = '#e05818';
+    ctx.beginPath();
+    ctx.ellipse(this.x - cam.x, this.y - cam.y, r, r * 0.7, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#f8c048';
+    ctx.beginPath();
+    ctx.ellipse(this.x - cam.x, this.y - cam.y, r * 0.85, r * 0.6, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function castFogo(world, player) {
+  world.spells.push(new FireNova(player.x, player.cy));
+  world.fx.burst(player.x, player.cy, '#f08030', 16, 220);
+  world.fx.text(player.x, player.y - 78, 'Que o fogo purifique!', '#f8a848');
+}
+
 // ---------- registro ----------
 
 export const MIRACLES = {
@@ -187,4 +248,5 @@ export const MIRACLES = {
   setas: { key: '2', name: 'Chuva de Setas', saint: 'São Sebastião', cost: 25, cast: castSetas },
   luz: { key: '3', name: 'Luz que Cega', saint: 'Santa Luzia', cost: 35, cast: castLuz },
   jejum: { key: '4', name: 'Jejum que Fortalece', saint: 'Santo Antão', cost: 30, cast: castJejum },
+  fogo: { key: '5', name: 'Fogo que Purifica', saint: 'São Lourenço', cost: 40, cast: castFogo },
 };

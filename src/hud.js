@@ -108,6 +108,21 @@ export function renderMiracles(ctx, player, world, miracles) {
       ctx.lineTo(x + 14, y + 14);
       ctx.closePath();
       ctx.stroke();
+    } else if (id === 'fogo') {
+      // chama
+      ctx.strokeStyle = '#f8a848';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x + 24, y + 8);
+      ctx.quadraticCurveTo(x + 34, y + 20, x + 30, y + 30);
+      ctx.quadraticCurveTo(x + 27, y + 38, x + 24, y + 38);
+      ctx.quadraticCurveTo(x + 15, y + 36, x + 17, y + 26);
+      ctx.quadraticCurveTo(x + 19, y + 18, x + 24, y + 8);
+      ctx.stroke();
+      ctx.fillStyle = '#e05818';
+      ctx.beginPath();
+      ctx.arc(x + 24, y + 31, 4, 0, Math.PI * 2);
+      ctx.fill();
     } else if (id === 'luz') {
       // sol radiante
       ctx.strokeStyle = '#f8f0c0';

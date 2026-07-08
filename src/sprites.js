@@ -86,6 +86,7 @@ export function buildEnemySprites() {
       leviata: sheetDirs(images.leviata),
       possesso: sheetDirs(images.possesso),
       belzebu: sheetDirs(images.belzebu),
+      mamon: sheetDirs(images.mamon),
     };
   }
   return enemyCache;
@@ -187,6 +188,17 @@ function tintedWater(green) {
   return frames;
 }
 
+// piso da Avareza: pedra clara com moedas perdidas
+function treasureTiles() {
+  const plain = cut(16, 31);
+  const coined = [[3, 7], [8, 2]].map(([ox, oy]) => {
+    const c = cut(17, 33);
+    c.getContext('2d').drawImage(images.coin, ox, oy);
+    return c;
+  });
+  return [plain, ...coined];
+}
+
 function bonesTiles() {
   // ossadas compostas sobre o piso de pedra
   const skull = cut(2, 17);
@@ -272,6 +284,7 @@ export function buildTiles() {
     tiles[type] = coords.map(([tx, ty]) => cut(tx, ty));
   }
   tiles[T.FLOWER] = [flowerTile()];
+  tiles[T.TREASURE] = treasureTiles();
   tiles[T.WATER] = tintedWater(false);
   tiles[T.POISON] = tintedWater(true);
   tiles[T.BONES] = bonesTiles();

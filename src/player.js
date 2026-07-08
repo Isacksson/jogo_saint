@@ -177,6 +177,7 @@ export class Player {
       if (input.wasPressed('mir2')) this.tryCast('setas', world);
       if (input.wasPressed('mir3')) this.tryCast('luz', world);
       if (input.wasPressed('mir4')) this.tryCast('jejum', world);
+      if (input.wasPressed('mir5')) this.tryCast('fogo', world);
     }
 
     // empurrão recebido

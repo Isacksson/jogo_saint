@@ -32,6 +32,7 @@ export const T = {
   STAIRS: 20,   // escada descendo
   ENVYFLOOR: 21,// pedra esverdeada da Fossa da Inveja
   FEASTFLOOR: 22,// salão dourado da Fossa da Gula
+  TREASURE: 23, // piso com moedas da Fossa da Avareza
 };
 
 // Tiles que bloqueiam movimento

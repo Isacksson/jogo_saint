@@ -22,7 +22,7 @@ python3 -m http.server 8000
 | Esquiva (i-frames) | Espaço / Shift |
 | Fúria Sagrada (com a barra cheia) | L / C |
 | Beber poção | Q |
-| Milagres (após receber a relíquia) | 1 / 2 / 3 / 4 |
+| Milagres (após receber a relíquia) | 1 – 5 |
 | Silenciar música e sons | M |
 | Inventário | I / Esc |
 | Orar no altar (cura + salva o jogo) | E |
@@ -67,4 +67,6 @@ Os gráficos usam o **[Ninja Adventure Asset Pack](https://pixel-boy.itch.io/nin
 
 - [x] **T9 — Fossa da Gula**: o salão do banquete com a mesa interminável e caldeirões de fogo, Possessos que explodem em miasma ao morrer, o príncipe **Belzebu** e o espírito de **Santo Antão** com o *Jejum que Fortalece* (tecla 4 — escudo de +6 de defesa por 9s)
 
-O roadmap detalhado dos passos T10–T15 (um por sessão, cada um com commit) está no [`docs/GDD.md`](docs/GDD.md). Próximo: **T10 — Fossa da Avareza** (príncipe Mamon + São Lourenço).
+- [x] **T10 — Fossa da Avareza**: o grande cofre com moedas perdidas no piso, o príncipe **Mamon** (sangra denários a cada ferida — a avareza punida) e o espírito de **São Lourenço** com o *Fogo que Purifica* (tecla 5 — nova de fogo em anel, 28 de dano em área)
+
+O roadmap detalhado dos passos T11–T15 (um por sessão, cada um com commit) está no [`docs/GDD.md`](docs/GDD.md). Próximo: **T11 — Fossa da Luxúria** (príncipe Asmodeu + Santa Inês).

@@ -473,6 +473,11 @@ export const MAP_DEFS = {
       m.fillRect(29, 21, 4, 4, T.FEASTFLOOR);
       m.set(28, 22, T.GATE);
       m.set(28, 23, T.GATE);
+
+      // a escada que desce à Quarta Fossa
+      m.fillRect(30, 25, 2, 4, T.FEASTFLOOR);
+      m.set(30, 29, T.STAIRS);
+      m.set(31, 29, T.STAIRS);
     },
     spawns: [
       ['possesso', 9, 8], ['possesso', 10, 13], ['serpe', 16, 13],
@@ -498,6 +503,62 @@ export const MAP_DEFS = {
     ],
     portals: [
       { x: 2, y: 2, w: 1, h: 2, to: 'fossa_inveja', tx: 30, ty: 27 },
+      { x: 30, y: 29, w: 2, h: 1, to: 'fossa_avareza', tx: 4, ty: 3 },
+    ],
+  },
+
+  // ---------- Quarta Fossa: a Avareza ----------
+  fossa_avareza: {
+    name: 'Quarta Fossa — A Avareza',
+    w: 34, h: 32,
+    base: T.HELLWALL,
+    outside: T.HELLWALL,
+    gateFloor: T.TREASURE,
+    dark: 'torch',
+    mood: 'dark',
+    generate(m) {
+      // antecâmara (chegada da escada)
+      m.fillRect(2, 2, 7, 5, T.TREASURE);
+      // o corredor dos cofres
+      m.fillRect(8, 6, 3, 7, T.TREASURE);
+      m.fillRect(8, 12, 15, 4, T.TREASURE);
+      m.fillRect(20, 15, 3, 5, T.TREASURE);
+      // pilhas de ouro amaldiçoado (obstáculos)
+      m.fillRect(12, 13, 1, 2, T.CWALL);
+      m.fillRect(17, 12, 1, 2, T.CWALL);
+      // o grande cofre (arena de Mamon)
+      m.fillRect(8, 20, 20, 9, T.TREASURE);
+      m.fillRect(13, 23, 2, 2, T.CWALL);
+      m.fillRect(21, 23, 2, 2, T.CWALL);
+      // alcova selada de São Lourenço
+      m.fillRect(29, 22, 4, 4, T.TREASURE);
+      m.set(28, 23, T.GATE);
+      m.set(28, 24, T.GATE);
+    },
+    spawns: [
+      ['invejoso', 9, 8], ['invejoso', 10, 13], ['possesso', 15, 14],
+      ['serpe', 19, 13], ['invejoso', 21, 17], ['possesso', 11, 25],
+      ['mamon', 18, 24],
+    ],
+    altars: [[4, 4]],
+    npcs: [
+      {
+        tx: 31, ty: 23, name: 'Espírito de São Lourenço',
+        sprite: 'espirito',
+        ghost: true,
+        grant: 'fogo',
+        lines: (flags) => flags.milagres?.fogo
+          ? ['"Podes virar-me deste lado: este já está no ponto." Ele sorri. "Vai, e queima o que não presta."']
+          : [
+            'Sobre as moedas frias, um jovem diácono irradia calor como brasa viva.',
+            '"O prefeito exigiu os tesouros da Igreja. Eu lhe trouxe os pobres. Ele me deitou na grelha."',
+            '"Aprendi no fogo o que o avarento nunca aprende: só é teu o que deste. Toma a minha chama."',
+            '✝ Milagre recebido: FOGO QUE PURIFICA — tecla 5 (40 de Fé)',
+          ],
+      },
+    ],
+    portals: [
+      { x: 2, y: 2, w: 1, h: 2, to: 'fossa_gula', tx: 30, ty: 26 },
     ],
   },
 };
