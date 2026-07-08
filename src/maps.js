@@ -534,6 +534,11 @@ export const MAP_DEFS = {
       m.fillRect(29, 22, 4, 4, T.TREASURE);
       m.set(28, 23, T.GATE);
       m.set(28, 24, T.GATE);
+
+      // a escada que desce à Quinta Fossa
+      m.fillRect(30, 26, 2, 3, T.TREASURE);
+      m.set(30, 29, T.STAIRS);
+      m.set(31, 29, T.STAIRS);
     },
     spawns: [
       ['invejoso', 9, 8], ['invejoso', 10, 13], ['possesso', 15, 14],
@@ -559,6 +564,66 @@ export const MAP_DEFS = {
     ],
     portals: [
       { x: 2, y: 2, w: 1, h: 2, to: 'fossa_gula', tx: 30, ty: 26 },
+      { x: 30, y: 29, w: 2, h: 1, to: 'fossa_luxuria', tx: 4, ty: 3 },
+    ],
+  },
+
+  // ---------- Quinta Fossa: a Luxúria ----------
+  fossa_luxuria: {
+    name: 'Quinta Fossa — A Luxúria',
+    w: 34, h: 32,
+    base: T.HELLWALL,
+    outside: T.HELLWALL,
+    gateFloor: T.ROSEFLOOR,
+    dark: 'hell',
+    mood: 'dark',
+    generate(m) {
+      // antecâmara (chegada da escada)
+      m.fillRect(2, 2, 7, 5, T.ROSEFLOOR);
+      // o corredor perfumado, serpenteante
+      m.fillRect(8, 4, 3, 5, T.ROSEFLOOR);
+      m.fillRect(11, 7, 6, 3, T.ROSEFLOOR);
+      m.fillRect(15, 10, 3, 6, T.ROSEFLOOR);
+      m.fillRect(12, 14, 4, 3, T.ROSEFLOOR);
+      m.fillRect(18, 13, 6, 4, T.ROSEFLOOR);
+      // espelhos d'água perfumada (venenosa)
+      m.fillRect(13, 8, 2, 1, T.POISON);
+      m.fillRect(19, 15, 2, 1, T.POISON);
+      // descida ao jardim
+      m.fillRect(20, 16, 3, 4, T.ROSEFLOOR);
+      // o jardim das delícias (arena de Asmodeu)
+      m.fillRect(8, 19, 20, 9, T.ROSEFLOOR);
+      m.fillRect(11, 21, 2, 2, T.POISON);
+      m.fillRect(23, 25, 2, 2, T.POISON);
+      // alcova selada de Santa Inês
+      m.fillRect(29, 22, 4, 4, T.ROSEFLOOR);
+      m.set(28, 23, T.GATE);
+      m.set(28, 24, T.GATE);
+    },
+    spawns: [
+      ['invejoso', 9, 6], ['serpe', 13, 8], ['possesso', 16, 12],
+      ['serpe', 14, 15], ['invejoso', 20, 15], ['possesso', 22, 21],
+      ['asmodeu', 18, 24],
+    ],
+    altars: [[4, 4]],
+    npcs: [
+      {
+        tx: 31, ty: 23, name: 'Espírito de Santa Inês',
+        sprite: 'mira',
+        ghost: true,
+        grant: 'cordeiro',
+        lines: (flags) => flags.milagres?.cordeiro
+          ? ['"Agnus custodit." Ela sorri, e o cordeiro invisível roça tua perna.']
+          : [
+            'No meio do jardim envenenado, uma menina de doze anos segura um cordeiro que não está lá.',
+            '"Prometeram-me casamentos, riquezas, prazeres. Eu já tinha esposo: aquele a quem os anjos servem."',
+            '"Recusei até a espada. Leva contigo o meu Cordeiro — ele guarda os que guardam o coração."',
+            '✝ Milagre recebido: CORDEIRO GUARDIÃO — tecla 6 (45 de Fé)',
+          ],
+      },
+    ],
+    portals: [
+      { x: 2, y: 2, w: 1, h: 2, to: 'fossa_avareza', tx: 30, ty: 27 },
     ],
   },
 };

@@ -22,7 +22,7 @@ python3 -m http.server 8000
 | Esquiva (i-frames) | Espaço / Shift |
 | Fúria Sagrada (com a barra cheia) | L / C |
 | Beber poção | Q |
-| Milagres (após receber a relíquia) | 1 – 5 |
+| Milagres (após receber a relíquia) | 1 – 6 |
 | Silenciar música e sons | M |
 | Inventário | I / Esc |
 | Orar no altar (cura + salva o jogo) | E |
@@ -69,4 +69,6 @@ Os gráficos usam o **[Ninja Adventure Asset Pack](https://pixel-boy.itch.io/nin
 
 - [x] **T10 — Fossa da Avareza**: o grande cofre com moedas perdidas no piso, o príncipe **Mamon** (sangra denários a cada ferida — a avareza punida) e o espírito de **São Lourenço** com o *Fogo que Purifica* (tecla 5 — nova de fogo em anel, 28 de dano em área)
 
-O roadmap detalhado dos passos T11–T15 (um por sessão, cada um com commit) está no [`docs/GDD.md`](docs/GDD.md). Próximo: **T11 — Fossa da Luxúria** (príncipe Asmodeu + Santa Inês).
+- [x] **T11 — Fossa da Luxúria**: o jardim das delícias com piso de pétalas, o príncipe **Asmodeu** (a sedução puxa Jorge para o abraço da morte — esquive para resistir) e o espírito de **Santa Inês** com o *Cordeiro Guardião* (tecla 6 — aliado alvo e leal que morde os malignos por 14s)
+
+O roadmap detalhado dos passos T12–T15 (um por sessão, cada um com commit) está no [`docs/GDD.md`](docs/GDD.md). Próximo: **T12 — Fossa da Preguiça** (príncipe Belfegor + São Bento, fecho do Ato II).

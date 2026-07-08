@@ -482,6 +482,49 @@ export class Mamon extends Amon {
   }
 }
 
+// ---------- Asmodeu: príncipe da Fossa da Luxúria ----------
+
+export class Asmodeu extends Amon {
+  constructor(tx, ty) {
+    super(tx, ty);
+    this.hpMax = 560;
+    this.hp = 560;
+    this.dmg = 26;
+    this.xpValue = 340;
+    this.blood = '#8a2040';
+    this.bossName = 'Asmodeu — Príncipe da Luxúria';
+    this.sheetName = 'asmodeu';
+    this.minionType = Invejoso;
+    this.summonCry = 'VINDE, MEUS AMORES!';
+    this.seduceCd = 5;
+  }
+
+  update(dt, world) {
+    super.update(dt, world);
+    if (!this.alive || this.stunT > 0) return;
+
+    // a sedução: puxa o cavaleiro para o abraço da morte
+    this.seduceCd = Math.max(0, this.seduceCd - dt);
+    const p = world.player;
+    const dx = this.x - p.x;
+    const dy = this.y - p.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    if (this.seduceCd <= 0 && p.alive && dist < 380 && dist > 90) {
+      this.seduceCd = 6.5;
+      this.seduceT = 1.1;
+      world.fx.text(this.x, this.y - 80, '"Vem a mim, cavaleiro..."', '#f090b0');
+    }
+    if (this.seduceT > 0) {
+      this.seduceT -= dt;
+      if (p.alive && p.state !== 'dodge') {
+        p.moveAxis(world.map, (dx / dist) * 150 * dt, 0);
+        p.moveAxis(world.map, 0, (dy / dist) * 150 * dt);
+        if (Math.random() < dt * 20) world.fx.spark(p.x, p.y - 20, '#f090b0');
+      }
+    }
+  }
+}
+
 // ---------- Serpe: cria do Dragão, mantém distância e cospe veneno ----------
 
 export class Serpe extends Enemy {

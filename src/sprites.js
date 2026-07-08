@@ -87,6 +87,7 @@ export function buildEnemySprites() {
       possesso: sheetDirs(images.possesso),
       belzebu: sheetDirs(images.belzebu),
       mamon: sheetDirs(images.mamon),
+      asmodeu: sheetDirs(images.asmodeu),
     };
   }
   return enemyCache;
@@ -188,6 +189,36 @@ function tintedWater(green) {
   return frames;
 }
 
+// o Cordeiro Guardião: o cão do pack alvejado como um cordeiro (2 frames)
+let cordeiroCache = null;
+export function buildCordeiro() {
+  if (!cordeiroCache) {
+    cordeiroCache = [0, 1].map((i) => {
+      const c = makeCanvas(TILE, TILE);
+      const ctx = c.getContext('2d');
+      ctx.filter = 'saturate(0.15) brightness(1.75)';
+      ctx.drawImage(images.cordeiro, i * TILE, 0, TILE, TILE, 0, 0, TILE, TILE);
+      return c;
+    });
+  }
+  return cordeiroCache;
+}
+
+// piso da Luxúria: pedra clara coberta de pétalas
+function roseTiles() {
+  return [[3, 5, 11, 9], [8, 12, 2, 4]].map((pts) => {
+    const c = cut(16, 31);
+    const ctx = c.getContext('2d');
+    for (let i = 0; i < pts.length; i += 2) {
+      ctx.fillStyle = '#e06880';
+      ctx.fillRect(pts[i], pts[i + 1], 2, 1);
+      ctx.fillStyle = '#f0a0b0';
+      ctx.fillRect(pts[i] + 1, pts[i + 1] + 1, 1, 1);
+    }
+    return c;
+  });
+}
+
 // piso da Avareza: pedra clara com moedas perdidas
 function treasureTiles() {
   const plain = cut(16, 31);
@@ -285,6 +316,7 @@ export function buildTiles() {
   }
   tiles[T.FLOWER] = [flowerTile()];
   tiles[T.TREASURE] = treasureTiles();
+  tiles[T.ROSEFLOOR] = roseTiles();
   tiles[T.WATER] = tintedWater(false);
   tiles[T.POISON] = tintedWater(true);
   tiles[T.BONES] = bonesTiles();

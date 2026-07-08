@@ -1,6 +1,8 @@
 // Milagres: os dons dos santos, pagos com Fé
 
 import { images } from './assets.js';
+import { SCALE } from './constants.js';
+import { buildCordeiro } from './sprites.js';
 
 // ---------- Raio do Trovão (Santa Bárbara) ----------
 
@@ -241,6 +243,92 @@ function castFogo(world, player) {
   world.fx.text(player.x, player.y - 78, 'Que o fogo purifique!', '#f8a848');
 }
 
+// ---------- Cordeiro Guardião (Santa Inês) ----------
+
+class Cordeiro {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.life = 14;
+    this.hitCd = 0;
+    this.anim = 0;
+    this.faceLeft = false;
+    this.dead = false;
+  }
+
+  update(dt, world) {
+    this.life -= dt;
+    this.hitCd = Math.max(0, this.hitCd - dt);
+    this.anim += dt;
+    if (this.life <= 0) {
+      this.dead = true;
+      world.fx.burst(this.x, this.y - 10, '#f8f4e8', 14, 150);
+      return;
+    }
+    // persegue o maligno mais próximo (é espírito: atravessa tudo)
+    let best = null;
+    let bd = 1e9;
+    for (const e of world.enemies) {
+      if (!e.alive) continue;
+      const d = Math.hypot(e.x - this.x, e.y - this.y);
+      if (d < bd) { bd = d; best = e; }
+    }
+    if (best && bd < 600) {
+      const dx = best.x - this.x;
+      const dy = best.y - this.y;
+      const d = Math.hypot(dx, dy) || 1;
+      if (d > 20) {
+        this.x += (dx / d) * 175 * dt;
+        this.y += (dy / d) * 175 * dt;
+        this.faceLeft = dx < 0;
+      }
+      if (d < 34 && this.hitCd <= 0) {
+        this.hitCd = 0.55;
+        best.takeDamage(11, (dx / d) * 160, (dy / d) * 160, world);
+      }
+    } else {
+      // volta a trotar junto do cavaleiro
+      const p = world.player;
+      const d = Math.hypot(p.x - this.x, p.y - this.y) || 1;
+      if (d > 60) {
+        this.x += ((p.x - this.x) / d) * 150 * dt;
+        this.y += ((p.y - this.y) / d) * 150 * dt;
+        this.faceLeft = p.x < this.x;
+      }
+    }
+  }
+
+  render(ctx, cam) {
+    const frames = buildCordeiro();
+    const frame = frames[Math.floor(this.anim * 6) % 2];
+    const px = 16 * SCALE;
+    const x = this.x - cam.x;
+    const y = this.y - cam.y + Math.sin(this.anim * 7) * 2;
+    ctx.save();
+    if (this.life < 2) ctx.globalAlpha = Math.max(0.2, this.life / 2);
+    // auréola
+    ctx.strokeStyle = 'rgba(248, 216, 96, 0.8)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(x, y - px + 6, 10, 3.5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    if (this.faceLeft) {
+      ctx.translate(x + px / 2, y - px);
+      ctx.scale(-1, 1);
+      ctx.drawImage(frame, 0, 0, px, px);
+    } else {
+      ctx.drawImage(frame, Math.round(x - px / 2), Math.round(y - px), px, px);
+    }
+    ctx.restore();
+  }
+}
+
+function castCordeiro(world, player) {
+  world.spells.push(new Cordeiro(player.x - 30, player.y));
+  world.fx.burst(player.x - 30, player.y - 14, '#f8f4e8', 16, 160);
+  world.fx.text(player.x, player.y - 78, 'O Cordeiro vela por ti.', '#f8f0dc');
+}
+
 // ---------- registro ----------
 
 export const MIRACLES = {
@@ -249,4 +337,5 @@ export const MIRACLES = {
   luz: { key: '3', name: 'Luz que Cega', saint: 'Santa Luzia', cost: 35, cast: castLuz },
   jejum: { key: '4', name: 'Jejum que Fortalece', saint: 'Santo Antão', cost: 30, cast: castJejum },
   fogo: { key: '5', name: 'Fogo que Purifica', saint: 'São Lourenço', cost: 40, cast: castFogo },
+  cordeiro: { key: '6', name: 'Cordeiro Guardião', saint: 'Santa Inês', cost: 45, cast: castCordeiro },
 };

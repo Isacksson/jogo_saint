@@ -15,7 +15,7 @@ const KEYMAP = {
   KeyE: 'interact', Enter: 'interact',
   KeyI: 'inventory', Escape: 'inventory',
   KeyQ: 'potion',
-  Digit1: 'mir1', Digit2: 'mir2', Digit3: 'mir3', Digit4: 'mir4', Digit5: 'mir5',
+  Digit1: 'mir1', Digit2: 'mir2', Digit3: 'mir3', Digit4: 'mir4', Digit5: 'mir5', Digit6: 'mir6',
   KeyM: 'mute',
 };
 

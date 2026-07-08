@@ -123,6 +123,20 @@ export function renderMiracles(ctx, player, world, miracles) {
       ctx.beginPath();
       ctx.arc(x + 24, y + 31, 4, 0, Math.PI * 2);
       ctx.fill();
+    } else if (id === 'cordeiro') {
+      // cordeiro com auréola
+      ctx.strokeStyle = '#f8f0dc';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(x + 22, y + 28, 9, 6, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(x + 32, y + 24, 4, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.strokeStyle = '#f8d860';
+      ctx.beginPath();
+      ctx.ellipse(x + 32, y + 16, 5, 2, 0, 0, Math.PI * 2);
+      ctx.stroke();
     } else if (id === 'luz') {
       // sol radiante
       ctx.strokeStyle = '#f8f0c0';
