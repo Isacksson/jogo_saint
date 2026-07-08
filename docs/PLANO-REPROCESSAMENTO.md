@@ -55,11 +55,14 @@ os padrões criados nele (portais, mapas, diálogo) são reaproveitados por todo
   persistem no save. Na reconstrução do mapa, chefe já derrotado não renasce e a
   alcova rompida continua aberta. Testado: Amon morto continua morto após reload.
 
-- [ ] **A3 — Caixa de diálogo rica**
-  A história da v0.2 é muito mais densa. A caixa atual é texto simples.
-  - Retrato do NPC (recorte do sprite) ao lado do nome.
-  - Avanço por página com indicador claro; suporte a falas longas condicionais.
-  - Base para o **pregoeiro/editos de Diocleciano** (o "relógio narrativo" da v0.2).
+- [x] **A3 — Caixa de diálogo rica** ✔ feito
+  Nova `renderDialogue` (`hud.js`): moldura dupla de iluminura, **retrato**
+  emoldurado do interlocutor (recorte do alto do sprite), nome com régua,
+  **efeito máquina de escrever** (a fala se revela; E completa a linha ou avança),
+  **pontos de página** e prompt contextual (`E — pular` / `continuar ▸` / `fechar ✕`).
+  Espíritos ganham tratamento próprio (nome e moldura em azul-frio, sprite
+  translúcido). Testado com Sabra e o Espírito de São Sebastião.
+  - Base pronta para o pregoeiro/editos de Diocleciano da v0.2.
 
 - [ ] **A4 — Navegação e orientação**
   - Indicador na borda da tela apontando para a saída/objetivo quando fora de quadro.

@@ -217,44 +217,92 @@ export function renderLocation(ctx, name, alpha) {
 
 // caixa de diálogo estilo Lufia
 export function renderDialogue(ctx, dlg) {
-  const w = 760, h = 108;
+  const w = 784, h = 134;
   const x = (VIEW_W - w) / 2;
-  const y = VIEW_H - h - 24;
+  const y = VIEW_H - h - 18;
 
   ctx.save();
-  ctx.fillStyle = 'rgba(14, 9, 5, 0.93)';
+  // painel com moldura dupla estilo iluminura
+  ctx.fillStyle = 'rgba(14, 9, 5, 0.95)';
   ctx.fillRect(x, y, w, h);
   ctx.strokeStyle = '#8a7442';
   ctx.lineWidth = 2;
   ctx.strokeRect(x + 3, y + 3, w - 6, h - 6);
+  ctx.strokeStyle = '#4a3820';
+  ctx.strokeRect(x + 7, y + 7, w - 14, h - 14);
 
+  // retrato do interlocutor, emoldurado à esquerda
+  const ps = 92;
+  const px = x + 16;
+  const py = y + (h - ps) / 2;
+  ctx.fillStyle = dlg.ghost ? 'rgba(120, 150, 200, 0.28)' : 'rgba(60, 44, 24, 0.5)';
+  ctx.fillRect(px, py, ps, ps);
+  if (dlg.portrait) {
+    ctx.imageSmoothingEnabled = false;
+    // recorta o alto do sprite (cabeça/tronco) para um enquadramento de retrato
+    ctx.save();
+    if (dlg.ghost) ctx.globalAlpha = 0.85;
+    ctx.drawImage(dlg.portrait, 0, 0, 16, 13, px + 8, py + 8, ps - 16, (ps - 16) * 13 / 16);
+    ctx.restore();
+  }
+  ctx.strokeStyle = '#8a7442';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(px, py, ps, ps);
+
+  const tx = px + ps + 20;
+  const tw = x + w - tx - 20;
+
+  // nome + régua divisória
   ctx.textAlign = 'left';
-  ctx.fillStyle = '#e8c860';
-  ctx.font = 'bold 15px Georgia, serif';
-  ctx.fillText(dlg.name, x + 18, y + 26);
+  ctx.fillStyle = dlg.ghost ? '#bcd0f0' : '#e8c860';
+  ctx.font = 'bold 16px Georgia, serif';
+  ctx.fillText(dlg.name, tx, y + 30);
+  ctx.strokeStyle = 'rgba(138, 116, 66, 0.5)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(tx, y + 39);
+  ctx.lineTo(x + w - 20, y + 39);
+  ctx.stroke();
 
-  // quebra de linha simples
+  // fala com efeito máquina de escrever (reveal) e quebra de linha
+  const full = dlg.lines[dlg.idx];
+  const shown = full.slice(0, Math.floor(dlg.reveal ?? full.length));
+  const revealed = (dlg.reveal ?? full.length) >= full.length;
   ctx.fillStyle = '#e8dcc0';
   ctx.font = '14px Georgia, serif';
-  const words = dlg.lines[dlg.idx].split(' ');
+  const words = shown.split(' ');
   let line = '';
-  let ly = y + 50;
+  let ly = y + 62;
   for (const word of words) {
     const test = line ? line + ' ' + word : word;
-    if (ctx.measureText(test).width > w - 40) {
-      ctx.fillText(line, x + 18, ly);
+    if (ctx.measureText(test).width > tw) {
+      ctx.fillText(line, tx, ly);
       line = word;
-      ly += 20;
+      ly += 21;
     } else {
       line = test;
     }
   }
-  ctx.fillText(line, x + 18, ly);
+  ctx.fillText(line, tx, ly);
 
+  // pontos de página
+  const n = dlg.lines.length;
+  const dotY = y + h - 16;
+  for (let i = 0; i < n; i++) {
+    ctx.fillStyle = i === dlg.idx ? '#e8c860' : '#5a4a2c';
+    ctx.beginPath();
+    ctx.arc(tx + 5 + i * 15, dotY, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // prompt contextual
   ctx.textAlign = 'right';
   ctx.fillStyle = '#9a8a62';
   ctx.font = 'italic 12px Georgia, serif';
-  ctx.fillText(dlg.idx < dlg.lines.length - 1 ? 'E — continuar ▸' : 'E — fechar ✕', x + w - 14, y + h - 12);
+  const prompt = !revealed
+    ? 'E — pular'
+    : (dlg.idx < n - 1 ? 'E — continuar ▸' : 'E — fechar ✕');
+  ctx.fillText(prompt, x + w - 18, dotY + 4);
   ctx.restore();
 }
 

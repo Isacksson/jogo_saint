@@ -247,7 +247,10 @@ function tryInteract() {
   // conversar com quem estiver perto
   for (const npc of world.npcs) {
     if (npc.isNear(p)) {
-      dlg = { name: npc.name, lines: npc.getLines(world), idx: 0, grant: npc.grant };
+      dlg = {
+        name: npc.name, lines: npc.getLines(world), idx: 0, grant: npc.grant,
+        portrait: npc.sprite, ghost: npc.ghost, reveal: 0,
+      };
       return;
     }
   }
@@ -516,19 +519,26 @@ function frame(now) {
 
   // --- update ---
   if (dlg) {
-    // diálogo aberto: só avançar/fechar
+    // máquina de escrever: a fala se revela; E completa a linha ou avança a página
+    const full = dlg.lines[dlg.idx];
+    dlg.reveal = Math.min(full.length, dlg.reveal + dt * 48);
     if (input.wasPressed('interact') || input.wasPressed('attack')) {
-      dlg.idx++;
-      if (dlg.idx >= dlg.lines.length) {
-        // relíquias e espíritos concedem seu milagre ao fim da conversa
-        if (dlg.grant && !world.flags.milagres?.[dlg.grant]) {
-          world.flags.milagres = world.flags.milagres || {};
-          world.flags.milagres[dlg.grant] = true;
-          const m = MIRACLES[dlg.grant];
-          world.fx.text(player.x, player.y - 66, `✝ ${m.name} (${m.key})`, '#a8c8f8');
-          world.fx.burst(player.x, player.y - 20, '#a8c8f8', 20, 200);
+      if (dlg.reveal < full.length) {
+        dlg.reveal = full.length; // primeira pressão: revela a fala inteira
+      } else {
+        dlg.idx++;
+        dlg.reveal = 0;
+        if (dlg.idx >= dlg.lines.length) {
+          // relíquias e espíritos concedem seu milagre ao fim da conversa
+          if (dlg.grant && !world.flags.milagres?.[dlg.grant]) {
+            world.flags.milagres = world.flags.milagres || {};
+            world.flags.milagres[dlg.grant] = true;
+            const m = MIRACLES[dlg.grant];
+            world.fx.text(player.x, player.y - 66, `✝ ${m.name} (${m.key})`, '#a8c8f8');
+            world.fx.burst(player.x, player.y - 20, '#a8c8f8', 20, 200);
+          }
+          dlg = null;
         }
-        dlg = null;
       }
     }
   } else if (invOpen) {
