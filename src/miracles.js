@@ -153,9 +153,29 @@ function castSetas(world, player) {
   world.spells.push(new ArrowRain(player.x + v[0] * 130, player.y + v[1] * 130));
 }
 
+// ---------- Luz que Cega (Santa Luzia) ----------
+
+function castLuz(world, player) {
+  world.fx.whiteFlash = 0.45;
+  world.fx.addShake(3);
+  world.fx.burst(player.x, player.y - 20, '#f8f4d8', 30, 300);
+  let touched = 0;
+  for (const e of world.enemies) {
+    if (!e.alive) continue;
+    if (Math.hypot(e.x - player.x, e.y - player.y) < 340) {
+      e.stunT = e.isBoss ? 1.4 : 3.2;
+      touched++;
+    }
+  }
+  if (touched > 0) {
+    world.fx.text(player.x, player.y - 78, 'Os malignos estão cegos!', '#f8f0c0');
+  }
+}
+
 // ---------- registro ----------
 
 export const MIRACLES = {
   raio: { key: '1', name: 'Raio do Trovão', saint: 'Santa Bárbara', cost: 30, cast: castRaio },
   setas: { key: '2', name: 'Chuva de Setas', saint: 'São Sebastião', cost: 25, cast: castSetas },
+  luz: { key: '3', name: 'Luz que Cega', saint: 'Santa Luzia', cost: 35, cast: castLuz },
 };

@@ -22,7 +22,7 @@ python3 -m http.server 8000
 | Esquiva (i-frames) | Espaço / Shift |
 | Fúria Sagrada (com a barra cheia) | L / C |
 | Beber poção | Q |
-| Milagres (após receber a relíquia) | 1 / 2 |
+| Milagres (após receber a relíquia) | 1 / 2 / 3 |
 | Silenciar música e sons | M |
 | Inventário | I / Esc |
 | Orar no altar (cura + salva o jogo) | E |
@@ -63,4 +63,6 @@ Os gráficos usam o **[Ninja Adventure Asset Pack](https://pixel-boy.itch.io/nin
 - [x] **Tela de título** com a cruz, controles e continuação da jornada salva
 - [x] **Repaginação visual (Turno 7)**: arte profissional CC0 do Ninja Adventure Pack — cavaleiro com elmo, NPCs únicos, demônios expressivos, dragão animado, tileset novo, árvores e casas com profundidade (o jogador passa por trás) e golpes com sprites de efeito
 
-Próximo (**Turno 8+**): as seis Fossas restantes com seus príncipes e relíquias, o Ato III nas Portas do Abismo, a Serpente Antiga e o epílogo das rosas.
+- [x] **T8 — Fossa da Inveja**: galeria verde-cobiça sob a Fossa da Ira, Invejosos, o príncipe **Leviatã** (invoca ao perder metade da vida) e o espírito de **Santa Luzia** com a *Luz que Cega* (tecla 3 — atordoa todos os malignos próximos com um clarão)
+
+O roadmap detalhado dos passos T9–T15 (um por sessão, cada um com commit) está no [`docs/GDD.md`](docs/GDD.md). Próximo: **T9 — Fossa da Gula** (príncipe Belzebu + Santo Antão).

@@ -8,7 +8,7 @@ import { GameMap } from './map.js';
 import { MAP_DEFS } from './maps.js';
 import { Camera } from './camera.js';
 import { Player } from './player.js';
-import { Imundo, ImundoChefe, Amon, Dragao, Serpe } from './enemies.js';
+import { Imundo, ImundoChefe, Amon, Dragao, Serpe, Invejoso, Leviata } from './enemies.js';
 import { initAudio, updateMusic, setMood, toggleMute, sfx } from './audio.js';
 import { Npc } from './npc.js';
 import { Fx } from './fx.js';
@@ -87,7 +87,11 @@ function getMap(id) {
   return gameMaps[id];
 }
 
-const ENEMY_TYPES = { imundo: Imundo, serpe: Serpe, chefe: ImundoChefe, amon: Amon, dragao: Dragao };
+const ENEMY_TYPES = {
+  imundo: Imundo, serpe: Serpe, chefe: ImundoChefe,
+  amon: Amon, dragao: Dragao,
+  invejoso: Invejoso, leviata: Leviata,
+};
 
 // o navegador só libera áudio após o primeiro gesto do usuário
 window.addEventListener('keydown', initAudio, { once: true });
@@ -504,6 +508,12 @@ function frame(now) {
 
   const darkMode = MAP_DEFS[world.mapId].dark;
   if (darkMode) renderDarkness(cam, darkMode);
+
+  // clarão da Luz que Cega
+  if (world.fx.whiteFlash > 0) {
+    ctx.fillStyle = `rgba(248, 244, 216, ${Math.min(0.85, world.fx.whiteFlash * 2)})`;
+    ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+  }
 
   renderHud(ctx, world.player, world, elapsed);
   renderMiracles(ctx, world.player, world, MIRACLES);

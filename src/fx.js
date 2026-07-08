@@ -5,6 +5,7 @@ export class Fx {
     this.parts = [];
     this.texts = [];
     this.shake = 0;
+    this.whiteFlash = 0; // clarão da Luz que Cega
   }
 
   addShake(m) {
@@ -44,6 +45,7 @@ export class Fx {
 
   update(dt) {
     this.shake = Math.max(0, this.shake - 26 * dt);
+    this.whiteFlash = Math.max(0, this.whiteFlash - dt);
     for (const p of this.parts) {
       p.t += dt;
       p.x += p.vx * dt;

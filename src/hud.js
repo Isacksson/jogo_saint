@@ -95,6 +95,20 @@ export function renderMiracles(ctx, player, world, miracles) {
         ctx.lineTo(x + 10 + i * 9, y + 34);
         ctx.stroke();
       }
+    } else if (id === 'luz') {
+      // sol radiante
+      ctx.strokeStyle = '#f8f0c0';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x + 24, y + 24, 7, 0, Math.PI * 2);
+      ctx.stroke();
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(x + 24 + Math.cos(a) * 11, y + 24 + Math.sin(a) * 11);
+        ctx.lineTo(x + 24 + Math.cos(a) * 17, y + 24 + Math.sin(a) * 17);
+        ctx.stroke();
+      }
     }
     ctx.globalAlpha = 1;
     ctx.fillStyle = '#e8dcb8';

@@ -61,6 +61,10 @@ class Enemy {
   updateCommon(dt, world) {
     this.flash = Math.max(0, this.flash - dt);
     this.hurtTimer = Math.max(0, this.hurtTimer - dt);
+    this.stunT = Math.max(0, (this.stunT || 0) - dt);
+    if (this.stunT > 0 && Math.random() < dt * 8) {
+      world.fx.spark(this.x + (Math.random() - 0.5) * 20, this.y - 30, '#f8f0c0');
+    }
     if (Math.abs(this.kbX) + Math.abs(this.kbY) > 2) {
       this.moveAxis(world.map, this.kbX * dt, 0);
       this.moveAxis(world.map, 0, this.kbY * dt);
@@ -168,6 +172,7 @@ export class Imundo extends Enemy {
   update(dt, world) {
     if (!this.alive) return;
     this.updateCommon(dt, world);
+    if (this.stunT > 0) return; // cegado pela Luz
     this.animTime += dt;
     this.atkCd = Math.max(0, this.atkCd - dt);
 
@@ -275,6 +280,9 @@ export class Amon extends Enemy {
     this.blood = '#5c0c08';
     this.isBoss = true;
     this.bossName = 'Amon, o Furioso — Príncipe da Ira';
+    this.sheetName = 'amon';
+    this.minionType = Imundo;
+    this.summonCry = 'LEVANTAI-VOS, IMUNDOS!';
     this.opensGate = true;
     this.windup = 0;
     this.chargeT = 0;
@@ -293,6 +301,7 @@ export class Amon extends Enemy {
   update(dt, world) {
     if (!this.alive) return;
     this.updateCommon(dt, world);
+    if (this.stunT > 0) return; // até os príncipes vacilam diante da Luz
     this.animTime += dt * (this.enraged ? 1.6 : 1);
     this.chargeCd = Math.max(0, this.chargeCd - dt);
 
@@ -304,11 +313,11 @@ export class Amon extends Enemy {
     // aos 50% de vida, convoca seus servos (uma única vez)
     if (!this.summoned && this.hp <= this.hpMax * 0.5) {
       this.summoned = true;
-      world.fx.text(this.x, this.y - 70, 'LEVANTAI-VOS, IMUNDOS!', '#e88060');
+      world.fx.text(this.x, this.y - 70, this.summonCry, '#e88060');
       world.fx.addShake(6);
       for (let i = 0; i < 3; i++) {
         const a = (i / 3) * Math.PI * 2;
-        const m = new Imundo(0, 0);
+        const m = new this.minionType(0, 0);
         m.x = this.x + Math.cos(a) * 70;
         m.y = this.y + Math.sin(a) * 70;
         world.enemies.push(m);
@@ -360,13 +369,45 @@ export class Amon extends Enemy {
 
   render(ctx, cam) {
     if (!this.alive) return;
-    const sheet = buildEnemySprites().amon;
+    const sheet = buildEnemySprites()[this.sheetName];
     const frame = sheet[this.dir][Math.floor(this.animTime * 7) % 4];
     ctx.save();
     if (this.enraged) ctx.filter = 'saturate(1.8) brightness(1.15)';
     if (this.windup > 0) ctx.translate((Math.random() - 0.5) * 5, 0);
     this.renderSprite(ctx, cam, frame);
     ctx.restore();
+  }
+}
+
+// ---------- Invejoso: espírito verde que cobiça e persegue ----------
+
+export class Invejoso extends Imundo {
+  constructor(tx, ty) {
+    super(tx, ty);
+    this.hpMax = 44;
+    this.hp = 44;
+    this.speed = 125;
+    this.dmg = 11;
+    this.xpValue = 20;
+    this.blood = '#3c6428';
+    this.sheetName = 'invejoso';
+  }
+}
+
+// ---------- Leviatã: príncipe da Fossa da Inveja ----------
+
+export class Leviata extends Amon {
+  constructor(tx, ty) {
+    super(tx, ty);
+    this.hpMax = 380;
+    this.hp = 380;
+    this.dmg = 20;
+    this.xpValue = 220;
+    this.blood = '#2c5040';
+    this.bossName = 'Leviatã — Príncipe da Inveja';
+    this.sheetName = 'leviata';
+    this.minionType = Invejoso;
+    this.summonCry = 'O QUE É TEU SERÁ MEU!';
   }
 }
 
@@ -386,6 +427,7 @@ export class Serpe extends Enemy {
   update(dt, world) {
     if (!this.alive) return;
     this.updateCommon(dt, world);
+    if (this.stunT > 0) return; // cegada pela Luz
     this.animTime += dt;
 
     const p = world.player;
@@ -480,6 +522,7 @@ export class Dragao extends Enemy {
   update(dt, world) {
     if (!this.alive) return;
     this.updateCommon(dt, world);
+    if (this.stunT > 0 && !this.airborne) return;
     this.animTime += dt;
     this.actT += dt;
     this.spitCd = Math.max(0, this.spitCd - dt);

@@ -173,6 +173,7 @@ export class Player {
     if (this.state === 'normal') {
       if (input.wasPressed('mir1')) this.tryCast('raio', world);
       if (input.wasPressed('mir2')) this.tryCast('setas', world);
+      if (input.wasPressed('mir3')) this.tryCast('luz', world);
     }
 
     // empurrão recebido

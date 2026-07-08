@@ -30,6 +30,7 @@ export const T = {
   HELLFLOOR: 18,// cinzas das fossas
   LAVA: 19,     // fogo líquido (sólido)
   STAIRS: 20,   // escada descendo
+  ENVYFLOOR: 21,// pedra esverdeada da Fossa da Inveja
 };
 
 // Tiles que bloqueiam movimento

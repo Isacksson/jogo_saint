@@ -137,7 +137,19 @@ Cada turno termina com **commit + push** — o trabalho nunca fica pela metade n
 - [x] **Turno 5** — Milagres/Relíquias (Raio do Trovão, Chuva de Setas), Fossa da Ira com o príncipe Amon.
 - [x] **Turno 6** — Boss Dragão de Silena, áudio (Web Audio), tela de título, polish.
 - [x] **Turno 7** — Repaginação visual: assets profissionais CC0 (Ninja Adventure Pack), cenografia com profundidade, FX de golpe em sprite.
-- [ ] **Turnos 7+** — Fossas restantes, Ato III, Serpente Antiga, epílogo.
+
+### Passos restantes (miúdos, um por sessão — cada um termina em commit + push)
+
+Cada fossa segue a mesma receita (~1 sessão): mapa novo + 1 inimigo temático + 1 príncipe (chefe) + espírito do santo com milagre + teste + commit. Os sprites dos príncipes já estão em `assets/` (baixados no Turno 8 para poupar redescoberta).
+
+- [x] **T8 — Fossa da Inveja**: príncipe Leviatã, Invejosos (mobs), milagre *Luz que Cega* de Santa Luzia (tecla 3, atordoa os malignos).
+- [ ] **T9 — Fossa da Gula**: príncipe Belzebu (`assets/belzebu.png`), milagre *Jejum que Fortalece* de Santo Antão (tecla 4, escudo temporário).
+- [ ] **T10 — Fossa da Avareza**: príncipe Mamon (`assets/mamon.png`), milagre *Fogo que Purifica* de São Lourenço (tecla 5, nova de fogo).
+- [ ] **T11 — Fossa da Luxúria**: príncipe Asmodeu (`assets/asmodeu.png`), milagre *Cordeiro Guardião* de Santa Inês (tecla 6, aliado invocado).
+- [ ] **T12 — Fossa da Preguiça**: príncipe Belfegor (`assets/belfegor.png`), milagre *Vade Retro* de São Bento (tecla 7, repele os malignos); fecho do Ato II.
+- [ ] **T13 — Portas do Abismo**: mapa final do Ato III + Serpente Antiga fases 1–2 (usa `assets/dragao.png` ampliado + tinta).
+- [ ] **T14 — A Tentação e o Epílogo**: fase 3 da Serpente (diálogo da tentação), epílogo das rosas, créditos.
+- [ ] **T15 — Balanceamento e polish final**: curva de dano/vida, preços, tela de vitória.
 
 ---
 

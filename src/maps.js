@@ -347,6 +347,11 @@ export const MAP_DEFS = {
       m.fillRect(29, 22, 4, 4, T.HELLFLOOR);
       m.set(28, 23, T.GATE);
       m.set(28, 24, T.GATE);
+
+      // a escada que desce à Segunda Fossa (após a alcova)
+      m.fillRect(30, 26, 2, 3, T.HELLFLOOR);
+      m.set(30, 29, T.STAIRS);
+      m.set(31, 29, T.STAIRS);
     },
     spawns: [
       ['imundo', 9, 12], ['imundo', 12, 13], ['serpe', 17, 12],
@@ -372,6 +377,63 @@ export const MAP_DEFS = {
     ],
     portals: [
       { x: 2, y: 2, w: 1, h: 2, to: 'catacumbas', tx: 27, ty: 24 },
+      { x: 30, y: 29, w: 2, h: 1, to: 'fossa_inveja', tx: 4, ty: 3 },
+    ],
+  },
+
+  // ---------- Segunda Fossa: a Inveja ----------
+  fossa_inveja: {
+    name: 'Segunda Fossa — A Inveja',
+    w: 34, h: 32,
+    base: T.HELLWALL,
+    outside: T.HELLWALL,
+    gateFloor: T.ENVYFLOOR,
+    dark: 'torch',
+    mood: 'dark',
+    generate(m) {
+      // antecâmara (chegada da escada)
+      m.fillRect(2, 2, 7, 5, T.ENVYFLOOR);
+      // galeria em zigue-zague
+      m.fillRect(7, 6, 3, 7, T.ENVYFLOOR);
+      m.fillRect(7, 12, 14, 4, T.ENVYFLOOR);
+      m.fillRect(19, 15, 3, 5, T.ENVYFLOOR);
+      // charcos de cobiça
+      m.fillRect(10, 13, 2, 2, T.POISON);
+      m.fillRect(16, 12, 2, 2, T.POISON);
+      // arena do Leviatã
+      m.fillRect(8, 20, 20, 9, T.ENVYFLOOR);
+      m.fillRect(8, 20, 2, 9, T.POISON);
+      m.fillRect(26, 20, 2, 9, T.POISON);
+      m.fillRect(26, 23, 2, 2, T.ENVYFLOOR);
+      // alcova selada de Santa Luzia
+      m.fillRect(29, 22, 4, 4, T.ENVYFLOOR);
+      m.set(28, 23, T.GATE);
+      m.set(28, 24, T.GATE);
+    },
+    spawns: [
+      ['invejoso', 8, 8], ['invejoso', 9, 13], ['serpe', 14, 14],
+      ['invejoso', 18, 13], ['invejoso', 20, 17], ['serpe', 12, 12],
+      ['leviata', 18, 24],
+    ],
+    altars: [[4, 4]],
+    npcs: [
+      {
+        tx: 31, ty: 23, name: 'Espírito de Santa Luzia',
+        sprite: 'luzia',
+        ghost: true,
+        grant: 'luz',
+        lines: (flags) => flags.milagres?.luz
+          ? ['"Vai com a Luz, cavaleiro. Nenhuma treva prevalece contra ela."']
+          : [
+            'Entre as pedras verdes de cobiça, ergue-se uma jovem de olhar sereno — sereno, embora tenham-lhe tirado os olhos.',
+            '"Quiseram apagar a minha vista, e eu passei a ver mais longe. A inveja é isto: olhos que ardem pelo que não lhes pertence."',
+            '"Toma a minha Luz. Diante dela, todo olho maligno se fecha."',
+            '✝ Milagre recebido: LUZ QUE CEGA — tecla 3 (35 de Fé)',
+          ],
+      },
+    ],
+    portals: [
+      { x: 2, y: 2, w: 1, h: 2, to: 'fossa_ira', tx: 30, ty: 27 },
     ],
   },
 };
