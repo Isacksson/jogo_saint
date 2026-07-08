@@ -2,7 +2,7 @@
 
 import { TILE_PX, SCALE, PLAYER_SPEED } from './constants.js';
 import { input } from './input.js';
-import { buildPlayerSprites } from './sprites.js';
+import { buildPlayerSprites, buildFxFrames } from './sprites.js';
 import { MIRACLES } from './miracles.js';
 import { sfx } from './audio.js';
 
@@ -389,12 +389,9 @@ export class Player {
   // ---------- render ----------
 
   render(ctx, camera) {
-    const cycle = [1, 0, 2, 0];
     const useWalk = this.moving || this.state === 'dodge';
-    const frame = useWalk ? cycle[Math.floor((this.animTime || this.stateTime) * 8) % 4] : 0;
-
-    const dir = this.facing === 'left' ? 'right' : this.facing;
-    const sprite = this.sprites[dir][frame];
+    const frame = useWalk ? Math.floor((this.animTime || this.stateTime) * 9) % 4 : 0;
+    const sprite = this.sprites[this.facing][frame];
 
     const sx = Math.round(this.x - camera.x - SPRITE_PX / 2);
     const sy = Math.round(this.y - camera.y - SPRITE_PX + this.hbH / 2);
@@ -430,10 +427,6 @@ export class Player {
       ctx.translate(this.x - camera.x, this.y - camera.y - 8);
       ctx.rotate(Math.PI / 2);
       ctx.drawImage(sprite, -SPRITE_PX / 2, -SPRITE_PX / 2, SPRITE_PX, SPRITE_PX);
-    } else if (this.facing === 'left') {
-      ctx.translate(sx + SPRITE_PX, sy);
-      ctx.scale(-1, 1);
-      ctx.drawImage(sprite, 0, 0, SPRITE_PX, SPRITE_PX);
     } else {
       ctx.drawImage(sprite, sx, sy, SPRITE_PX, SPRITE_PX);
     }
@@ -443,64 +436,37 @@ export class Player {
     if (this.state === 'heavy') this.renderLance(ctx, camera);
   }
 
+  // corte de espada em sprite, girado conforme a direção
   renderSlash(ctx, camera) {
     const spec = LIGHT[this.comboStep];
     const p = Math.min(1, this.stateTime / spec.dur);
-    const sweep = this.comboStep % 2 === 0 ? 1 : -1;
-    const ang = DIR_ANGLE[this.facing] + sweep * (-1.1 + 2.2 * p);
-    const cx = this.x - camera.x;
-    const cy = this.cy - camera.y;
+    const frames = buildFxFrames().slash;
+    const frame = frames[Math.min(4, Math.floor(p * 5))];
+    const ang = DIR_ANGLE[this.facing];
+    const size = 32 * SCALE * (this.comboStep === 2 ? 1.25 : 1);
+    const dist = spec.radius * 0.75;
 
     ctx.save();
-    ctx.lineCap = 'round';
-    // rastro do corte
-    ctx.globalAlpha = 0.85 * (1 - p * 0.5);
-    ctx.strokeStyle = this.furyTime > 0 ? '#ffd860' : '#f0ead0';
-    ctx.lineWidth = 7;
-    ctx.beginPath();
-    ctx.arc(cx, cy, spec.radius, ang - 0.55, ang + 0.55);
-    ctx.stroke();
-    ctx.globalAlpha *= 0.6;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(cx, cy, spec.radius - 9, ang - 0.4, ang + 0.4);
-    ctx.stroke();
-    // a espada
-    ctx.globalAlpha = 0.95;
-    ctx.strokeStyle = '#c8ccd4';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + Math.cos(ang) * (spec.radius - 4), cy + Math.sin(ang) * (spec.radius - 4));
-    ctx.stroke();
+    ctx.translate(this.x - camera.x + Math.cos(ang) * dist, this.cy - camera.y + Math.sin(ang) * dist);
+    ctx.rotate(ang + Math.PI / 2 + (this.comboStep % 2 ? Math.PI : 0));
+    if (this.furyTime > 0) ctx.filter = 'sepia(1) saturate(4) hue-rotate(-15deg) brightness(1.3)';
+    ctx.drawImage(frame, -size / 2, -size / 2, size, size);
     ctx.restore();
   }
 
+  // investida de Ascalon em sprite
   renderLance(ctx, camera) {
     const p = Math.min(1, this.stateTime / HEAVY.dur);
-    const ext = Math.sin(p * Math.PI) * HEAVY.reach;
+    const frames = buildFxFrames().heavy;
+    const frame = frames[Math.min(4, Math.floor(p * 5))];
     const ang = DIR_ANGLE[this.facing];
-    const cx = this.x - camera.x;
-    const cy = this.cy - camera.y;
-    const tx = cx + Math.cos(ang) * ext;
-    const ty = cy + Math.sin(ang) * ext;
+    const ext = Math.sin(p * Math.PI) * HEAVY.reach * 0.75;
+    const size = 32 * SCALE * 1.15;
 
     ctx.save();
-    ctx.lineCap = 'round';
-    // haste de Ascalon
-    ctx.strokeStyle = '#7a5230';
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(tx, ty);
-    ctx.stroke();
-    // ponta de aço
-    ctx.strokeStyle = this.furyTime > 0 ? '#ffd860' : '#d8dce4';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(cx + Math.cos(ang) * Math.max(0, ext - 16), cy + Math.sin(ang) * Math.max(0, ext - 16));
-    ctx.lineTo(tx, ty);
-    ctx.stroke();
+    ctx.translate(this.x - camera.x + Math.cos(ang) * ext, this.cy - camera.y + Math.sin(ang) * ext);
+    ctx.rotate(ang + Math.PI / 2);
+    ctx.drawImage(frame, -size / 2, -size / 2, size, size);
     ctx.restore();
   }
 }

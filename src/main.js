@@ -2,7 +2,8 @@
 
 import { TILE, TILE_PX, VIEW_W, VIEW_H, T, SCALE } from './constants.js';
 import { input } from './input.js';
-import { buildTiles, buildAltarSprite } from './sprites.js';
+import { loadAssets } from './assets.js';
+import { buildTiles, buildAltarSprite, buildObjects } from './sprites.js';
 import { GameMap } from './map.js';
 import { MAP_DEFS } from './maps.js';
 import { Camera } from './camera.js';
@@ -23,8 +24,56 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 
+// carrega a arte (Ninja Adventure Pack) antes de construir qualquer coisa
+await loadAssets();
+
 const tiles = buildTiles();
 const camera = new Camera();
+
+// cenografia: objeto desenhado com profundidade (o jogador passa por trás)
+class Prop {
+  constructor(img, x, baseY, scale = SCALE) {
+    this.img = img;
+    this.x = x;
+    this.y = baseY;
+    this.w = img.width * scale;
+    this.h = img.height * scale;
+  }
+
+  render(ctx, cam) {
+    ctx.drawImage(
+      this.img,
+      Math.round(this.x - cam.x - this.w / 2),
+      Math.round(this.y - cam.y - this.h + 6),
+      this.w, this.h
+    );
+  }
+}
+
+// tiles sólidos que viram cenografia: desenha-se o piso por baixo e um Prop por cima
+const PROP_TILES = {
+  [T.TREE]: ['tree', SCALE],
+  [T.DEADTREE]: ['morta', SCALE],
+  [T.ROCK]: ['boulder', 2],
+};
+
+function buildProps(map, def) {
+  const objects = buildObjects();
+  const props = [];
+  for (let ty = 0; ty < map.h; ty++) {
+    for (let tx = 0; tx < map.w; tx++) {
+      const spec = PROP_TILES[map.get(tx, ty)];
+      if (spec) {
+        props.push(new Prop(objects[spec[0]], (tx + 0.5) * TILE_PX, (ty + 1) * TILE_PX, spec[1]));
+      }
+    }
+  }
+  for (const [name, tx, ty] of def.stamps || []) {
+    const img = objects[name];
+    props.push(new Prop(img, (tx + img.width / TILE / 2) * TILE_PX, (ty + img.height / TILE) * TILE_PX));
+  }
+  return props;
+}
 
 // mapas e NPCs são construídos uma única vez e reaproveitados
 const gameMaps = {};
@@ -53,6 +102,7 @@ const world = {
   spells: [],
   groundItems: [],
   altars: [],
+  props: [],
   npcs: [],
   portals: [],
   kills: 0,
@@ -91,6 +141,7 @@ function enterMap(id, tx, ty) {
   world.map = map;
   world.portals = def.portals || [];
   world.npcs = mapNpcs[id];
+  world.props = buildProps(map, def);
   world.altars = (def.altars || []).map(([ax, ay]) => {
     const [fx0, fy0] = findFree(map, ax, ay);
     return { x: (fx0 + 0.5) * TILE_PX, y: (fy0 + 0.5) * TILE_PX };
@@ -236,7 +287,11 @@ function renderMap(cam) {
 
   for (let ty = y0; ty <= y1; ty++) {
     for (let tx = x0; tx <= x1; tx++) {
-      const type = map.get(tx, ty);
+      let type = map.get(tx, ty);
+      // cenografia e casas mostram o piso do mapa por baixo
+      if (PROP_TILES[type] !== undefined || type === T.ROOF || type === T.WALL || type === T.DOOR) {
+        type = map.base;
+      }
       const frames = tiles[type];
       let frame;
       if (type === T.WATER || type === T.POISON || type === T.LAVA) {
@@ -434,8 +489,8 @@ function frame(now) {
   renderAltars(cam);
   for (const g of world.groundItems) g.render(ctx, cam);
 
-  // entidades ordenadas por Y (quem está mais ao sul desenha por cima)
-  const entities = [...world.enemies.filter((e) => e.alive), ...world.npcs, world.player];
+  // entidades e cenografia ordenadas por Y (quem está mais ao sul desenha por cima)
+  const entities = [...world.enemies.filter((e) => e.alive), ...world.npcs, ...world.props, world.player];
   entities.sort((a, b) => a.y - b.y);
   for (const e of entities) {
     if (e instanceof Npc) e.render(ctx, cam, world, elapsed);

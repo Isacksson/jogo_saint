@@ -32,13 +32,16 @@ python3 -m http.server 8000
 
 O documento completo de design (história, atos, sistemas, inimigos, roadmap) está em [`docs/GDD.md`](docs/GDD.md).
 
-## 🗺️ Estado atual — Turno 6
+## 🎨 Arte
+
+Os gráficos usam o **[Ninja Adventure Asset Pack](https://pixel-boy.itch.io/ninja-adventure-asset-pack)** de **Pixel-boy & AAA** (licença CC0 — domínio público): tileset, personagens animados em 4 direções, monstros, itens e efeitos. Detalhes em [`assets/LICENSE.md`](assets/LICENSE.md). O que o pack não cobre (lava, muralhas das fossas, ícones de equipamento) continua gerado por código.
+
+## 🗺️ Estado atual — Turno 7
 
 - [x] Game Design Document
 - [x] Motor: game loop, input, câmera com follow suave
 - [x] Mapa em tiles com colisão (clareira da Capadócia: floresta, lago, estradas)
-- [x] Pixel art 100% gerada por código (sem assets externos)
-- [x] Jorge animado em 4 direções
+- [x] Jorge animado em 4 direções × 4 frames
 - [x] **Combate em tempo real**: combo de espada (3 golpes, o último com knockback), lança Ascalon (perfura em linha), esquiva com i-frames
 - [x] **Fúria Sagrada**: enche ao dar/receber dano; ativa dano ×2, regeneração e aura dourada
 - [x] **Demônios com IA**: Imundos (caçam em bando e dão botes) e Serpes (recuam e cospem veneno)
@@ -58,5 +61,6 @@ O documento completo de design (história, atos, sistemas, inimigos, roadmap) es
 - [x] **O DRAGÃO DE SILENA**: o chefe do Ato I em seu covil a leste do pântano — leque de bolas de fogo, voo com mergulho devastador (imune no ar!), enrage abaixo de 30%, tesouro garantido e a gratidão de Sabra
 - [x] **Áudio 100% gerado por código (Web Audio)**: trilha generativa em modos gregorianos — dórico na superfície, drone frígio nas trevas, arpejo acelerado nos chefes — e efeitos para golpes, milagres, oração e o rugido da besta (M silencia)
 - [x] **Tela de título** com a cruz, controles e continuação da jornada salva
+- [x] **Repaginação visual (Turno 7)**: arte profissional CC0 do Ninja Adventure Pack — cavaleiro com elmo, NPCs únicos, demônios expressivos, dragão animado, tileset novo, árvores e casas com profundidade (o jogador passa por trás) e golpes com sprites de efeito
 
-Próximo (**Turno 7+**): as seis Fossas restantes com seus príncipes e relíquias, o Ato III nas Portas do Abismo, a Serpente Antiga e o epílogo das rosas.
+Próximo (**Turno 8+**): as seis Fossas restantes com seus príncipes e relíquias, o Ato III nas Portas do Abismo, a Serpente Antiga e o epílogo das rosas.

@@ -18,6 +18,7 @@ export class GameMap {
     this.w = def.w;
     this.h = def.h;
     this.outside = def.outside ?? T.TREE; // o que existe "fora" do mapa
+    this.base = def.base ?? T.GRASS;      // piso desenhado sob a cenografia
     this.gateFloor = def.gateFloor ?? T.STONE; // o que fica no lugar do portão aberto
     this.tiles = new Uint8Array(this.w * this.h).fill(def.base ?? T.GRASS);
     def.generate(this);

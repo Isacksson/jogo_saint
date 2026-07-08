@@ -2,6 +2,7 @@
 
 import { TILE_PX, SCALE } from './constants.js';
 import { buildEnemySprites, buildDragonSprites } from './sprites.js';
+import { images } from './assets.js';
 import { rollDrop, GroundItem } from './items.js';
 import { sfx } from './audio.js';
 
@@ -23,6 +24,7 @@ class Enemy {
     this.dirY = 0;
     this.dead = false;
     this.facingLeft = false;
+    this.dir = 'down'; // direção do sprite (4 vias)
     this.scale = 1;
   }
 
@@ -49,6 +51,11 @@ class Enemy {
     this.moveAxis(map, vx * dt, 0);
     this.moveAxis(map, 0, vy * dt);
     if (vx !== 0) this.facingLeft = vx < 0;
+    if (Math.abs(vx) >= Math.abs(vy)) {
+      if (vx !== 0) this.dir = vx < 0 ? 'left' : 'right';
+    } else {
+      this.dir = vy < 0 ? 'up' : 'down';
+    }
   }
 
   updateCommon(dt, world) {
@@ -124,13 +131,7 @@ class Enemy {
     const sy = Math.round(this.y - cam.y - px + this.hbH / 2);
     ctx.save();
     if (this.flash > 0) ctx.filter = 'brightness(2.6) saturate(0.3)';
-    if (this.facingLeft) {
-      ctx.translate(sx + px, sy);
-      ctx.scale(-1, 1);
-      ctx.drawImage(sprite, 0, 0, px, px);
-    } else {
-      ctx.drawImage(sprite, sx, sy, px, px);
-    }
+    ctx.drawImage(sprite, sx, sy, px, px);
     ctx.restore();
 
     // barra de vida (só quando ferido recentemente)
@@ -211,8 +212,8 @@ export class Imundo extends Enemy {
 
   render(ctx, cam) {
     if (!this.alive) return;
-    const sprites = buildEnemySprites().imundo;
-    const frame = sprites[Math.floor(this.animTime * 6) % 2];
+    const sheet = buildEnemySprites()[this.sheetName || 'imundo'];
+    const frame = sheet[this.dir][Math.floor(this.animTime * 7) % 4];
     // tremor durante o windup
     if (this.windup > 0) {
       ctx.save();
@@ -239,6 +240,7 @@ export class ImundoChefe extends Imundo {
     this.hbW = 13 * SCALE;
     this.hbH = 7 * SCALE;
     this.keyCarrier = true;
+    this.sheetName = 'golgor';
   }
 
   render(ctx, cam) {
@@ -358,10 +360,10 @@ export class Amon extends Enemy {
 
   render(ctx, cam) {
     if (!this.alive) return;
-    const sprites = buildEnemySprites().imundo;
-    const frame = sprites[Math.floor(this.animTime * 6) % 2];
+    const sheet = buildEnemySprites().amon;
+    const frame = sheet[this.dir][Math.floor(this.animTime * 7) % 4];
     ctx.save();
-    if (this.enraged) ctx.filter = 'saturate(1.8) brightness(1.1)';
+    if (this.enraged) ctx.filter = 'saturate(1.8) brightness(1.15)';
     if (this.windup > 0) ctx.translate((Math.random() - 0.5) * 5, 0);
     this.renderSprite(ctx, cam, frame);
     ctx.restore();
@@ -393,6 +395,7 @@ export class Serpe extends Enemy {
 
     if (p.alive && dist < 340) {
       this.facingLeft = dx < 0;
+      this.dir = Math.abs(dx) >= Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : (dy < 0 ? 'up' : 'down');
       // recua se o cavaleiro chegar perto
       if (dist < 140) {
         this.move(world.map, (-dx / dist) * this.speed, (-dy / dist) * this.speed, dt);
@@ -409,8 +412,8 @@ export class Serpe extends Enemy {
 
   render(ctx, cam) {
     if (!this.alive) return;
-    const sprites = buildEnemySprites().serpe;
-    const frame = sprites[Math.floor(this.animTime * 4) % 2];
+    const sheet = buildEnemySprites().serpe;
+    const frame = sheet[this.dir][Math.floor(this.animTime * 5) % 4];
     this.renderSprite(ctx, cam, frame);
   }
 }
@@ -487,7 +490,10 @@ export class Dragao extends Enemy {
     const dx = p.x - this.x;
     const dy = p.y - this.y;
     const dist = Math.hypot(dx, dy) || 1;
-    if (this.state !== 'crash') this.facingLeft = dx < 0;
+    if (this.state !== 'crash' && p.alive) {
+      this.facingLeft = dx < 0;
+      this.dir = Math.abs(dx) >= Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : (dy < 0 ? 'up' : 'down');
+    }
 
     switch (this.state) {
       case 'chase': {
@@ -570,9 +576,9 @@ export class Dragao extends Enemy {
 
   render(ctx, cam) {
     if (!this.alive) return;
-    const frames = buildDragonSprites();
-    const wingSpeed = this.airborne ? 10 : 4;
-    const sprite = frames[Math.floor(this.animTime * wingSpeed) % 2];
+    const sheet = buildDragonSprites();
+    const animSpeed = this.airborne ? 14 : 6;
+    const sprite = sheet[this.dir][Math.floor(this.animTime * animSpeed) % 4];
 
     // sombra no chão (encolhe quando voa)
     const shScale = 1 - this.altitude / 240;
@@ -582,18 +588,11 @@ export class Dragao extends Enemy {
     ctx.fill();
 
     const sx = Math.round(this.x - cam.x - DRAGON_PX / 2);
-    const sy = Math.round(this.y - cam.y - DRAGON_PX * 0.75 - this.altitude);
+    const sy = Math.round(this.y - cam.y - DRAGON_PX * 0.85 - this.altitude);
     ctx.save();
     if (this.flash > 0) ctx.filter = 'brightness(2.6) saturate(0.3)';
-    else if (this.enraged) ctx.filter = 'saturate(1.5) hue-rotate(-18deg)';
-    if (!this.facingLeft) {
-      // a arte nativa olha para a esquerda
-      ctx.translate(sx + DRAGON_PX, sy);
-      ctx.scale(-1, 1);
-      ctx.drawImage(sprite, 0, 0, DRAGON_PX, DRAGON_PX * (sprite.height / sprite.width));
-    } else {
-      ctx.drawImage(sprite, sx, sy, DRAGON_PX, DRAGON_PX * (sprite.height / sprite.width));
-    }
+    else if (this.enraged) ctx.filter = 'saturate(1.6) hue-rotate(90deg)';
+    ctx.drawImage(sprite, sx, sy, DRAGON_PX, DRAGON_PX);
     ctx.restore();
 
     if (this.hurtTimer > 0) {
@@ -643,16 +642,13 @@ export class Fireball {
   }
 
   render(ctx, cam) {
-    const x = this.x - cam.x;
-    const y = this.y - cam.y;
-    ctx.fillStyle = '#c84010';
-    ctx.beginPath();
-    ctx.arc(x, y, 8, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#f8a838';
-    ctx.beginPath();
-    ctx.arc(x - 1, y - 1, 4, 0, Math.PI * 2);
-    ctx.fill();
+    const img = images.fireball;
+    const ang = Math.atan2(this.vy, this.vx);
+    ctx.save();
+    ctx.translate(this.x - cam.x, this.y - cam.y);
+    ctx.rotate(ang + Math.PI); // a arte aponta a cauda para a direita
+    ctx.drawImage(img, -img.width * 1.5, -img.height * 1.5, img.width * 3, img.height * 3);
+    ctx.restore();
   }
 }
 

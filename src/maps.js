@@ -89,13 +89,10 @@ export const MAP_DEFS = {
         m.set(23, y, T.PATH);
       }
 
-      // casas de Silena
-      m.house(6, 6, 6, 5);
-      m.house(15, 5, 5, 5);
-      m.house(28, 6, 6, 5);
-      m.house(8, 20, 5, 5);
-      m.house(30, 20, 6, 5);
-      m.house(37, 10, 4, 4);
+      // casas de Silena (4x3, carimbadas com a arte do pack)
+      for (const [hx, hy] of [[6, 6], [15, 5], [28, 6], [8, 20], [30, 20], [37, 10]]) {
+        m.fillRect(hx, hy, 4, 3, T.ROOF);
+      }
 
       // praça central calçada
       m.fillRect(19, 11, 9, 4, T.PATH);
@@ -104,12 +101,16 @@ export const MAP_DEFS = {
       m.scatter(rand, T.FLOWER, 24);
       m.scatter(rand, T.TREE, 8);
     },
+    stamps: [
+      ['houseThatch', 6, 6], ['houseCream', 15, 5], ['houseThatch', 28, 6],
+      ['houseCream', 8, 20], ['houseThatch', 30, 20], ['houseCream', 37, 10],
+    ],
     spawns: [], // cidade segura
     altars: [[26, 12]],
     npcs: [
       {
         tx: 25, ty: 17, name: 'Princesa Sabra',
-        palette: { W: '#c8a8e0', R: '#8a5cb8', H: '#3a2a18', A: '#e8c860' },
+        sprite: 'sabra',
         lines: (flags) => flags.dragaoDerrotado
           ? [
             'O Dragão... tombou? Silena está livre do tributo!',
@@ -130,7 +131,7 @@ export const MAP_DEFS = {
       },
       {
         tx: 27, ty: 13, name: 'Padre Anastácio',
-        palette: { W: '#4a4038', R: '#4a4038', H: '#c8c0b0' },
+        sprite: 'anastacio',
         lines: () => [
           'Ora nos altares, filho — a oração cura o corpo e guarda a jornada.',
           'E não desperdices tua Fúria: ela é dom do Alto para a hora mais escura.',
@@ -138,12 +139,12 @@ export const MAP_DEFS = {
       },
       {
         tx: 17, ty: 14, name: 'Mira, a tecelã',
-        palette: { W: '#b86838', R: '#7a3820', H: '#6b4a2b' },
+        sprite: 'mira',
         lines: () => ['O Dragão exige um tributo a cada lua cheia... Ontem levaram o filho do ferreiro. Ninguém mais dorme em Silena.'],
       },
       {
         tx: 30, ty: 17, name: 'Ancião Teodoro',
-        palette: { W: '#8a9a78', R: '#5a6a48', H: '#d8d0c0' },
+        sprite: 'teodoro',
         lines: () => [
           'O hálito da besta envenenou o pântano ao sul. Nem os corvos voam por lá.',
           'Dizem que o veneno queima até a alma... Leva poções, moço.',
@@ -356,7 +357,8 @@ export const MAP_DEFS = {
     npcs: [
       {
         tx: 31, ty: 23, name: 'Espírito de São Sebastião',
-        palette: { W: '#c8d8e8', R: '#8098b0', H: '#e8e0d0', S: '#d8e0e8' },
+        sprite: 'espirito',
+        ghost: true,
         grant: 'setas',
         lines: (flags) => flags.milagres?.setas
           ? ['"Vai, cavaleiro. Minhas setas voam contigo."']

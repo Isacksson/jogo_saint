@@ -1,5 +1,7 @@
 // Milagres: os dons dos santos, pagos com Fé
 
+import { images } from './assets.js';
+
 // ---------- Raio do Trovão (Santa Bárbara) ----------
 
 class Bolt {
@@ -128,25 +130,19 @@ class ArrowRain {
     ctx.arc(this.cx - cam.x, this.cy - cam.y, 88, 0, Math.PI * 2);
     ctx.stroke();
     ctx.globalAlpha = 1;
-    // setas caindo em diagonal
+    // setas caindo em diagonal (arte do pack)
+    const img = images.arrow;
     for (const ar of this.arrows) {
-      if (ar.t > 0.35) continue;
+      if (ar.t > 0.4) continue;
       const fall = Math.min(1, ar.t / 0.22);
       const x = ar.x - cam.x + (1 - fall) * 60;
       const y = ar.y - cam.y - (1 - fall) * 220;
-      ctx.strokeStyle = '#d8c8a0';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(x + 7, y - 24);
-      ctx.lineTo(x, y);
-      ctx.stroke();
-      if (fall >= 1) {
-        ctx.strokeStyle = '#8a7050';
-        ctx.beginPath();
-        ctx.moveTo(ar.x - cam.x + 3, ar.y - cam.y - 10);
-        ctx.lineTo(ar.x - cam.x, ar.y - cam.y);
-        ctx.stroke();
-      }
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(Math.PI * 0.75); // apontando para baixo-esquerda, como a queda
+      const s = fall >= 1 ? 2 : 3;
+      ctx.drawImage(img, -img.width * s / 2, -img.height * s / 2, img.width * s, img.height * s);
+      ctx.restore();
     }
     ctx.restore();
   }

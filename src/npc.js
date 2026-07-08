@@ -1,7 +1,7 @@
 // NPCs: aldeões de Silena e objetos sagrados com diálogo
 
 import { TILE_PX, SCALE } from './constants.js';
-import { makeVillagerSprite, buildAltarSprite } from './sprites.js';
+import { npcSprite, buildAltarSprite } from './sprites.js';
 
 const SPRITE_PX = 16 * SCALE;
 
@@ -11,9 +11,10 @@ export class Npc {
     this.y = (def.ty + 0.5) * TILE_PX;
     this.name = def.name;
     this.relic = !!def.relic;
+    this.ghost = !!def.ghost;
     this.grant = def.grant;
     this.lines = def.lines;
-    this.sprite = this.relic ? buildAltarSprite() : makeVillagerSprite(def.palette || {});
+    this.sprite = this.relic ? buildAltarSprite() : npcSprite(def.sprite || 'mira').down[0];
   }
 
   getLines(world) {
@@ -28,8 +29,8 @@ export class Npc {
     const x = this.x - cam.x;
     const y = this.y - cam.y;
 
-    if (this.relic) {
-      // pedestal com brilho místico
+    if (this.relic || this.ghost) {
+      // brilho místico
       const pulse = 0.18 + 0.1 * Math.sin(elapsed * 3);
       const g = ctx.createRadialGradient(x, y - 14, 4, x, y - 14, 40);
       g.addColorStop(0, `rgba(180, 200, 255, ${pulse})`);
@@ -42,12 +43,19 @@ export class Npc {
     ctx.beginPath();
     ctx.ellipse(x, y + 2, 10, 4, 0, 0, Math.PI * 2);
     ctx.fill();
+
+    ctx.save();
+    if (this.ghost) {
+      ctx.globalAlpha = 0.75 + 0.1 * Math.sin(elapsed * 2);
+    }
+    const bob = this.ghost ? Math.sin(elapsed * 2.2) * 3 : 0;
     ctx.drawImage(
       this.sprite,
       Math.round(x - SPRITE_PX / 2),
-      Math.round(y - SPRITE_PX + 8),
+      Math.round(y - SPRITE_PX + 8 + bob),
       SPRITE_PX, SPRITE_PX
     );
+    ctx.restore();
 
     if (world.player.alive && this.isNear(world.player)) {
       ctx.font = 'bold 13px Georgia, serif';

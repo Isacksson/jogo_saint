@@ -104,7 +104,7 @@ Século III. O Império Romano persegue os cristãos, mas algo pior desperta sob
 
 ## 4. Direção de Arte e Som
 
-- **Pixel art 16×16** gerada por código (sem assets externos) — paleta terrosa e dourada na superfície, escurecendo a cada fossa até o negro-vermelho do Abismo.
+- **Pixel art 16×16 do Ninja Adventure Pack (CC0, Pixel-boy)** — personagens 4 direções × 4 frames, cenografia com profundidade (árvores e casas que o jogador atravessa por trás); paleta clara na superfície, escurecendo a cada fossa até o negro-vermelho do Abismo. Lacunas do pack (lava, muralhas, ícones) seguem procedurais.
 - Jorge: túnica branca com a cruz vermelha, capa, lança.
 - UI: barras de Vida (vermelho), Fé (azul) e Fúria Sagrada (dourado); moldura estilo iluminura medieval.
 - **Áudio**: Web Audio API — chiptune modal (tons gregorianos) na superfície, drones graves nas fossas. (Turno 6.)
@@ -136,6 +136,7 @@ Cada turno termina com **commit + push** — o trabalho nunca fica pela metade n
 - [x] **Turno 4** — Ato I: vila de Silena, NPCs e diálogos, pântano, catacumbas (dungeon 1 com chave/porta).
 - [x] **Turno 5** — Milagres/Relíquias (Raio do Trovão, Chuva de Setas), Fossa da Ira com o príncipe Amon.
 - [x] **Turno 6** — Boss Dragão de Silena, áudio (Web Audio), tela de título, polish.
+- [x] **Turno 7** — Repaginação visual: assets profissionais CC0 (Ninja Adventure Pack), cenografia com profundidade, FX de golpe em sprite.
 - [ ] **Turnos 7+** — Fossas restantes, Ato III, Serpente Antiga, epílogo.
 
 ---

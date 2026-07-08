@@ -2,6 +2,7 @@
 
 import { SCALE } from './constants.js';
 import { makeSprite } from './sprites.js';
+import { images } from './assets.js';
 import { sfx } from './audio.js';
 
 export const RARITY = [
@@ -229,8 +230,11 @@ export class GroundItem {
   }
 
   render(ctx, cam) {
-    const icons = buildItemSprites();
-    const icon = this.item.kind === 'equip' ? icons[this.item.slot] : icons[this.item.kind];
+    // moeda, poção e chave usam a arte do pack; equipamento usa os ícones da UI
+    const PACK = { gold: 'coin', potion: 'potion', chave: 'key' };
+    const icon = this.item.kind === 'equip'
+      ? buildItemSprites()[this.item.slot]
+      : images[PACK[this.item.kind]];
     const bob = Math.sin(this.t * 4) * 3;
     const x = this.x - cam.x;
     const y = this.y - cam.y + bob;
@@ -247,7 +251,10 @@ export class GroundItem {
     ctx.fill();
     ctx.restore();
 
-    ctx.drawImage(icon, Math.round(x - ICON_PX / 2), Math.round(y - ICON_PX / 2),
-      ICON_PX, Math.round(icon.height / icon.width * ICON_PX));
+    const w = this.item.kind === 'equip' ? ICON_PX : icon.width * SCALE;
+    const h = this.item.kind === 'equip'
+      ? Math.round(icon.height / icon.width * ICON_PX)
+      : icon.height * SCALE;
+    ctx.drawImage(icon, Math.round(x - w / 2), Math.round(y - h / 2), w, h);
   }
 }
