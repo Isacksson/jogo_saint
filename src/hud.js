@@ -137,6 +137,16 @@ export function renderMiracles(ctx, player, world, miracles) {
       ctx.beginPath();
       ctx.ellipse(x + 32, y + 16, 5, 2, 0, 0, Math.PI * 2);
       ctx.stroke();
+    } else if (id === 'vade') {
+      // cruz radiante de São Bento
+      ctx.strokeStyle = '#f0e8d0';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x + 24, y + 8);
+      ctx.lineTo(x + 24, y + 38);
+      ctx.moveTo(x + 15, y + 17);
+      ctx.lineTo(x + 33, y + 17);
+      ctx.stroke();
     } else if (id === 'luz') {
       // sol radiante
       ctx.strokeStyle = '#f8f0c0';

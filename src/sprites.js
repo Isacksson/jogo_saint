@@ -88,6 +88,7 @@ export function buildEnemySprites() {
       belzebu: sheetDirs(images.belzebu),
       mamon: sheetDirs(images.mamon),
       asmodeu: sheetDirs(images.asmodeu),
+      belfegor: sheetDirs(images.belfegor),
     };
   }
   return enemyCache;
@@ -219,6 +220,21 @@ function roseTiles() {
   });
 }
 
+// piso da Preguiça: pedra tomada de musgo e poeira
+function slothTiles() {
+  return [[2, 4, 10, 11, 6, 13], [12, 3, 4, 9]].map((pts) => {
+    const c = cut(17, 33);
+    const ctx = c.getContext('2d');
+    for (let i = 0; i < pts.length; i += 2) {
+      ctx.fillStyle = '#6a7458';
+      ctx.fillRect(pts[i], pts[i + 1], 3, 2);
+      ctx.fillStyle = '#7e8868';
+      ctx.fillRect(pts[i] + 1, pts[i + 1], 1, 1);
+    }
+    return c;
+  });
+}
+
 // piso da Avareza: pedra clara com moedas perdidas
 function treasureTiles() {
   const plain = cut(16, 31);
@@ -317,6 +333,7 @@ export function buildTiles() {
   tiles[T.FLOWER] = [flowerTile()];
   tiles[T.TREASURE] = treasureTiles();
   tiles[T.ROSEFLOOR] = roseTiles();
+  tiles[T.SLOTHFLOOR] = slothTiles();
   tiles[T.WATER] = tintedWater(false);
   tiles[T.POISON] = tintedWater(true);
   tiles[T.BONES] = bonesTiles();

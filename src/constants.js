@@ -34,6 +34,7 @@ export const T = {
   FEASTFLOOR: 22,// salão dourado da Fossa da Gula
   TREASURE: 23, // piso com moedas da Fossa da Avareza
   ROSEFLOOR: 24,// piso de pétalas da Fossa da Luxúria
+  SLOTHFLOOR: 25,// pedra tomada de musgo da Fossa da Preguiça
 };
 
 // Tiles que bloqueiam movimento

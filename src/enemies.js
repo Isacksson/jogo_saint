@@ -525,6 +525,78 @@ export class Asmodeu extends Amon {
   }
 }
 
+// ---------- Belfegor: príncipe da Fossa da Preguiça ----------
+
+export class Belfegor extends Amon {
+  constructor(tx, ty) {
+    super(tx, ty);
+    this.hpMax = 620;
+    this.hp = 620;
+    this.dmg = 28;
+    this.xpValue = 400;
+    this.blood = '#4a5a68';
+    this.bossName = 'Belfegor — Príncipe da Preguiça';
+    this.sheetName = 'belfegor';
+    this.minionType = Possesso;
+    this.summonCry = 'DEIXAI-ME... DORMIR...';
+    this.sleepCd = 4;
+    this.sleepT = 0;
+  }
+
+  // sonolento: dorme para regenerar, mas o sono o deixa vulnerável
+  update(dt, world) {
+    if (!this.alive) return;
+
+    if (this.sleepT > 0) {
+      this.updateCommon(dt, world);
+      this.sleepT -= dt;
+      this.hp = Math.min(this.hpMax, this.hp + 22 * dt); // ressona e sara
+      this.animTime += dt * 0.3;
+      if (Math.random() < dt * 6) {
+        world.fx.text(this.x + (Math.random() - 0.5) * 30, this.y - 40 - Math.random() * 10, 'z', '#a8b8c8');
+      }
+      // um golpe forte o desperta na hora
+      if (this.sleepT <= 0) {
+        world.fx.text(this.x, this.y - 70, 'GRRR... QUEM OUSA?', '#c8d8e8');
+      }
+      return;
+    }
+
+    super.update(dt, world);
+
+    // fora de combate próximo, volta a cochilar
+    this.sleepCd = Math.max(0, this.sleepCd - dt);
+    const p = world.player;
+    if (this.sleepCd <= 0 && this.state === 'chase' && p.alive) {
+      this.sleepCd = 8;
+      this.sleepT = 3.2;
+      world.fx.text(this.x, this.y - 70, 'Que sono...', '#a8b8c8');
+    }
+  }
+
+  takeDamage(dmg, kbX, kbY, world) {
+    // dobro de dano enquanto dorme; qualquer golpe encurta o sono
+    const asleep = this.sleepT > 0;
+    if (asleep) {
+      this.sleepT = Math.min(this.sleepT, 0.3);
+      world.fx.text(this.x, this.y - 54, 'DESPERTOU!', '#f8d860');
+    }
+    super.takeDamage(asleep ? dmg * 2 : dmg, kbX, kbY, world);
+  }
+
+  render(ctx, cam) {
+    super.render(ctx, cam);
+    if (this.alive && this.sleepT > 0) {
+      // olhos fechados: um "zzz" sobre a cabeça
+      ctx.font = 'bold 16px Georgia, serif';
+      ctx.fillStyle = '#c8d8e8';
+      ctx.textAlign = 'center';
+      const py = this.y - cam.y - 32 * this.scale - 6 + Math.sin(this.animTime * 2) * 3;
+      ctx.fillText('z Z z', this.x - cam.x, py);
+    }
+  }
+}
+
 // ---------- Serpe: cria do Dragão, mantém distância e cospe veneno ----------
 
 export class Serpe extends Enemy {

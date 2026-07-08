@@ -599,6 +599,11 @@ export const MAP_DEFS = {
       m.fillRect(29, 22, 4, 4, T.ROSEFLOOR);
       m.set(28, 23, T.GATE);
       m.set(28, 24, T.GATE);
+
+      // a escada que desce à Sexta Fossa
+      m.fillRect(30, 26, 2, 3, T.ROSEFLOOR);
+      m.set(30, 29, T.STAIRS);
+      m.set(31, 29, T.STAIRS);
     },
     spawns: [
       ['invejoso', 9, 6], ['serpe', 13, 8], ['possesso', 16, 12],
@@ -624,6 +629,62 @@ export const MAP_DEFS = {
     ],
     portals: [
       { x: 2, y: 2, w: 1, h: 2, to: 'fossa_avareza', tx: 30, ty: 27 },
+      { x: 30, y: 29, w: 2, h: 1, to: 'fossa_preguica', tx: 4, ty: 3 },
+    ],
+  },
+
+  // ---------- Sexta Fossa: a Preguiça (fecho do Ato II) ----------
+  fossa_preguica: {
+    name: 'Sexta Fossa — A Preguiça',
+    w: 34, h: 32,
+    base: T.HELLWALL,
+    outside: T.HELLWALL,
+    gateFloor: T.SLOTHFLOOR,
+    dark: 'torch',
+    mood: 'dark',
+    generate(m) {
+      // antecâmara (chegada da escada)
+      m.fillRect(2, 2, 7, 5, T.SLOTHFLOOR);
+      // corredor lento e arrastado
+      m.fillRect(8, 5, 3, 6, T.SLOTHFLOOR);
+      m.fillRect(8, 10, 15, 4, T.SLOTHFLOOR);
+      m.fillRect(20, 13, 3, 7, T.SLOTHFLOOR);
+      // escombros do descuido (obstáculos)
+      m.fillRect(13, 11, 1, 2, T.CWALL);
+      m.fillRect(17, 12, 1, 2, T.CWALL);
+      // o leito eterno (arena de Belfegor)
+      m.fillRect(8, 19, 20, 9, T.SLOTHFLOOR);
+      m.fillRect(12, 22, 3, 2, T.CWALL);
+      m.fillRect(20, 24, 3, 2, T.CWALL);
+      // alcova selada de São Bento
+      m.fillRect(29, 22, 4, 4, T.SLOTHFLOOR);
+      m.set(28, 23, T.GATE);
+      m.set(28, 24, T.GATE);
+    },
+    spawns: [
+      ['possesso', 9, 7], ['possesso', 11, 12], ['serpe', 16, 11],
+      ['possesso', 20, 15], ['invejoso', 14, 13], ['possesso', 12, 25],
+      ['belfegor', 18, 24],
+    ],
+    altars: [[4, 4]],
+    npcs: [
+      {
+        tx: 31, ty: 23, name: 'Espírito de São Bento',
+        sprite: 'anastacio',
+        ghost: true,
+        grant: 'vade',
+        lines: (flags) => flags.milagres?.vade
+          ? ['"Ora et labora, cavaleiro. Nem o inferno resiste a uma alma que trabalha e reza."']
+          : [
+            'Entre os escombros do descuido, um velho monge de olhos vivos aponta uma cruz de metal.',
+            '"A preguiça não é o descanso — é a alma que desiste de lutar. Eu enfrentei o demônio no meu próprio copo de vinho envenenado, e o parti com o sinal da cruz."',
+            '"Grava na tua lança as palavras que gravei na minha medalha: VADE RETRO. Diante delas, as legiões recuam."',
+            '✝ Milagre recebido: VADE RETRO — tecla 7 (40 de Fé)',
+          ],
+      },
+    ],
+    portals: [
+      { x: 2, y: 2, w: 1, h: 2, to: 'fossa_luxuria', tx: 30, ty: 27 },
     ],
   },
 };

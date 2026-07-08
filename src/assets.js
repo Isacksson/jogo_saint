@@ -23,6 +23,7 @@ const FILES = {
   mamon: 'assets/mamon.png',
   asmodeu: 'assets/asmodeu.png',
   cordeiro: 'assets/cordeiro.png',
+  belfegor: 'assets/belfegor.png',
   coin: 'assets/coin.png',
   potion: 'assets/potion.png',
   key: 'assets/key.png',

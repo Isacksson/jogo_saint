@@ -10,7 +10,7 @@ import { Camera } from './camera.js';
 import { Player } from './player.js';
 import {
   Imundo, ImundoChefe, Amon, Dragao, Serpe,
-  Invejoso, Leviata, Possesso, Belzebu, Mamon, Asmodeu,
+  Invejoso, Leviata, Possesso, Belzebu, Mamon, Asmodeu, Belfegor,
 } from './enemies.js';
 import { initAudio, updateMusic, setMood, toggleMute, sfx } from './audio.js';
 import { Npc } from './npc.js';
@@ -94,7 +94,7 @@ const ENEMY_TYPES = {
   imundo: Imundo, serpe: Serpe, chefe: ImundoChefe,
   amon: Amon, dragao: Dragao,
   invejoso: Invejoso, leviata: Leviata,
-  possesso: Possesso, belzebu: Belzebu, mamon: Mamon, asmodeu: Asmodeu,
+  possesso: Possesso, belzebu: Belzebu, mamon: Mamon, asmodeu: Asmodeu, belfegor: Belfegor,
 };
 
 // o navegador só libera áudio após o primeiro gesto do usuário

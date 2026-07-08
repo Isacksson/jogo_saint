@@ -22,7 +22,7 @@ python3 -m http.server 8000
 | Esquiva (i-frames) | Espaço / Shift |
 | Fúria Sagrada (com a barra cheia) | L / C |
 | Beber poção | Q |
-| Milagres (após receber a relíquia) | 1 – 6 |
+| Milagres (após receber a relíquia) | 1 – 7 |
 | Silenciar música e sons | M |
 | Inventário | I / Esc |
 | Orar no altar (cura + salva o jogo) | E |
@@ -71,4 +71,6 @@ Os gráficos usam o **[Ninja Adventure Asset Pack](https://pixel-boy.itch.io/nin
 
 - [x] **T11 — Fossa da Luxúria**: o jardim das delícias com piso de pétalas, o príncipe **Asmodeu** (a sedução puxa Jorge para o abraço da morte — esquive para resistir) e o espírito de **Santa Inês** com o *Cordeiro Guardião* (tecla 6 — aliado alvo e leal que morde os malignos por 14s)
 
-O roadmap detalhado dos passos T12–T15 (um por sessão, cada um com commit) está no [`docs/GDD.md`](docs/GDD.md). Próximo: **T12 — Fossa da Preguiça** (príncipe Belfegor + São Bento, fecho do Ato II).
+- [x] **T12 — Fossa da Preguiça** (fecho do Ato II): o leito eterno tomado de musgo, o príncipe **Belfegor** (adormece no meio da luta — regenera ressonando, mas toma o dobro de dano; um golpe forte o desperta) e o espírito de **São Bento** com o *Vade Retro* (tecla 7 — a cruz que repele e atordoa todas as legiões próximas). **Os sete milagres dos santos estão completos.**
+
+O roadmap detalhado dos passos T13–T15 (um por sessão, cada um com commit) está no [`docs/GDD.md`](docs/GDD.md). Próximo: **T13 — as Portas do Abismo** (Ato III, a Serpente Antiga).

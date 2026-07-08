@@ -329,6 +329,68 @@ function castCordeiro(world, player) {
   world.fx.text(player.x, player.y - 78, 'O Cordeiro vela por ti.', '#f8f0dc');
 }
 
+// ---------- Vade Retro (São Bento) ----------
+
+class VadeRetro {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.t = 0;
+    this.dur = 0.7;
+    this.hit = false;
+    this.dead = false;
+  }
+
+  update(dt, world) {
+    this.t += dt;
+    if (!this.hit && this.t >= 0.1) {
+      this.hit = true;
+      world.fx.addShake(6);
+      for (const e of world.enemies) {
+        if (!e.alive) continue;
+        const dx = e.x - this.x;
+        const dy = e.y - this.y;
+        const d = Math.hypot(dx, dy) || 1;
+        if (d < 300) {
+          // repele com violência e atordoa por um instante
+          e.takeDamage(18, (dx / d) * 620, (dy / d) * 620, world);
+          e.stunT = Math.max(e.stunT || 0, e.isBoss ? 0.6 : 1.5);
+        }
+      }
+    }
+    if (this.t >= this.dur) this.dead = true;
+  }
+
+  render(ctx, cam) {
+    const p = this.t / this.dur;
+    const x = this.x - cam.x;
+    const y = this.y - cam.y;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, 1 - p);
+    // a cruz de São Bento, irradiando
+    ctx.strokeStyle = '#f0e8d0';
+    ctx.lineWidth = 5 * (1 - p * 0.5);
+    const r = 30 + p * 40;
+    ctx.beginPath();
+    ctx.moveTo(x, y - r); ctx.lineTo(x, y + r);
+    ctx.moveTo(x - r * 0.7, y - r * 0.2); ctx.lineTo(x + r * 0.7, y - r * 0.2);
+    ctx.stroke();
+    // onda de choque
+    ctx.strokeStyle = '#d8c890';
+    ctx.lineWidth = 4 * (1 - p);
+    ctx.beginPath();
+    ctx.arc(x, y, p * 300, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function castVade(world, player) {
+  world.spells.push(new VadeRetro(player.x, player.cy));
+  world.fx.burst(player.x, player.cy, '#f0e8d0', 22, 240);
+  world.fx.text(player.x, player.y - 78, 'Vade retro, satana!', '#f0e8d0');
+}
+
 // ---------- registro ----------
 
 export const MIRACLES = {
@@ -338,4 +400,5 @@ export const MIRACLES = {
   jejum: { key: '4', name: 'Jejum que Fortalece', saint: 'Santo Antão', cost: 30, cast: castJejum },
   fogo: { key: '5', name: 'Fogo que Purifica', saint: 'São Lourenço', cost: 40, cast: castFogo },
   cordeiro: { key: '6', name: 'Cordeiro Guardião', saint: 'Santa Inês', cost: 45, cast: castCordeiro },
+  vade: { key: '7', name: 'Vade Retro', saint: 'São Bento', cost: 40, cast: castVade },
 };
