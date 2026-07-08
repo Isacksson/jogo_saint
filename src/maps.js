@@ -376,7 +376,7 @@ export const MAP_DEFS = {
       },
     ],
     portals: [
-      { x: 2, y: 2, w: 1, h: 2, to: 'catacumbas', tx: 27, ty: 24 },
+      { x: 2, y: 2, w: 1, h: 5, to: 'catacumbas', tx: 27, ty: 24 },
       { x: 30, y: 29, w: 2, h: 1, to: 'fossa_inveja', tx: 4, ty: 3 },
     ],
   },
@@ -438,7 +438,7 @@ export const MAP_DEFS = {
       },
     ],
     portals: [
-      { x: 2, y: 2, w: 1, h: 2, to: 'fossa_ira', tx: 30, ty: 27 },
+      { x: 2, y: 2, w: 1, h: 5, to: 'fossa_ira', tx: 30, ty: 27 },
       { x: 30, y: 29, w: 2, h: 1, to: 'fossa_gula', tx: 4, ty: 3 },
     ],
   },
@@ -502,7 +502,7 @@ export const MAP_DEFS = {
       },
     ],
     portals: [
-      { x: 2, y: 2, w: 1, h: 2, to: 'fossa_inveja', tx: 30, ty: 27 },
+      { x: 2, y: 2, w: 1, h: 5, to: 'fossa_inveja', tx: 30, ty: 27 },
       { x: 30, y: 29, w: 2, h: 1, to: 'fossa_avareza', tx: 4, ty: 3 },
     ],
   },
@@ -563,7 +563,7 @@ export const MAP_DEFS = {
       },
     ],
     portals: [
-      { x: 2, y: 2, w: 1, h: 2, to: 'fossa_gula', tx: 30, ty: 26 },
+      { x: 2, y: 2, w: 1, h: 5, to: 'fossa_gula', tx: 30, ty: 26 },
       { x: 30, y: 29, w: 2, h: 1, to: 'fossa_luxuria', tx: 4, ty: 3 },
     ],
   },
@@ -628,7 +628,7 @@ export const MAP_DEFS = {
       },
     ],
     portals: [
-      { x: 2, y: 2, w: 1, h: 2, to: 'fossa_avareza', tx: 30, ty: 27 },
+      { x: 2, y: 2, w: 1, h: 5, to: 'fossa_avareza', tx: 30, ty: 27 },
       { x: 30, y: 29, w: 2, h: 1, to: 'fossa_preguica', tx: 4, ty: 3 },
     ],
   },
@@ -684,7 +684,7 @@ export const MAP_DEFS = {
       },
     ],
     portals: [
-      { x: 2, y: 2, w: 1, h: 2, to: 'fossa_luxuria', tx: 30, ty: 27 },
+      { x: 2, y: 2, w: 1, h: 5, to: 'fossa_luxuria', tx: 30, ty: 27 },
     ],
   },
 };

@@ -94,8 +94,15 @@ class Enemy {
       if (this.keyCarrier && !world.flags.temChave) {
         world.groundItems.push(new GroundItem(this.x, this.y, { kind: 'chave' }));
       }
+      // missão cumprida: o chefe (ou mini-chefe) não revive ao reentrar/recarregar
+      if (this.isBoss || this.keyCarrier) {
+        world.flags.defeated = world.flags.defeated || {};
+        world.flags.defeated[world.mapId] = true;
+      }
       if (this.opensGate) {
         world.map.openGates();
+        world.flags.sealsBroken = world.flags.sealsBroken || {};
+        world.flags.sealsBroken[world.mapId] = true;
         world.fx.text(this.x, this.y - 60, 'Os selos da fossa se rompem!', '#e8dcb8');
         world.fx.addShake(6);
       }

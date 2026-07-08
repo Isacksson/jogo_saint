@@ -160,6 +160,8 @@ function enterMap(id, tx, ty) {
 
   // o portão das catacumbas permanece aberto se já foi destrancado
   if (id === 'pantano' && world.flags.catacumbasAbertas) map.openGates();
+  // alcovas de fossa cujo selo já foi rompido continuam abertas
+  if (world.flags.sealsBroken?.[id]) map.openGates();
 
   const st = world.mapStates[id];
   if (st) {
@@ -169,10 +171,14 @@ function enterMap(id, tx, ty) {
   } else {
     world.kills = 0;
     world.groundItems = [];
-    world.enemies = (def.spawns || []).map(([type, sx, sy]) => {
+    world.enemies = [];
+    for (const [type, sx, sy] of def.spawns || []) {
       const [fx0, fy0] = findFree(map, sx, sy);
-      return new ENEMY_TYPES[type](fx0, fy0);
-    });
+      const e = new ENEMY_TYPES[type](fx0, fy0);
+      // chefe/mini-chefe já derrotado não renasce (missão cumprida)
+      if ((e.isBoss || e.keyCarrier) && world.flags.defeated?.[id]) continue;
+      world.enemies.push(e);
+    }
   }
 
   const [px, py] = findFree(map, tx, ty);

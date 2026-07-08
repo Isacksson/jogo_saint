@@ -36,11 +36,24 @@ os padrões criados nele (portais, mapas, diálogo) são reaproveitados por todo
     no canto). O marcador resolve a visibilidade; ao refatorar mapas, vale
     aumentar a zona de gatilho desses portais para facilitar o acerto.
 
-- [ ] **A2 — Refatoração de mapas e portais**
-  As 6 fossas são quase copy-paste. Extrair um `makeFossa({...})` e helpers de
-  portal/alcova/escada. Além de limpar o código, isso torna trivial o que a v0.2
-  pede ("a fossa já existe, só precisa de um novo ponto de entrada").
-  - Sem mudança visível de jogo — é refatoração pura + teste de regressão.
+- [x] **A2a — Zonas de gatilho dos portais de volta** ✔ feito
+  Os portais de volta das fossas eram alvos de 1×2 no canto. Alargados para a
+  coluna inteira da sala de entrada (`h: 2 → 5`), então andar para a esquerda de
+  qualquer altura da sala já sai. Sem gatilho instantâneo no spawn (que é em x=4).
+  Testado em ira/gula/preguiça saindo do meio da sala.
+
+- [ ] **A2b — Extração `makeFossa()`** *(adiado de propósito)*
+  As 6 fossas ainda são copy-paste. O único ganho da extração é conveniência
+  **futura** (novos pontos de entrada no Bloco C). Como mapa quebrado é pior que
+  código repetido e temos orçamento apertado, **adiamos até o Bloco C precisar** —
+  aí a refatoração é feita junto com o primeiro capítulo que reusa uma fossa.
+
+- [x] **BUG — Chefes ressuscitando** ✔ corrigido *(fora do plano original)*
+  Ao salvar/recarregar (e no renascer), os chefes reapareciam porque o mapa era
+  reconstruído de `spawns`. Agora, ao morrer, chefe/mini-chefe grava
+  `flags.defeated[mapId]` e (se abre selo) `flags.sealsBroken[mapId]`; ambos
+  persistem no save. Na reconstrução do mapa, chefe já derrotado não renasce e a
+  alcova rompida continua aberta. Testado: Amon morto continua morto após reload.
 
 - [ ] **A3 — Caixa de diálogo rica**
   A história da v0.2 é muito mais densa. A caixa atual é texto simples.
