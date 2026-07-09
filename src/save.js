@@ -1,5 +1,7 @@
 // Salvamento: orar num altar grava a jornada no localStorage
 
+import { Spear } from './spear.js';
+
 const KEY = 'lenda-aurea-save';
 
 export function serializeWorld(world) {
@@ -12,6 +14,7 @@ export function serializeWorld(world) {
     potions: p.potions,
     inventory: p.inventory,
     equip: p.equip,
+    spear: p.spear.toJSON(),
     x: p.x,
     y: p.y,
     mapId: world.mapId,
@@ -27,6 +30,7 @@ export function applyPlayer(p, data, keepPos = false) {
   p.potions = data.potions;
   p.inventory = data.inventory || [];
   p.equip = data.equip || {};
+  p.spear = Spear.from(data.spear);
   if (keepPos) {
     p.x = data.x;
     p.y = data.y;

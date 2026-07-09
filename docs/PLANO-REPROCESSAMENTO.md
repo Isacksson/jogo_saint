@@ -91,9 +91,19 @@ os padrões criados nele (portais, mapas, diálogo) são reaproveitados por todo
 ## BLOCO B — Infraestrutura da v0.2
 *Sistemas novos exigidos antes de qualquer região nova. Detalhe em `docs/GDD.md` §6.*
 
-- [ ] **B1 — Sistema de lança** *(GDD T12)* — a lança de guarnição com 3 estágios
-      visuais e de dano; substitui o dano fixo atual do ataque pesado. Ascalon
-      deixa de ser "já dada" e passa a ser forjada.
+- [x] **B1 — Sistema de lança** *(GDD T12)* ✔ feito
+      Novo `src/spear.js` com a classe `Spear`: quatro estágios derivados do estado
+      (guarnição → reforçada → Ascalon → consagrada) a partir de `reinforce`,
+      `forged`, `consecrated`. Cada estágio traduz para **dano** (24 → +3/reforço
+      até +15 → 44 forjada → 60 consagrada), **alcance** e **aparência** (tingimento
+      + halo dourado). O `Player` ganha `this.spear`; o ataque pesado passou a puxar
+      dano/alcance da lança (não mais `HEAVY.dmg`/`reach` fixos) e a escalar por
+      `lanceBonus` (nível), independente da espada de loot. `renderLance` reflete o
+      estágio. Persistido no save (`spear.toJSON()`/`Spear.from`, retrocompatível
+      com saves sem o campo). Ascalon deixou de ser "já dada": só existe via
+      `forge()` (fecho do Ato II, C6) e `consecrate()` (Ato III, D1); Rufo chama
+      `reinforceOnce()` (B2). Testado: 31/31 asserções de lógica + smoke no navegador
+      (carrega sem erro, investida renderiza nos 4 estágios, dano 24→44).
 - [ ] **B2 — Economia** *(GDD T13)* — ferreiro **Rufo** e mercadora **Prisca**, loja
       simples (comprar/vender), e os **fragmentos de Ascalon** como item de inventário.
 - [ ] **B3 — Estradas do Império** *(GDD T14)* — tela de viagem ligando Silena aos

@@ -4,6 +4,7 @@ import { TILE_PX, SCALE, PLAYER_SPEED } from './constants.js';
 import { input } from './input.js';
 import { buildPlayerSprites, buildFxFrames } from './sprites.js';
 import { MIRACLES } from './miracles.js';
+import { Spear } from './spear.js';
 import { sfx } from './audio.js';
 
 const SPRITE_PX = 16 * SCALE;
@@ -20,7 +21,8 @@ const LIGHT = [
   { dmg: 10, kb: 150, dur: 0.22, radius: 42 },
   { dmg: 16, kb: 320, dur: 0.3, radius: 54 },
 ];
-const HEAVY = { dmg: 24, kb: 240, dur: 0.5, reach: 86 };
+// dano e alcance vêm da Spear; aqui ficam só o tempo do golpe e o empurrão
+const HEAVY = { kb: 240, dur: 0.5 };
 const DODGE = { dur: 0.32, speed: 340, cd: 0.45 };
 const FURY_DURATION = 6;
 
@@ -50,6 +52,7 @@ export class Player {
     this.potions = 0;
     this.inventory = [];
     this.equip = {}; // arma / escudo / armadura / medalha
+    this.spear = new Spear(); // lança de guarnição -> Ascalon (GDD §2.3)
     this.refreshStats();
 
     // máquina de estados de combate
@@ -93,6 +96,11 @@ export class Player {
 
   get attackBonus() {
     return (this.equip.arma?.value || 0) + (this.level - 1);
+  }
+
+  // a lança é mortal, não mágica: não escala com a espada de loot, só com nível
+  get lanceBonus() {
+    return this.level - 1;
   }
 
   get defense() {
@@ -323,17 +331,19 @@ export class Player {
     if (!this.didHit && this.stateTime >= HEAVY.dur * 0.3) {
       this.didHit = true;
       const v = DIR_VEC[this.facing];
-      const cx = this.x + v.x * HEAVY.reach * 0.55;
-      const cy = this.cy + v.y * HEAVY.reach * 0.55;
+      const reach = this.spear.reach;
+      const cx = this.x + v.x * reach * 0.55;
+      const cy = this.cy + v.y * reach * 0.55;
       // corredor estreito e comprido: a lança perfura em linha
-      const alongX = Math.abs(v.x) > 0 ? HEAVY.reach * 0.65 : 22;
-      const alongY = Math.abs(v.y) > 0 ? HEAVY.reach * 0.65 : 22;
+      const alongX = Math.abs(v.x) > 0 ? reach * 0.65 : 22;
+      const alongY = Math.abs(v.y) > 0 ? reach * 0.65 : 22;
+      const dmg = (this.spear.dmg + this.lanceBonus) * this.dmgMult;
       let hitAny = false;
       for (const e of world.enemies) {
         if (!e.alive) continue;
         if (Math.abs(e.x - cx) < alongX && Math.abs((e.y - 10) - cy) < alongY) {
           hitAny = true;
-          e.takeDamage((HEAVY.dmg + this.attackBonus) * this.dmgMult, v.x * HEAVY.kb, v.y * HEAVY.kb, world);
+          e.takeDamage(dmg, v.x * HEAVY.kb, v.y * HEAVY.kb, world);
           this.gainFury(8);
         }
       }
@@ -473,18 +483,37 @@ export class Player {
     ctx.restore();
   }
 
-  // investida de Ascalon em sprite
+  // investida da lança em sprite — a aparência muda com o estágio (GDD §2.3)
   renderLance(ctx, camera) {
     const p = Math.min(1, this.stateTime / HEAVY.dur);
     const frames = buildFxFrames().heavy;
     const frame = frames[Math.min(4, Math.floor(p * 5))];
     const ang = DIR_ANGLE[this.facing];
-    const ext = Math.sin(p * Math.PI) * HEAVY.reach * 0.75;
+    const ext = Math.sin(p * Math.PI) * this.spear.reach * 0.75;
     const size = 32 * SCALE * 1.15;
+    const style = this.spear.style;
+    const tx = this.x - camera.x + Math.cos(ang) * ext;
+    const ty = this.cy - camera.y + Math.sin(ang) * ext;
+
+    // halo dourado da lança forjada/consagrada
+    if (style.glow > 0) {
+      const halo = Math.sin(p * Math.PI) * style.glow;
+      const g = ctx.createRadialGradient(tx, ty, 4, tx, ty, size * 0.7);
+      g.addColorStop(0, `rgba(255, 225, 130, ${0.45 * halo})`);
+      g.addColorStop(1, 'rgba(255, 225, 130, 0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(tx - size * 0.7, ty - size * 0.7, size * 1.4, size * 1.4);
+    }
 
     ctx.save();
-    ctx.translate(this.x - camera.x + Math.cos(ang) * ext, this.cy - camera.y + Math.sin(ang) * ext);
+    ctx.translate(tx, ty);
     ctx.rotate(ang + Math.PI / 2);
+    // tingimento da ponta reforçada/Ascalon (a Fúria já reforça no golpe leve)
+    if (style.tint) {
+      ctx.filter = this.spear.forged
+        ? 'sepia(1) saturate(3) hue-rotate(-12deg) brightness(1.35)'
+        : 'brightness(1.15) saturate(0.7)';
+    }
     ctx.drawImage(frame, -size / 2, -size / 2, size, size);
     ctx.restore();
   }
