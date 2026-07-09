@@ -179,10 +179,22 @@ cada. Segue o roadmap do GDD §6 (T15–T26); as fossas são reaproveitadas, nã
       os capítulos de uma vez). Testado (integração + screenshot): viagem, quest
       completa (chave→cárcere→Marcelino), poço→fossa com 3 portais, bênção de
       Sebastião concede Chuva de Setas + Farpa da Flecha. Sem erros.
-- [ ] **C1b — Corda de Sebastião + Cavaleiro Guerra** *(GDD T15–T16, parte 2)* —
-      o instrumento emprestado pelo santo (atravessar fossos / imobilizar inimigo
-      por 2 s) e a **emboscada do Cavaleiro Guerra** na estrada de chegada
-      (primeiro dos Quatro Cavaleiros, GDD §2.6).
+- [x] **C1b — Corda de Sebastião + Cavaleiro Guerra** *(GDD T15–T16, parte 2)* —
+      **`instruments.js` novo**: os 7 instrumentos registrados de uma vez, posse
+      DERIVADA de `flags.milagres` (zero campos de save, retroativo; anunciado
+      na bênção junto do fragmento). **Corda (tecla R)**: com estaca-âncora
+      alinhada ao olhar (≤330 px), Jorge se lança por sobre lava/fossos (estado
+      `grapple`, invulnerável); sem âncora, laça o inimigo mais próximo (≤240 px)
+      e o imobiliza 2 s (`bindT`, IA congela como no atordoamento da Luz; cd
+      4,5 s; funciona até em chefes). Na Fossa da Ira: saliência com 2 âncoras
+      + **tesouros de mapa** (`def.treasures`, coleta única via `flags.tesouros`)
+      — 90 denários + Relicário do Mártir. **Cavaleiro Guerra**: viajar a
+      Sebaste sem vencê-lo desvia para o mapa novo `estrada_sebaste`; saída
+      leste com `portal.locked(flags)` (novo, com pushback + aviso) até ele cair;
+      ao "morrer" se dissolve prometendo voltar (`flags.cavaleiros.guerra`,
+      GDD §2.6) — render: sprite de Jorge tingido de vermelho + aura (sem asset
+      novo). Testado (integração, 14 asserções + 2 screenshots): emboscada,
+      laço, bloqueio, dissolução, travessia e tesouro. Sem erros.
 - [ ] **C2 — Porto de Luzia** + Fossa da Inveja + Espelho de Luzia + Cavaleiro Conquista. *(T17–T18)*
 - [ ] **C3 — Ermo de Antão** + Fossa da Gula + Cajado de Antão. *(T19–T20)*
 - [ ] **C4 — Distrito do Tesouro** (revisita) + Fossa da Avareza + Balança de Lourenço

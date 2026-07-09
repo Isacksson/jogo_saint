@@ -1,7 +1,7 @@
 // Demônios: Imundo (bando, corpo a corpo) e Serpe (cospe veneno à distância)
 
 import { TILE_PX, SCALE } from './constants.js';
-import { buildEnemySprites, buildDragonSprites } from './sprites.js';
+import { buildEnemySprites, buildDragonSprites, buildPlayerSprites } from './sprites.js';
 import { images } from './assets.js';
 import { rollDrop, GroundItem } from './items.js';
 import { sfx } from './audio.js';
@@ -65,6 +65,8 @@ class Enemy {
     if (this.stunT > 0 && Math.random() < dt * 8) {
       world.fx.spark(this.x + (Math.random() - 0.5) * 20, this.y - 30, '#f8f0c0');
     }
+    // amarrado pela Corda de Sebastião: imóvel enquanto o laço aperta
+    this.bindT = Math.max(0, (this.bindT || 0) - dt);
     if (Math.abs(this.kbX) + Math.abs(this.kbY) > 2) {
       this.moveAxis(world.map, this.kbX * dt, 0);
       this.moveAxis(world.map, 0, this.kbY * dt);
@@ -147,6 +149,19 @@ class Enemy {
     ctx.drawImage(sprite, sx, sy, px, px);
     ctx.restore();
 
+    // as voltas do laço da Corda de Sebastião
+    if (this.bindT > 0 && this.alive) {
+      ctx.strokeStyle = '#c8a060';
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 3; i++) {
+        const ly = this.y - cam.y - (8 + i * 7) * this.scale;
+        ctx.beginPath();
+        ctx.moveTo(this.x - cam.x - 7 * this.scale, ly);
+        ctx.lineTo(this.x - cam.x + 7 * this.scale, ly + 2);
+        ctx.stroke();
+      }
+    }
+
     // barra de vida (só quando ferido recentemente)
     if (this.hurtTimer > 0 && this.alive) {
       const w = 30 * this.scale;
@@ -181,7 +196,7 @@ export class Imundo extends Enemy {
   update(dt, world) {
     if (!this.alive) return;
     this.updateCommon(dt, world);
-    if (this.stunT > 0) return; // cegado pela Luz
+    if (this.stunT > 0 || this.bindT > 0) return; // cegado pela Luz ou amarrado
     this.animTime += dt;
     this.atkCd = Math.max(0, this.atkCd - dt);
 
@@ -310,7 +325,7 @@ export class Amon extends Enemy {
   update(dt, world) {
     if (!this.alive) return;
     this.updateCommon(dt, world);
-    if (this.stunT > 0) return; // até os príncipes vacilam diante da Luz
+    if (this.stunT > 0 || this.bindT > 0) return; // até os príncipes vacilam diante da Luz
     this.animTime += dt * (this.enraged ? 1.6 : 1);
     this.chargeCd = Math.max(0, this.chargeCd - dt);
 
@@ -478,6 +493,69 @@ export class Carcereiro extends Possesso {
   }
 }
 
+// ---------- Guerra: o primeiro dos Quatro Cavaleiros (GDD §2.6) ----------
+//
+// Não é um príncipe das fossas: aparece como emboscada semi-roteirizada nas
+// Estradas do Império. Um cavaleiro de vermelho, espelho sombrio de Jorge —
+// derrotá-lo não o mata: figuras apocalípticas se dissolvem e prometem voltar
+// (e voltam, fundidas como arauto da Serpente, antes da batalha final).
+
+export class CavaleiroGuerra extends Amon {
+  constructor(tx, ty) {
+    super(tx, ty);
+    this.hpMax = 340;
+    this.hp = 340;
+    this.dmg = 20;
+    this.xpValue = 240;
+    this.scale = 2;
+    this.hbW = 13 * SCALE;
+    this.hbH = 7 * SCALE;
+    this.blood = '#7a1010';
+    this.bossName = 'GUERRA, o Primeiro Cavaleiro';
+    this.opensGate = false;
+    this.minionType = Imundo;
+    this.summonCry = 'A GUERRA NÃO POUPA NINGUÉM!';
+  }
+
+  // os Cavaleiros enchem a Fúria mais depressa: sobreviver a eles é o prêmio
+  update(dt, world) {
+    const hpBefore = world.player.hp;
+    super.update(dt, world);
+    if (world.player.hp < hpBefore) world.player.gainFury(10);
+  }
+
+  onDeath(world) {
+    world.flags.cavaleiros = world.flags.cavaleiros || {};
+    world.flags.cavaleiros.guerra = true;
+    world.fx.addShake(9);
+    world.fx.burst(this.x, this.y - 20, '#7a1010', 40, 300);
+    world.fx.burst(this.x, this.y - 20, '#2a2018', 26, 220);
+    world.fx.text(this.x, this.y - 96, '"Voltarei quando a hora chegar, cavaleiro de Cristo."', '#e88060');
+    world.fx.text(this.x, this.y - 72, 'O Cavaleiro se dissolve em cinza e ferro. A estrada está livre.', '#e8dcb8');
+  }
+
+  // um cavaleiro vermelho: a silhueta de Jorge tingida de sangue e ferrugem
+  render(ctx, cam) {
+    if (!this.alive) return;
+    const frame = buildPlayerSprites()[this.dir][Math.floor(this.animTime * 6) % 4];
+
+    // a aura do cavalo vermelho
+    const x = this.x - cam.x, y = this.y - cam.y - 16 * this.scale;
+    const pulse = 0.3 + 0.1 * Math.sin(this.animTime * 4);
+    const g = ctx.createRadialGradient(x, y, 6, x, y, 70);
+    g.addColorStop(0, `rgba(200, 40, 24, ${this.enraged ? pulse + 0.15 : pulse})`);
+    g.addColorStop(1, 'rgba(200, 40, 24, 0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(x - 70, y - 70, 140, 140);
+
+    ctx.save();
+    if (this.flash <= 0) ctx.filter = 'sepia(1) saturate(9) hue-rotate(-42deg) brightness(0.52)';
+    if (this.windup > 0) ctx.translate((Math.random() - 0.5) * 5, 0);
+    this.renderSprite(ctx, cam, frame);
+    ctx.restore();
+  }
+}
+
 // ---------- Belzebu: príncipe da Fossa da Gula ----------
 
 export class Belzebu extends Amon {
@@ -543,7 +621,7 @@ export class Asmodeu extends Amon {
 
   update(dt, world) {
     super.update(dt, world);
-    if (!this.alive || this.stunT > 0) return;
+    if (!this.alive || this.stunT > 0 || this.bindT > 0) return;
 
     // a sedução: puxa o cavaleiro para o abraço da morte
     this.seduceCd = Math.max(0, this.seduceCd - dt);
@@ -655,7 +733,7 @@ export class Serpe extends Enemy {
   update(dt, world) {
     if (!this.alive) return;
     this.updateCommon(dt, world);
-    if (this.stunT > 0) return; // cegada pela Luz
+    if (this.stunT > 0 || this.bindT > 0) return; // cegada pela Luz ou amarrada
     this.animTime += dt;
 
     const p = world.player;
@@ -750,7 +828,7 @@ export class Dragao extends Enemy {
   update(dt, world) {
     if (!this.alive) return;
     this.updateCommon(dt, world);
-    if (this.stunT > 0 && !this.airborne) return;
+    if ((this.stunT > 0 || this.bindT > 0) && !this.airborne) return;
     this.animTime += dt;
     this.actT += dt;
     this.spitCd = Math.max(0, this.spitCd - dt);

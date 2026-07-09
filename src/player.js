@@ -5,6 +5,7 @@ import { input } from './input.js';
 import { buildPlayerSprites, buildFxFrames } from './sprites.js';
 import { MIRACLES } from './miracles.js';
 import { Spear } from './spear.js';
+import { hasInstrument } from './instruments.js';
 import { sfx } from './audio.js';
 
 const SPRITE_PX = 16 * SCALE;
@@ -72,6 +73,8 @@ export class Player {
     this.kbY = 0;
     this.castCd = 0;
     this.shieldT = 0; // Jejum que Fortalece
+    this.ropeCd = 0;  // Corda de Sebastião
+    this.grapple = null;
   }
 
   get alive() {
@@ -175,6 +178,7 @@ export class Player {
     this.comboWindow = Math.max(0, this.comboWindow - dt);
     this.castCd = Math.max(0, this.castCd - dt);
     this.shieldT = Math.max(0, this.shieldT - dt);
+    this.ropeCd = Math.max(0, this.ropeCd - dt);
 
     // a Fé se recompõe devagar
     this.faith = Math.min(this.faithMax, this.faith + 2.5 * dt);
@@ -221,6 +225,7 @@ export class Player {
       case 'attack': this.updateAttack(dt, world); break;
       case 'heavy': this.updateHeavy(dt, world); break;
       case 'dodge': this.updateDodge(dt, world); break;
+      case 'grapple': this.updateGrapple(dt, world); break;
     }
   }
 
@@ -257,6 +262,8 @@ export class Player {
       this.setState('heavy');
       this.didHit = false;
       sfx('heavy');
+    } else if (input.wasPressed('corda')) {
+      this.tryRope(world);
     } else if (input.wasPressed('dodge') && this.dodgeCd <= 0) {
       const v = this.moving
         ? { x: dx / Math.hypot(dx, dy), y: dy / Math.hypot(dx, dy) }
@@ -350,6 +357,74 @@ export class Player {
       if (hitAny) world.fx.addShake(5);
     }
     if (this.stateTime >= HEAVY.dur) this.setState('normal');
+  }
+
+  // Corda de Sebastião (R): âncora à frente → travessia por sobre o fosso;
+  // sem âncora, laça e imobiliza o inimigo mais próximo por 2 s (GDD §3.7)
+  tryRope(world) {
+    if (!hasInstrument(world.flags, 'corda') || this.ropeCd > 0) return;
+    const v = DIR_VEC[this.facing];
+
+    // 1) uma âncora alinhada com o olhar: lança-se por sobre o que houver
+    let best = null, bestD = Infinity;
+    for (const a of world.anchors || []) {
+      const dx = a.x - this.x, dy = a.y - this.y;
+      const d = Math.hypot(dx, dy);
+      if (d < 40 || d > 330) continue;
+      if ((dx * v.x + dy * v.y) / d < 0.72) continue;
+      if (d < bestD) { best = a; bestD = d; }
+    }
+    if (best) {
+      this.grapple = { x: best.x, y: best.y };
+      this.invuln = Math.max(this.invuln, 1);
+      this.ropeCd = 0.6;
+      sfx('swing');
+      this.setState('grapple');
+      return;
+    }
+
+    // 2) o laço: amarra o inimigo mais próximo
+    let e0 = null;
+    bestD = 240;
+    for (const e of world.enemies) {
+      if (!e.alive) continue;
+      const d = Math.hypot(e.x - this.x, e.y - this.y);
+      if (d < bestD) { e0 = e; bestD = d; }
+    }
+    if (e0) {
+      e0.bindT = 2;
+      this.ropeCd = 4.5;
+      sfx('swing');
+      for (let i = 0; i <= 8; i++) {
+        world.fx.spark(
+          this.x + (e0.x - this.x) * i / 8,
+          this.cy + (e0.y - 20 - this.cy) * i / 8,
+          '#c8a060'
+        );
+      }
+      world.fx.text(e0.x, e0.y - 50, 'Amarrado!', '#c8a060');
+    } else {
+      world.fx.text(this.x, this.y - 58, 'A corda não acha onde prender...', '#c0b090');
+      this.ropeCd = 0.4;
+    }
+  }
+
+  // voando pela corda: em linha reta até a âncora, por cima de lava e fossos
+  updateGrapple(dt, world) {
+    const dx = this.grapple.x - this.x;
+    const dy = this.grapple.y - this.y;
+    const d = Math.hypot(dx, dy);
+    const step = 560 * dt;
+    if (d <= step + 2) {
+      this.x = this.grapple.x;
+      this.y = this.grapple.y;
+      this.grapple = null;
+      this.setState('normal');
+      return;
+    }
+    this.x += (dx / d) * step;
+    this.y += (dy / d) * step;
+    if (Math.random() < dt * 30) world.fx.spark(this.x, this.y, '#c8a060');
   }
 
   updateDodge(dt, world) {
@@ -463,6 +538,16 @@ export class Player {
 
     if (this.state === 'attack') this.renderSlash(ctx, camera);
     if (this.state === 'heavy') this.renderLance(ctx, camera);
+
+    // a corda esticada até a âncora durante a travessia
+    if (this.state === 'grapple' && this.grapple) {
+      ctx.strokeStyle = '#c8a060';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(this.x - camera.x, this.cy - camera.y);
+      ctx.lineTo(this.grapple.x - camera.x, this.grapple.y - camera.y - 18);
+      ctx.stroke();
+    }
   }
 
   // corte de espada em sprite, girado conforme a direção

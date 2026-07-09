@@ -55,6 +55,8 @@ function makeFossa(cfg) {
       }
     },
     spawns,
+    anchors: cfg.anchors,
+    treasures: cfg.treasures,
     altars: [[4, 4]],
     npcs: [{
       tx: 31, ty: gateY, name: spirit.name, sprite: spirit.sprite,
@@ -503,6 +505,37 @@ export const MAP_DEFS = {
     ],
   },
 
+  // ---------- a emboscada do Cavaleiro Guerra na estrada (GDD §2.6) ----------
+  estrada_sebaste: {
+    name: 'Estrada para Sebaste',
+    w: 36, h: 16,
+    mood: 'dark',
+    generate(m) {
+      const rand = rng(616);
+      m.border(2, T.TREE);
+      // a via romana, reta de oeste a leste
+      for (let x = 0; x < m.w; x++) {
+        m.set(x, 7, T.PATH);
+        m.set(x, 8, T.PATH);
+      }
+      // beira de estrada calcinada: por onde a Guerra passa, nada verdeja
+      m.scatter(rand, T.DEADTREE, 16);
+      m.scatter(rand, T.ROCK, 6);
+    },
+    spawns: [['guerra', 20, 7]],
+    altars: [[4, 5]],
+    npcs: [],
+    portals: [
+      { x: 0, y: 6, w: 1, h: 4, roads: true }, // recuar para as Estradas
+      {
+        x: 35, y: 6, w: 1, h: 4, to: 'sebaste', tx: 2, ty: 12,
+        // o Cavaleiro bloqueia a passagem enquanto não for vencido
+        locked: (f) => !f.cavaleiros?.guerra,
+        lockedMsg: '"NINGUÉM passa. A guerra cobra o seu pedágio." O Cavaleiro barra a estrada.',
+      },
+    ],
+  },
+
   // ---------- Primeira Fossa: a Ira ----------
   fossa_ira: makeFossa({
     name: 'Primeira Fossa — A Ira',
@@ -511,6 +544,12 @@ export const MAP_DEFS = {
     descendTo: { to: 'fossa_inveja' },
     // o poço velho de Forte Sebaste desemboca no teto da antecâmara (C1)
     extraPortals: [{ x: 5, y: 2, w: 2, h: 1, to: 'sebaste', tx: 32, ty: 19 }],
+    // a saliência do tesouro, do outro lado do rio de fogo: só a Corda alcança
+    anchors: [[5, 22], [11, 22]],
+    treasures: [
+      { tx: 5, ty: 21, item: { kind: 'gold', amount: 90 } },
+      { tx: 6, ty: 23, item: { kind: 'equip', slot: 'medalha', rarity: 2, name: 'Relicário do Mártir', value: 100 } },
+    ],
     carve(m, f) {
       // descida serpenteante
       m.fillRect(8, 6, 3, 6, f);
@@ -520,6 +559,8 @@ export const MAP_DEFS = {
       m.fillRect(8, 19, 2, 9, T.LAVA);
       m.fillRect(26, 19, 2, 9, T.LAVA);
       m.fillRect(13, 11, 2, 2, T.LAVA);
+      // a saliência isolada além do fogo, a oeste da arena
+      m.fillRect(4, 21, 4, 3, f);
     },
     spawns: [
       ['imundo', 9, 12], ['imundo', 12, 13], ['serpe', 17, 12],
@@ -534,6 +575,7 @@ export const MAP_DEFS = {
           'Um vulto translúcido se ergue entre as brasas: um jovem soldado, o corpo marcado por cem flechas.',
           '"Fui alvejado por ordem do imperador, e sobrevivi para ser alvejado de novo. Conheço a ira — e a venci com paciência."',
           '"Toma minhas setas, irmão de armas. Que elas caiam sobre os malignos como caíram sobre mim."',
+          '"E leva a minha corda de soldado. Com ela cruzarás fossos onde vires uma estaca — e amarrarás os furiosos (tecla R)."',
           '✝ Milagre recebido: CHUVA DE SETAS — tecla 2 (25 de Fé)',
         ],
     },

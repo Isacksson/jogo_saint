@@ -74,9 +74,10 @@ const EDGES = [
   ['tesouro', 'nursia'],
 ];
 
-// nó correspondente a um mapa (para marcar "estás aqui")
+// nó correspondente a um mapa (para marcar "estás aqui"); null quando o mapa
+// não é um nó (ex.: a estrada da emboscada) — daí nada bloqueia a viagem
 export function nodeForMap(mapId) {
-  return NODES.find((n) => n.dest?.to === mapId)?.id || 'silena';
+  return NODES.find((n) => n.dest?.to === mapId)?.id || null;
 }
 
 export class RoadsScreen {

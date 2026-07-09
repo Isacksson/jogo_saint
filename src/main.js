@@ -11,7 +11,7 @@ import { Player } from './player.js';
 import {
   Imundo, ImundoChefe, Amon, Dragao, Serpe,
   Invejoso, Leviata, Possesso, Belzebu, Mamon, Asmodeu, Belfegor,
-  Carcereiro,
+  Carcereiro, CavaleiroGuerra,
 } from './enemies.js';
 import { initAudio, updateMusic, setMood, toggleMute, sfx } from './audio.js';
 import { Npc } from './npc.js';
@@ -24,6 +24,8 @@ import {
 import { renderInventory } from './inventory.js';
 import { Shop, VENDORS, renderShop } from './economy.js';
 import { FRAGMENTS, MIRACLE_FRAGMENT, grantFragment } from './fragments.js';
+import { MIRACLE_INSTRUMENT, hasInstrument } from './instruments.js';
+import { GroundItem } from './items.js';
 import { RoadsScreen, renderRoads, nodeForMap } from './roads.js';
 import { Angel } from './angel.js';
 import { serializeWorld, applyPlayer, saveGame, loadSave } from './save.js';
@@ -100,7 +102,7 @@ const ENEMY_TYPES = {
   amon: Amon, dragao: Dragao,
   invejoso: Invejoso, leviata: Leviata,
   possesso: Possesso, belzebu: Belzebu, mamon: Mamon, asmodeu: Asmodeu, belfegor: Belfegor,
-  carcereiro: Carcereiro,
+  carcereiro: Carcereiro, guerra: CavaleiroGuerra,
 };
 
 // o navegador só libera áudio após o primeiro gesto do usuário
@@ -116,6 +118,7 @@ const world = {
   spells: [],
   groundItems: [],
   altars: [],
+  anchors: [],
   props: [],
   npcs: [],
   portals: [],
@@ -165,6 +168,10 @@ function enterMap(id, tx, ty) {
     const [fx0, fy0] = findFree(map, ax, ay);
     return { x: (fx0 + 0.5) * TILE_PX, y: (fy0 + 0.5) * TILE_PX };
   });
+  // estacas onde a Corda de Sebastião pode prender (travessia de fossos)
+  world.anchors = (def.anchors || []).map(([ax, ay]) => ({
+    x: (ax + 0.5) * TILE_PX, y: (ay + 0.5) * TILE_PX,
+  }));
   world.projectiles = [];
   world.spells = [];
   world.total = (def.spawns || []).length;
@@ -192,6 +199,14 @@ function enterMap(id, tx, ty) {
       if ((e.isBoss || e.keyCarrier) && world.flags.defeated?.[id]) continue;
       world.enemies.push(e);
     }
+    // tesouros de mapa: aparecem só enquanto não coletados (flag em tesouros)
+    (def.treasures || []).forEach((t, i) => {
+      const key = `${id}:${i}`;
+      if (world.flags.tesouros?.[key]) return;
+      world.groundItems.push(new GroundItem(
+        (t.tx + 0.5) * TILE_PX, (t.ty + 0.5) * TILE_PX, { ...t.item, tesouro: key }
+      ));
+    });
   }
 
   const [px, py] = findFree(map, tx, ty);
@@ -202,6 +217,11 @@ function enterMap(id, tx, ty) {
   camera.follow(world.player.x, world.player.y, 0, map, true);
   locName = def.name;
   locTime = 3.5;
+
+  // a emboscada: um vulto vermelho barra a estrada adiante (GDD §2.6)
+  if (id === 'estrada_sebaste' && !world.flags.cavaleiros?.guerra) {
+    world.fx.text(world.player.x, world.player.y - 70, 'Um cavaleiro vermelho barra a estrada adiante...', '#e88060');
+  }
 }
 
 // portão trancado: interação e aviso
@@ -323,23 +343,35 @@ function tryInteract() {
   }
 }
 
+// recua o cavaleiro um passo para dentro do mapa, na direção oposta à saída
+function portalPushback(portal, p) {
+  const side = portal.h >= portal.w
+    ? (portal.x <= world.map.w - (portal.x + portal.w) ? -1 : 1)
+    : 0;
+  const vert = portal.h >= portal.w
+    ? 0
+    : (portal.y <= world.map.h - (portal.y + portal.h) ? -1 : 1);
+  p.x -= side * TILE_PX * 1.6;
+  p.y -= vert * TILE_PX * 1.6;
+}
+
 function checkPortals() {
   const p = world.player;
   const tx = Math.floor(p.x / TILE_PX);
   const ty = Math.floor(p.y / TILE_PX);
   for (const portal of world.portals) {
     if (tx >= portal.x && tx < portal.x + portal.w && ty >= portal.y && ty < portal.y + portal.h) {
+      // passagem barrada pela história (ex.: o Cavaleiro Guerra na estrada)
+      if (portal.locked?.(world.flags)) {
+        portalPushback(portal, p);
+        world.fx.text(p.x, p.y - 64, portal.lockedMsg || 'O caminho está bloqueado.', '#e88060');
+        sfx('hurt');
+        return;
+      }
       if (portal.roads) {
-        // encruzilhada: abre a tela de viagem. Recua o cavaleiro um passo para
-        // dentro do mapa, para que fechar a tela não a reabra no mesmo tile.
-        const side = portal.h >= portal.w
-          ? (portal.x <= world.map.w - (portal.x + portal.w) ? -1 : 1)
-          : 0;
-        const vert = portal.h >= portal.w
-          ? 0
-          : (portal.y <= world.map.h - (portal.y + portal.h) ? -1 : 1);
-        p.x -= side * TILE_PX * 1.6;
-        p.y -= vert * TILE_PX * 1.6;
+        // encruzilhada: abre a tela de viagem (recuo para que fechar
+        // a tela não a reabra no mesmo tile)
+        portalPushback(portal, p);
         roads = new RoadsScreen(nodeForMap(world.mapId), world.flags);
         return;
       }
@@ -402,6 +434,36 @@ function renderAltars(cam) {
       ctx.lineWidth = 3;
       ctx.strokeText('E — Orar', a.x - cam.x, a.y - cam.y - px - 2);
       ctx.fillText('E — Orar', a.x - cam.x, a.y - cam.y - px - 2);
+    }
+  }
+}
+
+// estacas de amarração: onde a Corda de Sebastião prende para cruzar fossos
+function renderAnchors(cam) {
+  const p = world.player;
+  const temCorda = hasInstrument(world.flags, 'corda');
+  for (const a of world.anchors) {
+    const x = a.x - cam.x, y = a.y - cam.y;
+    // a estaca de madeira
+    ctx.fillStyle = '#4a3420';
+    ctx.fillRect(x - 4, y - 24, 8, 26);
+    ctx.fillStyle = '#6a4e30';
+    ctx.fillRect(x - 4, y - 24, 3, 26);
+    // o rolo de corda no topo
+    ctx.strokeStyle = '#c8a060';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(x, y - 22, 6, 0, Math.PI * 2);
+    ctx.stroke();
+
+    if (temCorda && p.alive && Math.hypot(p.x - a.x, p.y - a.y) < 340) {
+      ctx.font = 'bold 12px Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.strokeStyle = 'rgba(10, 6, 2, 0.9)';
+      ctx.lineWidth = 3;
+      ctx.strokeText('R — Corda', x, y - 34);
+      ctx.fillStyle = '#e8cf9a';
+      ctx.fillText('R — Corda', x, y - 34);
     }
   }
 }
@@ -579,7 +641,7 @@ function renderTitleScreen() {
   ctx.fillStyle = '#9a8a62';
   ctx.font = '13px Georgia, serif';
   ctx.fillText('WASD mover · J espada · K lança · ESPAÇO esquiva · L fúria · 1-2 milagres', VIEW_W / 2, 400);
-  ctx.fillText('E falar/orar · Q poção · I bolsa · M silenciar', VIEW_W / 2, 422);
+  ctx.fillText('E falar/orar · Q poção · R corda · I bolsa · M silenciar', VIEW_W / 2, 422);
   ctx.restore();
 }
 
@@ -638,6 +700,11 @@ function frame(now) {
               const f = FRAGMENTS.find((x) => x.id === fragId);
               world.fx.text(player.x, player.y - 90, `✦ Fragmento de Ascalon: ${f.relic}`, '#f0d060');
             }
+            // ... e o instrumento do santo (posse derivada do próprio milagre)
+            const inst = MIRACLE_INSTRUMENT[dlg.grant];
+            if (inst) {
+              world.fx.text(player.x, player.y - 114, `⚒ Instrumento: ${inst.name}`, '#c8a060');
+            }
           }
           // dons que não são milagres (o Anjo da Guarda de São Miguel, etc.)
           if (dlg.grantFlag && !world.flags[dlg.grantFlag]) {
@@ -667,7 +734,11 @@ function frame(now) {
       if (input.wasPressed('left') || input.wasPressed('up')) roads.move(-1);
       if (input.wasPressed('right') || input.wasPressed('down')) roads.move(1);
       if (input.wasPressed('interact')) {
-        const dest = roads.confirm(world.flags);
+        let dest = roads.confirm(world.flags);
+        // o Cavaleiro Guerra embosca quem toma a estrada de Sebaste (GDD §2.6)
+        if (dest?.to === 'sebaste' && !world.flags.cavaleiros?.guerra) {
+          dest = { to: 'estrada_sebaste', tx: 2, ty: 7 };
+        }
         if (dest) {
           trans = { t: 0, to: dest.to, tx: dest.tx, ty: dest.ty, swapped: false };
           roads = null;
@@ -738,6 +809,7 @@ function frame(now) {
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
   renderMap(cam);
   renderAltars(cam);
+  renderAnchors(cam);
   for (const g of world.groundItems) g.render(ctx, cam);
 
   // entidades e cenografia ordenadas por Y (quem está mais ao sul desenha por cima)

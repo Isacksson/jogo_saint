@@ -3,6 +3,7 @@
 import { VIEW_W, VIEW_H } from './constants.js';
 import { RARITY, describeItem, buildItemSprites } from './items.js';
 import { fragmentCount, FRAGMENT_TOTAL } from './fragments.js';
+import { instrumentCount, INSTRUMENT_TOTAL } from './instruments.js';
 
 const SLOT_LABEL = { arma: 'Arma', escudo: 'Escudo', armadura: 'Armadura', medalha: 'Medalha' };
 const SLOTS = ['arma', 'escudo', 'armadura', 'medalha'];
@@ -40,7 +41,8 @@ export function renderInventory(ctx, player, sel, flags = {}) {
   ctx.fillStyle = '#bcae86';
   ctx.font = '12px Georgia, serif';
   ctx.fillText(
-    `Lança: ${player.spear.name}  ·  Fragmentos de Ascalon ${fragmentCount(flags)}/${FRAGMENT_TOTAL}`,
+    `Lança: ${player.spear.name}  ·  Fragmentos de Ascalon ${fragmentCount(flags)}/${FRAGMENT_TOTAL}` +
+    `  ·  Instrumentos ${instrumentCount(flags)}/${INSTRUMENT_TOTAL}`,
     x + w / 2, y + 80
   );
 

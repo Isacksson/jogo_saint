@@ -227,6 +227,12 @@ export class GroundItem {
       world.fx.text(p.x, p.y - 54, 'Bolsa cheia! (I)', '#c0b090');
       this.fullMsgT = 1.5;
     }
+
+    // tesouro de mapa coletado: não reaparece nas próximas visitas
+    if (this.dead && it.tesouro) {
+      world.flags.tesouros = world.flags.tesouros || {};
+      world.flags.tesouros[it.tesouro] = true;
+    }
   }
 
   render(ctx, cam) {
