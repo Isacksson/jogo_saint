@@ -128,7 +128,6 @@ os padrões criados nele (portais, mapas, diálogo) são reaproveitados por todo
       + integração no jogo (reforço debita ouro e sobe o dano 24→27; inventário
       renderiza com fragmentos).
 
-> **Bloco B — 3 de 4.** Falta só o **B4 (Anjo da Guarda)**.
 - [x] **B3 — Estradas do Império** *(GDD T14)* ✔ feito
       Novo `src/roads.js`: registro `NODES` com os 8 destinos (Capadócia e Silena
       abertos; os 6 hubs do Bloco C fechados até `flags.roads[id] = true`, persistido
@@ -141,8 +140,24 @@ os padrões criados nele (portais, mapas, diálogo) são reaproveitados por todo
       do Bloco C só precisa gravar a flag e preencher `dest`.
       Testado (integração + screenshot): abre ao pisar na encruzilhada, recusa
       Forte Sebaste fechado, viaja a Capadócia no nó certo, sem erros.
-- [ ] **B4 — Anjo da Guarda** *(GDD T14b)* — companheiro de IA com 7 patentes, dado
-      no Prólogo, que evolui a cada bênção (GDD §3.6).
+- [x] **B4 — Anjo da Guarda** *(GDD T14b)* ✔ feito
+      Novo `src/angel.js`: o companheiro celeste concedido por **São Miguel** (novo
+      NPC-espírito no Prólogo da Capadócia, via `grantFlag: 'anjo'` — mecanismo
+      genérico de dom não-milagre no fim do diálogo). A patente é **derivada das
+      bênçãos** (`angelRank(flags)`): Anjo → Arcanjo → Principado → Virtude →
+      Potestade → Domínio → Serafim, com promoção anunciada em jogo. Comportamento:
+      órbita suave junto a Jorge; ataca sozinho o inimigo mais próximo (raio de luz,
+      dano 4+2/patente a cada 2,2 s); da **Virtude** em diante cura 1,5 hp/s; o
+      **Serafim** ganha o socorro (escudo + invulnerabilidade 2,5 s quando a vida
+      cai de 25%, recarga 45 s). Visual procedural: brilho que cresce com a patente,
+      1–3 pares de asas, auréola da Potestade em diante; desenhado por cima da
+      escuridão (é uma luz). Nada novo no save: posse e patente vivem em `flags`.
+      Testado (integração): o diálogo concede o dom; inimigo perde vida sozinho
+      (30→22); promovido a Virtude, cura (50→53 em 2 s); Serafim dispara o socorro
+      (invuln + escudo + recarga armada). Screenshot ok, sem erros.
+
+> **Bloco B concluído** (lança, economia, estradas, anjo). A infraestrutura da
+> v0.2 está pronta — o próximo passo é o **Bloco C** (C1 — Forte Sebaste).
 
 ---
 

@@ -122,7 +122,19 @@ export const MAP_DEFS = {
       ['imundo', 20, 28], ['imundo', 18, 30], ['serpe', 30, 30],
     ],
     altars: [[15, 16], [20, 29]],
-    npcs: [],
+    npcs: [
+      {
+        tx: 14, ty: 18, name: 'São Miguel Arcanjo',
+        sprite: 'anastacio', ghost: true, grantFlag: 'anjo',
+        lines: (flags) => flags.anjo
+          ? ['Guarda a fé, cavaleiro. A pequena luz cresce contigo — patente a patente, até o Serafim.']
+          : [
+            'Jorge. Não temas: o sonho era verdadeiro, e a estrada que se abre diante de ti não será andada sozinho.',
+            'Recebe esta pequena luz: um anjo da guarda. Ele fere o que te cerca e crescerá contigo — a cada bênção dos santos, sobe uma patente da hierarquia celeste.',
+            'Anjo, Arcanjo, Principado, Virtude, Potestade, Domínio... e, no cume, Serafim. Eu velarei de longe.',
+          ],
+      },
+    ],
     portals: [
       { x: 47, y: 17, w: 1, h: 4, to: 'silena', tx: 2, ty: 15 },
     ],

@@ -23,6 +23,7 @@ import {
 import { renderInventory } from './inventory.js';
 import { Shop, VENDORS, renderShop } from './economy.js';
 import { RoadsScreen, renderRoads, nodeForMap } from './roads.js';
+import { Angel } from './angel.js';
 import { serializeWorld, applyPlayer, saveGame, loadSave } from './save.js';
 
 const canvas = document.getElementById('game');
@@ -120,8 +121,12 @@ const world = {
   flags: {},
   mapStates: {},
 };
+// o Anjo da Guarda acompanha Jorge quando concedido (flags.anjo)
+const angel = new Angel();
+
 // exposto para depuração e testes automatizados
 window.world = world;
+window.angel = angel;
 window.enterMap = (id, tx, ty) => enterMap(id, tx, ty);
 
 // acha o tile livre mais próximo (spawn nunca dentro de parede/água)
@@ -262,7 +267,7 @@ function tryInteract() {
       }
       dlg = {
         name: npc.name, lines: npc.getLines(world), idx: 0, grant: npc.grant,
-        portrait: npc.sprite, ghost: npc.ghost, reveal: 0,
+        grantFlag: npc.grantFlag, portrait: npc.sprite, ghost: npc.ghost, reveal: 0,
       };
       return;
     }
@@ -606,6 +611,14 @@ function frame(now) {
             world.fx.text(player.x, player.y - 66, `✝ ${m.name} (${m.key})`, '#a8c8f8');
             world.fx.burst(player.x, player.y - 20, '#a8c8f8', 20, 200);
           }
+          // dons que não são milagres (o Anjo da Guarda de São Miguel, etc.)
+          if (dlg.grantFlag && !world.flags[dlg.grantFlag]) {
+            world.flags[dlg.grantFlag] = true;
+            if (dlg.grantFlag === 'anjo') {
+              world.fx.text(player.x, player.y - 66, '✝ Anjo da Guarda!', '#b8d8f8');
+              world.fx.burst(player.x, player.y - 40, '#d8e8ff', 24, 220);
+            }
+          }
           dlg = null;
         }
       }
@@ -667,6 +680,7 @@ function frame(now) {
     player.update(dt, world);
     if (player.alive && player.state === 'normal' && input.wasPressed('interact')) tryInteract();
     if (input.wasPressed('potion')) player.usePotion(world);
+    angel.update(dt, world);
     for (const e of world.enemies) e.update(dt, world);
     for (const p of world.projectiles) p.update(dt, world);
     world.projectiles = world.projectiles.filter((p) => !p.dead);
@@ -713,6 +727,9 @@ function frame(now) {
 
   const darkMode = MAP_DEFS[world.mapId].dark;
   if (darkMode) renderDarkness(cam, darkMode);
+
+  // o anjo é uma luz: desenhado por cima da escuridão
+  angel.render(ctx, cam, world);
 
   // marcadores de portal por cima da escuridão: exits sempre visíveis
   renderPortals(cam);
