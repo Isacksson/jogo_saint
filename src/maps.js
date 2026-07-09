@@ -4,6 +4,64 @@
 import { T } from './constants.js';
 import { rng } from './map.js';
 
+// Fábrica das Fossas: monta a estrutura comum a todas (antecâmara, arena, alcova
+// selada com portões, escada de descida, altar, portais e o espírito do santo) e
+// delega ao `carve(m, floor)` apenas a geometria única de cada fossa (o corredor
+// serpenteante, os perigos e os obstáculos). Elimina o copy-paste das 6 fossas e
+// deixa trivial acrescentar novos pontos de entrada (Bloco C da v0.2).
+//
+// Deriva de poucos parâmetros:
+//   floor    — tile de piso da fossa (também o chão que fica sob o portão aberto)
+//   arenaY   — linha do topo da arena do chefe (base retangular 20×9)
+//   alcoveY  — linha do topo da alcova selada; dela saem o portão, o espírito e
+//              a escada de descida (gateY = alcoveY+1, escada = alcoveY+4..29)
+//   anteW    — largura da antecâmara (quase sempre 7)
+//   returnTo — para onde a saída de volta leva { to, tx, ty }
+//   descendTo— próxima fossa { to } (tx/ty da chegada são sempre 4,3); null na última
+//   spirit   — { name, sprite, grant, lines } do santo na alcova
+function makeFossa(cfg) {
+  const {
+    name, floor, dark, arenaY = 19, alcoveY = 22, anteW = 7,
+    returnTo, descendTo = null, spirit, spawns, carve,
+  } = cfg;
+  const gateY = alcoveY + 1;
+  const stairY = alcoveY + 4;
+
+  const portals = [
+    { x: 2, y: 2, w: 1, h: 5, to: returnTo.to, tx: returnTo.tx, ty: returnTo.ty },
+  ];
+  if (descendTo) {
+    portals.push({ x: 30, y: 29, w: 2, h: 1, to: descendTo.to, tx: 4, ty: 3 });
+  }
+
+  return {
+    name, w: 34, h: 32,
+    base: T.HELLWALL, outside: T.HELLWALL, gateFloor: floor,
+    dark, mood: 'dark',
+    generate(m) {
+      m.fillRect(2, 2, anteW, 5, floor);      // antecâmara (chegada da escada)
+      m.fillRect(8, arenaY, 20, 9, floor);    // piso base da arena do chefe
+      carve(m, floor);                        // corredor + perigos únicos da fossa
+      m.fillRect(26, gateY, 2, 2, floor);     // vau: piso diante do portão selado
+      m.fillRect(29, alcoveY, 4, 4, floor);   // alcova do espírito
+      m.set(28, gateY, T.GATE);
+      m.set(28, gateY + 1, T.GATE);
+      if (descendTo) {                        // escada de descida (exceto na última)
+        m.fillRect(30, stairY, 2, 29 - stairY, floor);
+        m.set(30, 29, T.STAIRS);
+        m.set(31, 29, T.STAIRS);
+      }
+    },
+    spawns,
+    altars: [[4, 4]],
+    npcs: [{
+      tx: 31, ty: gateY, name: spirit.name, sprite: spirit.sprite,
+      ghost: true, grant: spirit.grant, lines: spirit.lines,
+    }],
+    portals,
+  };
+}
+
 export const MAP_DEFS = {
   // ---------- clareira inicial ----------
   capadocia: {
@@ -320,371 +378,218 @@ export const MAP_DEFS = {
   },
 
   // ---------- Primeira Fossa: a Ira ----------
-  fossa_ira: {
+  fossa_ira: makeFossa({
     name: 'Primeira Fossa — A Ira',
-    w: 34, h: 32,
-    base: T.HELLWALL,
-    outside: T.HELLWALL,
-    gateFloor: T.HELLFLOOR,
-    dark: 'hell',
-    mood: 'dark',
-    generate(m) {
-      const rand = rng(1313);
-      // antecâmara (chegada da escada)
-      m.fillRect(2, 2, 8, 5, T.HELLFLOOR);
+    floor: T.HELLFLOOR, dark: 'hell', anteW: 8, arenaY: 19, alcoveY: 22,
+    returnTo: { to: 'catacumbas', tx: 27, ty: 24 },
+    descendTo: { to: 'fossa_inveja' },
+    carve(m, f) {
       // descida serpenteante
-      m.fillRect(8, 6, 3, 6, T.HELLFLOOR);
-      m.fillRect(8, 11, 12, 4, T.HELLFLOOR);
-      m.fillRect(18, 14, 3, 6, T.HELLFLOOR);
-      // arena de Amon
-      m.fillRect(8, 19, 20, 9, T.HELLFLOOR);
-      // rios de fogo na arena (com vau diante do portão selado)
+      m.fillRect(8, 6, 3, 6, f);
+      m.fillRect(8, 11, 12, 4, f);
+      m.fillRect(18, 14, 3, 6, f);
+      // rios de fogo nas bordas da arena
       m.fillRect(8, 19, 2, 9, T.LAVA);
       m.fillRect(26, 19, 2, 9, T.LAVA);
-      m.fillRect(26, 23, 2, 2, T.HELLFLOOR);
       m.fillRect(13, 11, 2, 2, T.LAVA);
-      // alcova selada do espírito
-      m.fillRect(29, 22, 4, 4, T.HELLFLOOR);
-      m.set(28, 23, T.GATE);
-      m.set(28, 24, T.GATE);
-
-      // a escada que desce à Segunda Fossa (após a alcova)
-      m.fillRect(30, 26, 2, 3, T.HELLFLOOR);
-      m.set(30, 29, T.STAIRS);
-      m.set(31, 29, T.STAIRS);
     },
     spawns: [
       ['imundo', 9, 12], ['imundo', 12, 13], ['serpe', 17, 12],
       ['imundo', 19, 16], ['serpe', 19, 18],
       ['amon', 18, 23],
     ],
-    altars: [[4, 4]],
-    npcs: [
-      {
-        tx: 31, ty: 23, name: 'Espírito de São Sebastião',
-        sprite: 'espirito',
-        ghost: true,
-        grant: 'setas',
-        lines: (flags) => flags.milagres?.setas
-          ? ['"Vai, cavaleiro. Minhas setas voam contigo."']
-          : [
-            'Um vulto translúcido se ergue entre as brasas: um jovem soldado, o corpo marcado por cem flechas.',
-            '"Fui alvejado por ordem do imperador, e sobrevivi para ser alvejado de novo. Conheço a ira — e a venci com paciência."',
-            '"Toma minhas setas, irmão de armas. Que elas caiam sobre os malignos como caíram sobre mim."',
-            '✝ Milagre recebido: CHUVA DE SETAS — tecla 2 (25 de Fé)',
-          ],
-      },
-    ],
-    portals: [
-      { x: 2, y: 2, w: 1, h: 5, to: 'catacumbas', tx: 27, ty: 24 },
-      { x: 30, y: 29, w: 2, h: 1, to: 'fossa_inveja', tx: 4, ty: 3 },
-    ],
-  },
+    spirit: {
+      name: 'Espírito de São Sebastião', sprite: 'espirito', grant: 'setas',
+      lines: (flags) => flags.milagres?.setas
+        ? ['"Vai, cavaleiro. Minhas setas voam contigo."']
+        : [
+          'Um vulto translúcido se ergue entre as brasas: um jovem soldado, o corpo marcado por cem flechas.',
+          '"Fui alvejado por ordem do imperador, e sobrevivi para ser alvejado de novo. Conheço a ira — e a venci com paciência."',
+          '"Toma minhas setas, irmão de armas. Que elas caiam sobre os malignos como caíram sobre mim."',
+          '✝ Milagre recebido: CHUVA DE SETAS — tecla 2 (25 de Fé)',
+        ],
+    },
+  }),
 
   // ---------- Segunda Fossa: a Inveja ----------
-  fossa_inveja: {
+  fossa_inveja: makeFossa({
     name: 'Segunda Fossa — A Inveja',
-    w: 34, h: 32,
-    base: T.HELLWALL,
-    outside: T.HELLWALL,
-    gateFloor: T.ENVYFLOOR,
-    dark: 'torch',
-    mood: 'dark',
-    generate(m) {
-      // antecâmara (chegada da escada)
-      m.fillRect(2, 2, 7, 5, T.ENVYFLOOR);
+    floor: T.ENVYFLOOR, dark: 'torch', arenaY: 20, alcoveY: 22,
+    returnTo: { to: 'fossa_ira', tx: 30, ty: 27 },
+    descendTo: { to: 'fossa_gula' },
+    carve(m, f) {
       // galeria em zigue-zague
-      m.fillRect(7, 6, 3, 7, T.ENVYFLOOR);
-      m.fillRect(7, 12, 14, 4, T.ENVYFLOOR);
-      m.fillRect(19, 15, 3, 5, T.ENVYFLOOR);
+      m.fillRect(7, 6, 3, 7, f);
+      m.fillRect(7, 12, 14, 4, f);
+      m.fillRect(19, 15, 3, 5, f);
       // charcos de cobiça
       m.fillRect(10, 13, 2, 2, T.POISON);
       m.fillRect(16, 12, 2, 2, T.POISON);
-      // arena do Leviatã
-      m.fillRect(8, 20, 20, 9, T.ENVYFLOOR);
+      // charcos nas bordas da arena
       m.fillRect(8, 20, 2, 9, T.POISON);
       m.fillRect(26, 20, 2, 9, T.POISON);
-      m.fillRect(26, 23, 2, 2, T.ENVYFLOOR);
-      // alcova selada de Santa Luzia
-      m.fillRect(29, 22, 4, 4, T.ENVYFLOOR);
-      m.set(28, 23, T.GATE);
-      m.set(28, 24, T.GATE);
-
-      // a escada que desce à Terceira Fossa
-      m.fillRect(30, 26, 2, 3, T.ENVYFLOOR);
-      m.set(30, 29, T.STAIRS);
-      m.set(31, 29, T.STAIRS);
     },
     spawns: [
       ['invejoso', 8, 8], ['invejoso', 9, 13], ['serpe', 14, 14],
       ['invejoso', 18, 13], ['invejoso', 20, 17], ['serpe', 12, 12],
       ['leviata', 18, 24],
     ],
-    altars: [[4, 4]],
-    npcs: [
-      {
-        tx: 31, ty: 23, name: 'Espírito de Santa Luzia',
-        sprite: 'luzia',
-        ghost: true,
-        grant: 'luz',
-        lines: (flags) => flags.milagres?.luz
-          ? ['"Vai com a Luz, cavaleiro. Nenhuma treva prevalece contra ela."']
-          : [
-            'Entre as pedras verdes de cobiça, ergue-se uma jovem de olhar sereno — sereno, embora tenham-lhe tirado os olhos.',
-            '"Quiseram apagar a minha vista, e eu passei a ver mais longe. A inveja é isto: olhos que ardem pelo que não lhes pertence."',
-            '"Toma a minha Luz. Diante dela, todo olho maligno se fecha."',
-            '✝ Milagre recebido: LUZ QUE CEGA — tecla 3 (35 de Fé)',
-          ],
-      },
-    ],
-    portals: [
-      { x: 2, y: 2, w: 1, h: 5, to: 'fossa_ira', tx: 30, ty: 27 },
-      { x: 30, y: 29, w: 2, h: 1, to: 'fossa_gula', tx: 4, ty: 3 },
-    ],
-  },
+    spirit: {
+      name: 'Espírito de Santa Luzia', sprite: 'luzia', grant: 'luz',
+      lines: (flags) => flags.milagres?.luz
+        ? ['"Vai com a Luz, cavaleiro. Nenhuma treva prevalece contra ela."']
+        : [
+          'Entre as pedras verdes de cobiça, ergue-se uma jovem de olhar sereno — sereno, embora tenham-lhe tirado os olhos.',
+          '"Quiseram apagar a minha vista, e eu passei a ver mais longe. A inveja é isto: olhos que ardem pelo que não lhes pertence."',
+          '"Toma a minha Luz. Diante dela, todo olho maligno se fecha."',
+          '✝ Milagre recebido: LUZ QUE CEGA — tecla 3 (35 de Fé)',
+        ],
+    },
+  }),
 
   // ---------- Terceira Fossa: a Gula ----------
-  fossa_gula: {
+  fossa_gula: makeFossa({
     name: 'Terceira Fossa — A Gula',
-    w: 34, h: 32,
-    base: T.HELLWALL,
-    outside: T.HELLWALL,
-    gateFloor: T.FEASTFLOOR,
-    dark: 'hell',
-    mood: 'dark',
-    generate(m) {
-      // antecâmara (chegada da escada)
-      m.fillRect(2, 2, 7, 5, T.FEASTFLOOR);
+    floor: T.FEASTFLOOR, dark: 'hell', arenaY: 19, alcoveY: 21,
+    returnTo: { to: 'fossa_inveja', tx: 30, ty: 27 },
+    descendTo: { to: 'fossa_avareza' },
+    carve(m, f) {
       // corredor das migalhas
-      m.fillRect(8, 6, 3, 6, T.FEASTFLOOR);
-      m.fillRect(8, 11, 16, 4, T.FEASTFLOOR);
-      m.fillRect(21, 14, 3, 5, T.FEASTFLOOR);
+      m.fillRect(8, 6, 3, 6, f);
+      m.fillRect(8, 11, 16, 4, f);
+      m.fillRect(21, 14, 3, 5, f);
       // caldeirões ferventes
       m.fillRect(12, 12, 2, 2, T.LAVA);
       m.fillRect(18, 11, 2, 2, T.LAVA);
-      // o salão do banquete (arena de Belzebu)
-      m.fillRect(8, 19, 20, 9, T.FEASTFLOOR);
+      // fogo nas bordas do salão
       m.fillRect(8, 19, 2, 9, T.LAVA);
       m.fillRect(26, 19, 2, 9, T.LAVA);
-      m.fillRect(26, 22, 2, 2, T.FEASTFLOOR);
-      // a mesa interminável (obstáculos no salão)
+      // a mesa interminável (obstáculo)
       m.fillRect(13, 22, 8, 1, T.CWALL);
-      // alcova selada de Santo Antão
-      m.fillRect(29, 21, 4, 4, T.FEASTFLOOR);
-      m.set(28, 22, T.GATE);
-      m.set(28, 23, T.GATE);
-
-      // a escada que desce à Quarta Fossa
-      m.fillRect(30, 25, 2, 4, T.FEASTFLOOR);
-      m.set(30, 29, T.STAIRS);
-      m.set(31, 29, T.STAIRS);
     },
     spawns: [
       ['possesso', 9, 8], ['possesso', 10, 13], ['serpe', 16, 13],
       ['possesso', 20, 12], ['invejoso', 22, 16],
       ['possesso', 12, 25], ['belzebu', 18, 25],
     ],
-    altars: [[4, 4]],
-    npcs: [
-      {
-        tx: 31, ty: 22, name: 'Espírito de Santo Antão',
-        sprite: 'espirito',
-        ghost: true,
-        grant: 'jejum',
-        lines: (flags) => flags.milagres?.jejum
-          ? ['"Que o teu pão seja a Palavra, cavaleiro. O resto é migalha."']
-          : [
-            'Junto ao banquete apodrecido, um eremita de hábito branco ora de olhos fechados, indiferente ao festim.',
-            '"No deserto, os demônios me ofereceram mesas fartas. Recusei — e cada recusa me fez mais forte que a fome."',
-            '"Aprende o meu Jejum: quando a carne renuncia, nem o dente da besta a atravessa."',
-            '✝ Milagre recebido: JEJUM QUE FORTALECE — tecla 4 (30 de Fé)',
-          ],
-      },
-    ],
-    portals: [
-      { x: 2, y: 2, w: 1, h: 5, to: 'fossa_inveja', tx: 30, ty: 27 },
-      { x: 30, y: 29, w: 2, h: 1, to: 'fossa_avareza', tx: 4, ty: 3 },
-    ],
-  },
+    spirit: {
+      name: 'Espírito de Santo Antão', sprite: 'espirito', grant: 'jejum',
+      lines: (flags) => flags.milagres?.jejum
+        ? ['"Que o teu pão seja a Palavra, cavaleiro. O resto é migalha."']
+        : [
+          'Junto ao banquete apodrecido, um eremita de hábito branco ora de olhos fechados, indiferente ao festim.',
+          '"No deserto, os demônios me ofereceram mesas fartas. Recusei — e cada recusa me fez mais forte que a fome."',
+          '"Aprende o meu Jejum: quando a carne renuncia, nem o dente da besta a atravessa."',
+          '✝ Milagre recebido: JEJUM QUE FORTALECE — tecla 4 (30 de Fé)',
+        ],
+    },
+  }),
 
   // ---------- Quarta Fossa: a Avareza ----------
-  fossa_avareza: {
+  fossa_avareza: makeFossa({
     name: 'Quarta Fossa — A Avareza',
-    w: 34, h: 32,
-    base: T.HELLWALL,
-    outside: T.HELLWALL,
-    gateFloor: T.TREASURE,
-    dark: 'torch',
-    mood: 'dark',
-    generate(m) {
-      // antecâmara (chegada da escada)
-      m.fillRect(2, 2, 7, 5, T.TREASURE);
+    floor: T.TREASURE, dark: 'torch', arenaY: 20, alcoveY: 22,
+    returnTo: { to: 'fossa_gula', tx: 30, ty: 26 },
+    descendTo: { to: 'fossa_luxuria' },
+    carve(m, f) {
       // o corredor dos cofres
-      m.fillRect(8, 6, 3, 7, T.TREASURE);
-      m.fillRect(8, 12, 15, 4, T.TREASURE);
-      m.fillRect(20, 15, 3, 5, T.TREASURE);
+      m.fillRect(8, 6, 3, 7, f);
+      m.fillRect(8, 12, 15, 4, f);
+      m.fillRect(20, 15, 3, 5, f);
       // pilhas de ouro amaldiçoado (obstáculos)
       m.fillRect(12, 13, 1, 2, T.CWALL);
       m.fillRect(17, 12, 1, 2, T.CWALL);
-      // o grande cofre (arena de Mamon)
-      m.fillRect(8, 20, 20, 9, T.TREASURE);
       m.fillRect(13, 23, 2, 2, T.CWALL);
       m.fillRect(21, 23, 2, 2, T.CWALL);
-      // alcova selada de São Lourenço
-      m.fillRect(29, 22, 4, 4, T.TREASURE);
-      m.set(28, 23, T.GATE);
-      m.set(28, 24, T.GATE);
-
-      // a escada que desce à Quinta Fossa
-      m.fillRect(30, 26, 2, 3, T.TREASURE);
-      m.set(30, 29, T.STAIRS);
-      m.set(31, 29, T.STAIRS);
     },
     spawns: [
       ['invejoso', 9, 8], ['invejoso', 10, 13], ['possesso', 15, 14],
       ['serpe', 19, 13], ['invejoso', 21, 17], ['possesso', 11, 25],
       ['mamon', 18, 24],
     ],
-    altars: [[4, 4]],
-    npcs: [
-      {
-        tx: 31, ty: 23, name: 'Espírito de São Lourenço',
-        sprite: 'espirito',
-        ghost: true,
-        grant: 'fogo',
-        lines: (flags) => flags.milagres?.fogo
-          ? ['"Podes virar-me deste lado: este já está no ponto." Ele sorri. "Vai, e queima o que não presta."']
-          : [
-            'Sobre as moedas frias, um jovem diácono irradia calor como brasa viva.',
-            '"O prefeito exigiu os tesouros da Igreja. Eu lhe trouxe os pobres. Ele me deitou na grelha."',
-            '"Aprendi no fogo o que o avarento nunca aprende: só é teu o que deste. Toma a minha chama."',
-            '✝ Milagre recebido: FOGO QUE PURIFICA — tecla 5 (40 de Fé)',
-          ],
-      },
-    ],
-    portals: [
-      { x: 2, y: 2, w: 1, h: 5, to: 'fossa_gula', tx: 30, ty: 26 },
-      { x: 30, y: 29, w: 2, h: 1, to: 'fossa_luxuria', tx: 4, ty: 3 },
-    ],
-  },
+    spirit: {
+      name: 'Espírito de São Lourenço', sprite: 'espirito', grant: 'fogo',
+      lines: (flags) => flags.milagres?.fogo
+        ? ['"Podes virar-me deste lado: este já está no ponto." Ele sorri. "Vai, e queima o que não presta."']
+        : [
+          'Sobre as moedas frias, um jovem diácono irradia calor como brasa viva.',
+          '"O prefeito exigiu os tesouros da Igreja. Eu lhe trouxe os pobres. Ele me deitou na grelha."',
+          '"Aprendi no fogo o que o avarento nunca aprende: só é teu o que deste. Toma a minha chama."',
+          '✝ Milagre recebido: FOGO QUE PURIFICA — tecla 5 (40 de Fé)',
+        ],
+    },
+  }),
 
   // ---------- Quinta Fossa: a Luxúria ----------
-  fossa_luxuria: {
+  fossa_luxuria: makeFossa({
     name: 'Quinta Fossa — A Luxúria',
-    w: 34, h: 32,
-    base: T.HELLWALL,
-    outside: T.HELLWALL,
-    gateFloor: T.ROSEFLOOR,
-    dark: 'hell',
-    mood: 'dark',
-    generate(m) {
-      // antecâmara (chegada da escada)
-      m.fillRect(2, 2, 7, 5, T.ROSEFLOOR);
+    floor: T.ROSEFLOOR, dark: 'hell', arenaY: 19, alcoveY: 22,
+    returnTo: { to: 'fossa_avareza', tx: 30, ty: 27 },
+    descendTo: { to: 'fossa_preguica' },
+    carve(m, f) {
       // o corredor perfumado, serpenteante
-      m.fillRect(8, 4, 3, 5, T.ROSEFLOOR);
-      m.fillRect(11, 7, 6, 3, T.ROSEFLOOR);
-      m.fillRect(15, 10, 3, 6, T.ROSEFLOOR);
-      m.fillRect(12, 14, 4, 3, T.ROSEFLOOR);
-      m.fillRect(18, 13, 6, 4, T.ROSEFLOOR);
+      m.fillRect(8, 4, 3, 5, f);
+      m.fillRect(11, 7, 6, 3, f);
+      m.fillRect(15, 10, 3, 6, f);
+      m.fillRect(12, 14, 4, 3, f);
+      m.fillRect(18, 13, 6, 4, f);
+      m.fillRect(20, 16, 3, 4, f); // descida ao jardim
       // espelhos d'água perfumada (venenosa)
       m.fillRect(13, 8, 2, 1, T.POISON);
       m.fillRect(19, 15, 2, 1, T.POISON);
-      // descida ao jardim
-      m.fillRect(20, 16, 3, 4, T.ROSEFLOOR);
-      // o jardim das delícias (arena de Asmodeu)
-      m.fillRect(8, 19, 20, 9, T.ROSEFLOOR);
       m.fillRect(11, 21, 2, 2, T.POISON);
       m.fillRect(23, 25, 2, 2, T.POISON);
-      // alcova selada de Santa Inês
-      m.fillRect(29, 22, 4, 4, T.ROSEFLOOR);
-      m.set(28, 23, T.GATE);
-      m.set(28, 24, T.GATE);
-
-      // a escada que desce à Sexta Fossa
-      m.fillRect(30, 26, 2, 3, T.ROSEFLOOR);
-      m.set(30, 29, T.STAIRS);
-      m.set(31, 29, T.STAIRS);
     },
     spawns: [
       ['invejoso', 9, 6], ['serpe', 13, 8], ['possesso', 16, 12],
       ['serpe', 14, 15], ['invejoso', 20, 15], ['possesso', 22, 21],
       ['asmodeu', 18, 24],
     ],
-    altars: [[4, 4]],
-    npcs: [
-      {
-        tx: 31, ty: 23, name: 'Espírito de Santa Inês',
-        sprite: 'mira',
-        ghost: true,
-        grant: 'cordeiro',
-        lines: (flags) => flags.milagres?.cordeiro
-          ? ['"Agnus custodit." Ela sorri, e o cordeiro invisível roça tua perna.']
-          : [
-            'No meio do jardim envenenado, uma menina de doze anos segura um cordeiro que não está lá.',
-            '"Prometeram-me casamentos, riquezas, prazeres. Eu já tinha esposo: aquele a quem os anjos servem."',
-            '"Recusei até a espada. Leva contigo o meu Cordeiro — ele guarda os que guardam o coração."',
-            '✝ Milagre recebido: CORDEIRO GUARDIÃO — tecla 6 (45 de Fé)',
-          ],
-      },
-    ],
-    portals: [
-      { x: 2, y: 2, w: 1, h: 5, to: 'fossa_avareza', tx: 30, ty: 27 },
-      { x: 30, y: 29, w: 2, h: 1, to: 'fossa_preguica', tx: 4, ty: 3 },
-    ],
-  },
+    spirit: {
+      name: 'Espírito de Santa Inês', sprite: 'mira', grant: 'cordeiro',
+      lines: (flags) => flags.milagres?.cordeiro
+        ? ['"Agnus custodit." Ela sorri, e o cordeiro invisível roça tua perna.']
+        : [
+          'No meio do jardim envenenado, uma menina de doze anos segura um cordeiro que não está lá.',
+          '"Prometeram-me casamentos, riquezas, prazeres. Eu já tinha esposo: aquele a quem os anjos servem."',
+          '"Recusei até a espada. Leva contigo o meu Cordeiro — ele guarda os que guardam o coração."',
+          '✝ Milagre recebido: CORDEIRO GUARDIÃO — tecla 6 (45 de Fé)',
+        ],
+    },
+  }),
 
   // ---------- Sexta Fossa: a Preguiça (fecho do Ato II) ----------
-  fossa_preguica: {
+  fossa_preguica: makeFossa({
     name: 'Sexta Fossa — A Preguiça',
-    w: 34, h: 32,
-    base: T.HELLWALL,
-    outside: T.HELLWALL,
-    gateFloor: T.SLOTHFLOOR,
-    dark: 'torch',
-    mood: 'dark',
-    generate(m) {
-      // antecâmara (chegada da escada)
-      m.fillRect(2, 2, 7, 5, T.SLOTHFLOOR);
+    floor: T.SLOTHFLOOR, dark: 'torch', arenaY: 19, alcoveY: 22,
+    returnTo: { to: 'fossa_luxuria', tx: 30, ty: 27 },
+    descendTo: null, // última fossa: sem descida
+    carve(m, f) {
       // corredor lento e arrastado
-      m.fillRect(8, 5, 3, 6, T.SLOTHFLOOR);
-      m.fillRect(8, 10, 15, 4, T.SLOTHFLOOR);
-      m.fillRect(20, 13, 3, 7, T.SLOTHFLOOR);
+      m.fillRect(8, 5, 3, 6, f);
+      m.fillRect(8, 10, 15, 4, f);
+      m.fillRect(20, 13, 3, 7, f);
       // escombros do descuido (obstáculos)
       m.fillRect(13, 11, 1, 2, T.CWALL);
       m.fillRect(17, 12, 1, 2, T.CWALL);
-      // o leito eterno (arena de Belfegor)
-      m.fillRect(8, 19, 20, 9, T.SLOTHFLOOR);
       m.fillRect(12, 22, 3, 2, T.CWALL);
       m.fillRect(20, 24, 3, 2, T.CWALL);
-      // alcova selada de São Bento
-      m.fillRect(29, 22, 4, 4, T.SLOTHFLOOR);
-      m.set(28, 23, T.GATE);
-      m.set(28, 24, T.GATE);
     },
     spawns: [
       ['possesso', 9, 7], ['possesso', 11, 12], ['serpe', 16, 11],
       ['possesso', 20, 15], ['invejoso', 14, 13], ['possesso', 12, 25],
       ['belfegor', 18, 24],
     ],
-    altars: [[4, 4]],
-    npcs: [
-      {
-        tx: 31, ty: 23, name: 'Espírito de São Bento',
-        sprite: 'anastacio',
-        ghost: true,
-        grant: 'vade',
-        lines: (flags) => flags.milagres?.vade
-          ? ['"Ora et labora, cavaleiro. Nem o inferno resiste a uma alma que trabalha e reza."']
-          : [
-            'Entre os escombros do descuido, um velho monge de olhos vivos aponta uma cruz de metal.',
-            '"A preguiça não é o descanso — é a alma que desiste de lutar. Eu enfrentei o demônio no meu próprio copo de vinho envenenado, e o parti com o sinal da cruz."',
-            '"Grava na tua lança as palavras que gravei na minha medalha: VADE RETRO. Diante delas, as legiões recuam."',
-            '✝ Milagre recebido: VADE RETRO — tecla 7 (40 de Fé)',
-          ],
-      },
-    ],
-    portals: [
-      { x: 2, y: 2, w: 1, h: 5, to: 'fossa_luxuria', tx: 30, ty: 27 },
-    ],
-  },
+    spirit: {
+      name: 'Espírito de São Bento', sprite: 'anastacio', grant: 'vade',
+      lines: (flags) => flags.milagres?.vade
+        ? ['"Ora et labora, cavaleiro. Nem o inferno resiste a uma alma que trabalha e reza."']
+        : [
+          'Entre os escombros do descuido, um velho monge de olhos vivos aponta uma cruz de metal.',
+          '"A preguiça não é o descanso — é a alma que desiste de lutar. Eu enfrentei o demônio no meu próprio copo de vinho envenenado, e o parti com o sinal da cruz."',
+          '"Grava na tua lança as palavras que gravei na minha medalha: VADE RETRO. Diante delas, as legiões recuam."',
+          '✝ Milagre recebido: VADE RETRO — tecla 7 (40 de Fé)',
+        ],
+    },
+  }),
 };

@@ -42,11 +42,16 @@ os padrões criados nele (portais, mapas, diálogo) são reaproveitados por todo
   qualquer altura da sala já sai. Sem gatilho instantâneo no spawn (que é em x=4).
   Testado em ira/gula/preguiça saindo do meio da sala.
 
-- [ ] **A2b — Extração `makeFossa()`** *(adiado de propósito)*
-  As 6 fossas ainda são copy-paste. O único ganho da extração é conveniência
-  **futura** (novos pontos de entrada no Bloco C). Como mapa quebrado é pior que
-  código repetido e temos orçamento apertado, **adiamos até o Bloco C precisar** —
-  aí a refatoração é feita junto com o primeiro capítulo que reusa uma fossa.
+- [x] **A2b — Extração `makeFossa()`** ✔ feito
+  As 6 fossas eram copy-paste. Agora uma fábrica `makeFossa(cfg)` monta toda a
+  estrutura comum (antecâmara, arena, alcova selada com portões, escada de
+  descida, altar, portais, espírito do santo) a partir de poucos parâmetros
+  (`floor`, `arenaY`, `alcoveY`, `returnTo`, `descendTo`, `spirit`, `spawns`),
+  delegando ao `carve(m, floor)` só a geometria única de cada fossa. Acrescentar
+  um novo ponto de entrada (Bloco C) passa a ser trivial.
+  - **Verificado sem mudança visível**: diff dos grids de tile gerados (antigo
+    vs. novo) → **idênticos nas 6 fossas**; smoke test → cada fossa carrega com
+    chefe/espírito/portões/portais corretos, sem erro.
 
 - [x] **BUG — Chefes ressuscitando** ✔ corrigido *(fora do plano original)*
   Ao salvar/recarregar (e no renascer), os chefes reapareciam porque o mapa era
