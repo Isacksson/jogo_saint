@@ -104,8 +104,21 @@ os padrões criados nele (portais, mapas, diálogo) são reaproveitados por todo
       `forge()` (fecho do Ato II, C6) e `consecrate()` (Ato III, D1); Rufo chama
       `reinforceOnce()` (B2). Testado: 31/31 asserções de lógica + smoke no navegador
       (carrega sem erro, investida renderiza nos 4 estágios, dano 24→44).
-- [ ] **B2 — Economia** *(GDD T13)* — ferreiro **Rufo** e mercadora **Prisca**, loja
-      simples (comprar/vender), e os **fragmentos de Ascalon** como item de inventário.
+- [x] **B2a — Loja e mercadora Prisca** *(GDD T13, parte 1)* ✔ feito
+      Novo `src/economy.js`: classe `Shop` (abas Comprar/Vender, navegação, mensagens
+      do mercador), `renderShop` (painel no estilo do inventário), `sellPrice` (revenda
+      de loot escalando com valor e raridade) e o registro `VENDORS` com **Prisca**.
+      Prisca vende poções e compra o equipamento de loot da bolsa. NPC ganha campo
+      `vendor`; `tryInteract` abre a loja em vez de diálogo; novo ramo de estado no
+      loop (mundo congela como no inventário, ←/→ aba · ↑/↓ item · E negocia · I/Esc
+      sai). Prisca posta na praça de Silena. `window.enterMap` exposto para testes.
+      Fragmentos e milagres nunca entram na loja (não-vendáveis por construção).
+      Testado: 13/13 asserções (lógica + render nas 3 telas) + integração no jogo
+      (abre perto da Prisca, comprar debita ouro e dá poção).
+- [ ] **B2b — Ferreiro Rufo e fragmentos** *(GDD T13, parte 2)* — ferreiro **Rufo**
+      que reforça a lança (`spear.reinforceOnce()` com preço crescente em denários),
+      e os **fragmentos de Ascalon** como tipo de item de quest (registro dos 7,
+      contagem, exibição), a serem concedidos pelos santos no Bloco C.
 - [ ] **B3 — Estradas do Império** *(GDD T14)* — tela de viagem ligando Silena aos
       hubs novos, com desbloqueio progressivo de destinos.
 - [ ] **B4 — Anjo da Guarda** *(GDD T14b)* — companheiro de IA com 7 patentes, dado

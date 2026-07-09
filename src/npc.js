@@ -13,6 +13,7 @@ export class Npc {
     this.relic = !!def.relic;
     this.ghost = !!def.ghost;
     this.grant = def.grant;
+    this.vendor = def.vendor; // id do mercador (economy.js), se for uma loja
     this.lines = def.lines;
     this.sprite = this.relic ? buildAltarSprite() : npcSprite(def.sprite || 'mira').down[0];
   }
@@ -63,7 +64,9 @@ export class Npc {
       ctx.strokeStyle = 'rgba(10, 6, 2, 0.9)';
       ctx.lineWidth = 3;
       ctx.fillStyle = '#f0e0b0';
-      const label = this.relic ? 'E — Examinar' : `E — Falar (${this.name})`;
+      const label = this.relic ? 'E — Examinar'
+        : this.vendor ? `E — Negociar (${this.name})`
+        : `E — Falar (${this.name})`;
       ctx.strokeText(label, x, y - SPRITE_PX - 2);
       ctx.fillText(label, x, y - SPRITE_PX - 2);
     }

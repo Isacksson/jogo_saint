@@ -21,6 +21,7 @@ import {
   renderLocation, renderDialogue, renderMiracles, renderBossBar,
 } from './hud.js';
 import { renderInventory } from './inventory.js';
+import { Shop, VENDORS, renderShop } from './economy.js';
 import { serializeWorld, applyPlayer, saveGame, loadSave } from './save.js';
 
 const canvas = document.getElementById('game');
@@ -120,6 +121,7 @@ const world = {
 };
 // exposto para depuração e testes automatizados
 window.world = world;
+window.enterMap = (id, tx, ty) => enterMap(id, tx, ty);
 
 // acha o tile livre mais próximo (spawn nunca dentro de parede/água)
 function findFree(map, tx, ty) {
@@ -217,6 +219,7 @@ function fullReset(data) {
   deathTime = 0;
   invOpen = false;
   dlg = null;
+  shop = null;
 }
 
 let elapsed = 0;
@@ -224,6 +227,7 @@ let deathTime = 0;
 let invOpen = false;
 let invSel = 0;
 let dlg = null;
+let shop = null;
 let locName = '';
 let locTime = 0;
 let gameState = 'title'; // title | play
@@ -246,9 +250,13 @@ if (saved) {
 function tryInteract() {
   const p = world.player;
 
-  // conversar com quem estiver perto
+  // conversar (ou negociar) com quem estiver perto
   for (const npc of world.npcs) {
     if (npc.isNear(p)) {
+      if (npc.vendor && VENDORS[npc.vendor]) {
+        shop = new Shop(VENDORS[npc.vendor]);
+        return;
+      }
       dlg = {
         name: npc.name, lines: npc.getLines(world), idx: 0, grant: npc.grant,
         portrait: npc.sprite, ghost: npc.ghost, reveal: 0,
@@ -594,6 +602,16 @@ function frame(now) {
       trans.swapped = true;
     }
     if (trans.t >= FADE * 2) trans = null;
+  } else if (shop) {
+    // loja aberta: o mundo congela como no inventário
+    if (input.wasPressed('inventory')) shop = null;
+    else {
+      if (input.wasPressed('left')) shop.setTab(shop.tab - 1, player);
+      if (input.wasPressed('right')) shop.setTab(shop.tab + 1, player);
+      if (input.wasPressed('up')) shop.move(-1, player);
+      if (input.wasPressed('down')) shop.move(1, player);
+      if (input.wasPressed('interact')) shop.confirm(player, world);
+    }
   } else if (invOpen) {
     // inventário aberto: navegação da bolsa
     if (input.wasPressed('inventory')) invOpen = false;
@@ -637,7 +655,7 @@ function frame(now) {
   }
 
   // --- render ---
-  const shake = invOpen || dlg ? 0 : world.fx.shake;
+  const shake = invOpen || dlg || shop ? 0 : world.fx.shake;
   const cam = {
     x: camera.x + (Math.random() - 0.5) * shake,
     y: camera.y + (Math.random() - 0.5) * shake,
@@ -686,6 +704,7 @@ function frame(now) {
   if (world.total > 0 && world.kills >= world.total) renderVictory(ctx, elapsed);
   if (!world.player.alive) renderDeath(ctx, deathTime);
   if (invOpen) renderInventory(ctx, world.player, invSel);
+  if (shop) renderShop(ctx, shop, world.player);
   if (dlg) renderDialogue(ctx, dlg);
 
   // fade da transição de mapa, por cima de tudo (escurece → troca → clareia)

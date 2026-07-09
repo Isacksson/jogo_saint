@@ -201,6 +201,11 @@ export const MAP_DEFS = {
         lines: () => ['O Dragão exige um tributo a cada lua cheia... Ontem levaram o filho do ferreiro. Ninguém mais dorme em Silena.'],
       },
       {
+        tx: 21, ty: 13, name: 'Prisca, a mercadora',
+        sprite: 'mira', vendor: 'prisca',
+        lines: () => ['Denários falam mais alto que orações por aqui.'],
+      },
+      {
         tx: 30, ty: 17, name: 'Ancião Teodoro',
         sprite: 'teodoro',
         lines: () => [
