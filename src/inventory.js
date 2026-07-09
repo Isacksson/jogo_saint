@@ -2,11 +2,12 @@
 
 import { VIEW_W, VIEW_H } from './constants.js';
 import { RARITY, describeItem, buildItemSprites } from './items.js';
+import { fragmentCount, FRAGMENT_TOTAL } from './fragments.js';
 
 const SLOT_LABEL = { arma: 'Arma', escudo: 'Escudo', armadura: 'Armadura', medalha: 'Medalha' };
 const SLOTS = ['arma', 'escudo', 'armadura', 'medalha'];
 
-export function renderInventory(ctx, player, sel) {
+export function renderInventory(ctx, player, sel, flags = {}) {
   const w = 660, h = 400;
   const x = (VIEW_W - w) / 2;
   const y = (VIEW_H - h) / 2;
@@ -34,6 +35,13 @@ export function renderInventory(ctx, player, sel) {
     `Nível ${player.level} · Dano +${player.attackBonus} · Defesa ${player.defense} · ` +
     `Vida ${Math.ceil(player.hp)}/${player.hpMax} · ${player.gold} denários`,
     x + w / 2, y + 62
+  );
+  // lança (estágio atual) e progresso dos fragmentos de Ascalon
+  ctx.fillStyle = '#bcae86';
+  ctx.font = '12px Georgia, serif';
+  ctx.fillText(
+    `Lança: ${player.spear.name}  ·  Fragmentos de Ascalon ${fragmentCount(flags)}/${FRAGMENT_TOTAL}`,
+    x + w / 2, y + 80
   );
 
   // coluna esquerda: equipado

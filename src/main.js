@@ -703,7 +703,7 @@ function frame(now) {
   renderLocation(ctx, locName, locTime);
   if (world.total > 0 && world.kills >= world.total) renderVictory(ctx, elapsed);
   if (!world.player.alive) renderDeath(ctx, deathTime);
-  if (invOpen) renderInventory(ctx, world.player, invSel);
+  if (invOpen) renderInventory(ctx, world.player, invSel, world.flags);
   if (shop) renderShop(ctx, shop, world.player);
   if (dlg) renderDialogue(ctx, dlg);
 

@@ -115,10 +115,20 @@ os padrões criados nele (portais, mapas, diálogo) são reaproveitados por todo
       Fragmentos e milagres nunca entram na loja (não-vendáveis por construção).
       Testado: 13/13 asserções (lógica + render nas 3 telas) + integração no jogo
       (abre perto da Prisca, comprar debita ouro e dá poção).
-- [ ] **B2b — Ferreiro Rufo e fragmentos** *(GDD T13, parte 2)* — ferreiro **Rufo**
-      que reforça a lança (`spear.reinforceOnce()` com preço crescente em denários),
-      e os **fragmentos de Ascalon** como tipo de item de quest (registro dos 7,
-      contagem, exibição), a serem concedidos pelos santos no Bloco C.
+- [x] **B2b — Ferreiro Rufo e fragmentos** *(GDD T13, parte 2)* ✔ feito
+      **Rufo** entra em `VENDORS` como ferreiro (`reforge: true`): a aba de compra
+      ganha o serviço "Reforçar a lança", que chama `spear.reinforceOnce()` com preço
+      crescente (`reinforceCost` = 40 → 180). O serviço se autodesabilita no limite
+      (+5) e na lança já forjada (Ascalon não aceita reforços), sem cobrar. Rufo
+      posto em Silena. Novo `src/fragments.js`: registro dos 7 **fragmentos de
+      Ascalon** (relíquia por santo), `grantFragment`/`fragmentCount`/`hasAllFragments`
+      (a serem concedidos pelos santos no Bloco C e consumidos na forja em C6). O
+      inventário passa a exibir o estágio da lança e o progresso `N/7` dos fragmentos.
+      Testado: 10/10 (fragmentos, Node) + 14/14 (economia do Rufo + render, navegador)
+      + integração no jogo (reforço debita ouro e sobe o dano 24→27; inventário
+      renderiza com fragmentos).
+
+> **Bloco B — 2 de 4.** Falta **B3 (Estradas do Império)** e **B4 (Anjo da Guarda)**.
 - [ ] **B3 — Estradas do Império** *(GDD T14)* — tela de viagem ligando Silena aos
       hubs novos, com desbloqueio progressivo de destinos.
 - [ ] **B4 — Anjo da Guarda** *(GDD T14b)* — companheiro de IA com 7 patentes, dado

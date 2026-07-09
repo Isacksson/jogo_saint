@@ -206,6 +206,11 @@ export const MAP_DEFS = {
         lines: () => ['Denários falam mais alto que orações por aqui.'],
       },
       {
+        tx: 34, ty: 15, name: 'Rufo, o ferreiro',
+        sprite: 'teodoro', vendor: 'rufo',
+        lines: () => ['Traz denários e essa lança sai da minha forja mais mortal.'],
+      },
+      {
         tx: 30, ty: 17, name: 'Ancião Teodoro',
         sprite: 'teodoro',
         lines: () => [

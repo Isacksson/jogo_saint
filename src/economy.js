@@ -15,6 +15,11 @@ export function sellPrice(item) {
   return Math.max(3, Math.round(item.value * perSlot * (1 + item.rarity * 0.5)));
 }
 
+// custo do próximo reforço da lança: sobe a cada reforço (40, 75, 110, 145, 180)
+export function reinforceCost(spear) {
+  return 40 + spear.reinforce * 35;
+}
+
 // catálogo dos mercadores. `stock` são itens à venda; `buysLoot` habilita a aba
 // de venda do inventário do jogador.
 export const VENDORS = {
@@ -29,12 +34,40 @@ export const VENDORS = {
       { id: 'potion', name: 'Poção de cura', desc: 'restaura 40 de vida', price: 30 },
     ],
   },
+  rufo: {
+    name: 'Rufo, o ferreiro',
+    sprite: 'teodoro',
+    greeting: 'Traz denários e essa lança sai da minha forja mais mortal, cavaleiro.',
+    farewell: 'Que a ponta se mantenha afiada.',
+    broke: 'Ferro custa, rapaz. Volta com mais denários.',
+    buysLoot: false,
+    reforge: true, // acrescenta o serviço de reforço da lança à aba de compra
+    stock: [
+      { id: 'potion', name: 'Poção de cura', desc: 'restaura 40 de vida', price: 35 },
+    ],
+  },
 };
 
-// aplica a compra de um item de estoque ao jogador
+// aplica a compra de um item de estoque ao jogador; false se não pôde
 function applyPurchase(entry, player) {
   if (entry.id === 'potion') { player.potions++; return true; }
+  if (entry.id === 'reinforce') return player.spear.reinforceOnce();
   return false;
+}
+
+// monta o serviço de reforço da lança conforme o estado atual dela
+function reinforceEntry(spear) {
+  if (spear.forged) {
+    return { id: 'reinforce', name: 'Lança já forjada', disabled: true,
+      desc: 'Ascalon não aceita reforços de ferreiro', price: 0 };
+  }
+  if (!spear.canReinforce) {
+    return { id: 'reinforce', name: `Lança no limite (+${spear.reinforce})`, disabled: true,
+      desc: 'a têmpera não aguenta mais reforços', price: 0 };
+  }
+  return { id: 'reinforce',
+    name: `Reforçar a lança (+${spear.reinforce} → +${spear.reinforce + 1})`,
+    desc: 'cabo e ponta reforçados: +3 de dano', price: reinforceCost(spear) };
 }
 
 export class Shop {
@@ -50,8 +83,15 @@ export class Shop {
     return this.vendor.buysLoot ? ['COMPRAR', 'VENDER'] : ['COMPRAR'];
   }
 
+  // itens da aba de compra: estoque fixo + (se ferreiro) o serviço de reforço
+  buyEntries(player) {
+    const out = this.vendor.stock ? this.vendor.stock.slice() : [];
+    if (this.vendor.reforge) out.push(reinforceEntry(player.spear));
+    return out;
+  }
+
   list(player) {
-    return this.tab === 0 ? this.vendor.stock : player.inventory;
+    return this.tab === 0 ? this.buyEntries(player) : player.inventory;
   }
 
   setTab(t, player) {
@@ -76,12 +116,15 @@ export class Shop {
     if (!item) return;
 
     if (this.tab === 0) {
+      if (item.disabled) { this.say(item.desc, '#c8b090'); return; }
       if (player.gold < item.price) { this.say(this.vendor.broke, '#c88060'); sfx('hurt'); return; }
       if (!applyPurchase(item, player)) return;
       player.gold -= item.price;
       sfx('pickup');
-      this.say(`Comprado: ${item.name}. (−${item.price} denários)`, '#f0d060');
-      world.fx.text(player.x, player.y - 54, `−${item.price} denários`, '#f0d060');
+      const label = item.id === 'reinforce' ? `Lança reforçada! (+${player.spear.reinforce})` : `Comprado: ${item.name}.`;
+      this.say(`${label} (−${item.price} denários)`, '#f0d060');
+      world.fx.text(player.x, player.y - 54, item.id === 'reinforce' ? '✦ Lança reforçada' : `−${item.price} denários`, '#f0d060');
+      if (item.id === 'reinforce') world.fx.burst(player.x, player.y - 20, '#dfe4ec', 16, 170);
     } else {
       const price = sellPrice(item);
       player.gold += price;
@@ -159,25 +202,31 @@ export function renderShop(ctx, shop, player) {
         ctx.strokeRect(x + 26.5, sy - 3.5, w - 52, 32);
       }
       // ícone
-      const iconKey = shop.tab === 0 ? (it.id === 'potion' ? 'potion' : 'gold') : it.slot;
+      const iconKey = shop.tab === 0
+        ? (it.id === 'potion' ? 'potion' : it.id === 'reinforce' ? 'arma' : 'gold')
+        : it.slot;
       const icon = icons[iconKey] || icons.gold;
+      ctx.globalAlpha = it.disabled ? 0.4 : 1;
       ctx.drawImage(icon, x + 34, sy, 24, Math.round(icon.height / icon.width * 24));
+      ctx.globalAlpha = 1;
 
       // nome + descrição
       if (shop.tab === 0) {
-        ctx.fillStyle = '#e8dcb8';
+        ctx.fillStyle = it.disabled ? '#7a6a4c' : '#e8dcb8';
         ctx.font = 'bold 14px Georgia, serif';
         ctx.fillText(it.name, x + 70, sy + 12);
-        ctx.fillStyle = '#a89a72';
+        ctx.fillStyle = it.disabled ? '#6a5c40' : '#a89a72';
         ctx.font = '12px Georgia, serif';
         ctx.fillText(it.desc, x + 70, sy + 26);
-        // preço
-        const afford = player.gold >= it.price;
-        ctx.fillStyle = afford ? '#f0d060' : '#a05040';
-        ctx.font = 'bold 14px Georgia, serif';
-        ctx.textAlign = 'right';
-        ctx.fillText(`${it.price} d`, x + w - 34, sy + 20);
-        ctx.textAlign = 'left';
+        // preço (entradas desabilitadas não mostram preço)
+        if (!it.disabled) {
+          const afford = player.gold >= it.price;
+          ctx.fillStyle = afford ? '#f0d060' : '#a05040';
+          ctx.font = 'bold 14px Georgia, serif';
+          ctx.textAlign = 'right';
+          ctx.fillText(`${it.price} d`, x + w - 34, sy + 20);
+          ctx.textAlign = 'left';
+        }
       } else {
         ctx.fillStyle = RARITY[it.rarity].color;
         ctx.font = 'bold 14px Georgia, serif';
