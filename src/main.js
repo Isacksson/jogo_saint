@@ -11,6 +11,7 @@ import { Player } from './player.js';
 import {
   Imundo, ImundoChefe, Amon, Dragao, Serpe,
   Invejoso, Leviata, Possesso, Belzebu, Mamon, Asmodeu, Belfegor,
+  Carcereiro,
 } from './enemies.js';
 import { initAudio, updateMusic, setMood, toggleMute, sfx } from './audio.js';
 import { Npc } from './npc.js';
@@ -22,6 +23,7 @@ import {
 } from './hud.js';
 import { renderInventory } from './inventory.js';
 import { Shop, VENDORS, renderShop } from './economy.js';
+import { FRAGMENTS, MIRACLE_FRAGMENT, grantFragment } from './fragments.js';
 import { RoadsScreen, renderRoads, nodeForMap } from './roads.js';
 import { Angel } from './angel.js';
 import { serializeWorld, applyPlayer, saveGame, loadSave } from './save.js';
@@ -98,6 +100,7 @@ const ENEMY_TYPES = {
   amon: Amon, dragao: Dragao,
   invejoso: Invejoso, leviata: Leviata,
   possesso: Possesso, belzebu: Belzebu, mamon: Mamon, asmodeu: Asmodeu, belfegor: Belfegor,
+  carcereiro: Carcereiro,
 };
 
 // o navegador só libera áudio após o primeiro gesto do usuário
@@ -168,6 +171,8 @@ function enterMap(id, tx, ty) {
 
   // o portão das catacumbas permanece aberto se já foi destrancado
   if (id === 'pantano' && world.flags.catacumbasAbertas) map.openGates();
+  // o cárcere de Forte Sebaste permanece aberto depois de Marcelino livre
+  if (id === 'sebaste' && world.flags.sebasteLivre) map.openGates();
   // alcovas de fossa cujo selo já foi rompido continuam abertas
   if (world.flags.sealsBroken?.[id]) map.openGates();
 
@@ -283,6 +288,23 @@ function tryInteract() {
       world.fx.burst(a.x, a.y - 30, '#f0c040', 18, 160);
       return;
     }
+  }
+
+  // o cárcere de Forte Sebaste: as chaves do Carcereiro soltam Marcelino
+  if (world.mapId === 'sebaste') {
+    const gate = gateCenter();
+    if (gate && Math.hypot(p.x - gate.x, p.y - gate.y) < 130) {
+      if (world.flags.chaveForte) {
+        world.map.openGates();
+        world.flags.sebasteLivre = true;
+        world.fx.text(gate.x, gate.y - 40, 'Os ferrolhos do cárcere cedem!', '#e8dcb8');
+        world.fx.burst(gate.x, gate.y, '#c8c8d0', 16, 140);
+        world.fx.addShake(4);
+      } else {
+        world.fx.text(gate.x, gate.y - 40, 'Trancado. As chaves ficaram com o Carcereiro...', '#c0b090');
+      }
+    }
+    return;
   }
 
   // destrancar o portão das catacumbas (o da fossa só abre com a queda de Amon)
@@ -610,6 +632,12 @@ function frame(now) {
             const m = MIRACLES[dlg.grant];
             world.fx.text(player.x, player.y - 66, `✝ ${m.name} (${m.key})`, '#a8c8f8');
             world.fx.burst(player.x, player.y - 20, '#a8c8f8', 20, 200);
+            // cada bênção traz a relíquia física do santo: um fragmento de Ascalon
+            const fragId = MIRACLE_FRAGMENT[dlg.grant];
+            if (fragId && grantFragment(world, fragId)) {
+              const f = FRAGMENTS.find((x) => x.id === fragId);
+              world.fx.text(player.x, player.y - 90, `✦ Fragmento de Ascalon: ${f.relic}`, '#f0d060');
+            }
           }
           // dons que não são milagres (o Anjo da Guarda de São Miguel, etc.)
           if (dlg.grantFlag && !world.flags[dlg.grantFlag]) {

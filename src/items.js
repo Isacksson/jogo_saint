@@ -207,8 +207,8 @@ export class GroundItem {
     const it = this.item;
     if (it.kind !== 'equip' || p.inventory.length < 10) sfx('pickup');
     if (it.kind === 'chave') {
-      world.flags.temChave = true;
-      world.fx.text(p.x, p.y - 54, '✝ Chave das Catacumbas!', '#f0c040');
+      world.flags[it.flag || 'temChave'] = true;
+      world.fx.text(p.x, p.y - 54, it.label || '✝ Chave das Catacumbas!', '#f0c040');
       world.fx.burst(this.x, this.y, '#f0c040', 14, 160);
       this.dead = true;
     } else if (it.kind === 'gold') {

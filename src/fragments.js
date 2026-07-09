@@ -18,6 +18,12 @@ export const FRAGMENTS = [
 
 export const FRAGMENT_TOTAL = FRAGMENTS.length;
 
+// cada bênção traz consigo a relíquia do santo: milagre concedido → fragmento
+export const MIRACLE_FRAGMENT = {
+  raio: 'barbara', setas: 'sebastiao', luz: 'luzia', jejum: 'antao',
+  fogo: 'lourenco', cordeiro: 'ines', vade: 'bento',
+};
+
 // concede um fragmento (chamado pelos santos no Bloco C); false se já possuía
 export function grantFragment(world, id) {
   if (!FRAGMENTS.some((f) => f.id === id)) return false;

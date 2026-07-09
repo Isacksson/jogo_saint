@@ -26,9 +26,10 @@ export const NODES = [
   },
   {
     id: 'sebaste', name: 'Forte Sebaste', px: 0.44, py: 0.32,
-    desc: 'Quartel do Oriente, onde serviu São Sebastião. A estrada está fechada por ordem do Império.',
-    dest: null, // aponta para o mapa em C1
-    unlocked: (f) => !!f.roads?.sebaste,
+    desc: 'Quartel do Oriente, onde serviu São Sebastião. O primeiro edito chegou antes de ti.',
+    dest: { to: 'sebaste', tx: 2, ty: 12 },
+    // a estrada reabre quando o Dragão cai (começa a peregrinação do Ato II)
+    unlocked: (f) => !!f.dragaoDerrotado || !!f.roads?.sebaste,
   },
   {
     id: 'porto_luzia', name: 'Porto de Luzia', px: 0.72, py: 0.62,

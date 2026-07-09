@@ -33,6 +33,8 @@ function makeFossa(cfg) {
   if (descendTo) {
     portals.push({ x: 30, y: 29, w: 2, h: 1, to: descendTo.to, tx: 4, ty: 3 });
   }
+  // entradas extras da v0.2 (ex.: o poço de Forte Sebaste na Fossa da Ira)
+  if (cfg.extraPortals) portals.push(...cfg.extraPortals);
 
   return {
     name, w: 34, h: 32,
@@ -185,6 +187,7 @@ export const MAP_DEFS = {
           ? [
             'O Dragão... tombou? Silena está livre do tributo!',
             'Que as rosas floresçam onde teu sangue caiu, cavaleiro. Mas eu sinto... isto ainda não é o fim. As Portas continuam abertas lá embaixo.',
+            'Os batedores dizem que a estrada a LESTE reabriu. Procura Forte Sebaste, a guarnição de São Sebastião — tua peregrinação começa por lá.',
           ]
           : flags.catacumbasAbertas
             ? [
@@ -400,12 +403,114 @@ export const MAP_DEFS = {
     ],
   },
 
+  // ---------- Capítulo 1: Forte Sebaste (superfície de São Sebastião) ----------
+  sebaste: {
+    name: 'Forte Sebaste',
+    w: 40, h: 26,
+    mood: 'dark',
+    gateFloor: T.STONE,
+    generate(m) {
+      m.border(2, T.TREE);
+
+      // a estrada do Império chega pelo oeste
+      m.fillRect(0, 12, 6, 2, T.PATH);
+
+      // a muralha da guarnição e o pátio de pedra
+      m.fillRect(5, 4, 30, 18, T.CWALL);
+      m.fillRect(6, 5, 28, 16, T.STONE);
+      m.set(5, 12, T.PATH); // o portão oeste do forte
+      m.set(5, 13, T.PATH);
+
+      // casernas
+      m.fillRect(8, 6, 4, 3, T.ROOF);
+      m.fillRect(14, 6, 4, 3, T.ROOF);
+      m.fillRect(8, 15, 4, 3, T.ROOF);
+
+      // o cárcere, ao norte do pátio leste (Marcelino espera lá dentro)
+      m.fillRect(26, 5, 8, 6, T.CWALL);
+      m.fillRect(27, 6, 6, 4, T.STONE);
+      m.set(29, 10, T.GATE);
+      m.set(30, 10, T.GATE);
+
+      // o poço velho no canto sudeste — por ele os possessos subiram; desce à Fossa da Ira
+      m.fillRect(29, 15, 6, 6, T.CWALL);
+      m.fillRect(30, 16, 4, 4, T.STONE);
+      m.set(31, 16, T.STAIRS);
+      m.set(32, 16, T.STAIRS);
+      m.set(31, 20, T.STONE); // a boca do poço ficou escancarada
+      m.set(32, 20, T.STONE);
+    },
+    stamps: [
+      ['houseThatch', 8, 6], ['houseCream', 14, 6], ['houseThatch', 8, 15],
+    ],
+    spawns: [
+      ['possesso', 26, 12], ['possesso', 32, 12], ['possesso', 27, 14],
+      ['possesso', 25, 17], ['carcereiro', 30, 13],
+    ],
+    altars: [[13, 17]],
+    npcs: [
+      {
+        tx: 12, ty: 13, name: 'Pregoeiro Imperial',
+        sprite: 'anastacio',
+        lines: () => [
+          '"POR ORDEM DO DIVINO IMPERADOR DIOCLECIANO, AUGUSTO: os que se disserem cristãos serão riscados das legiões, seus bens tomados, seus nomes lançados aos registros."',
+          'O pregoeiro enrola o edito e evita teu olhar. "Primeiro edito, soldado. Dizem que virão outros... Eu só leio o que me mandam ler."',
+        ],
+      },
+      {
+        tx: 18, ty: 12, name: 'Cassiano, soldado',
+        sprite: 'teodoro',
+        lines: (flags) => flags.sebasteLivre
+          ? [
+            'Marcelino está livre, e a guarnição finge que não viu. Enquanto houver braços como o teu, ainda há honra nesta farda.',
+            'O poço velho segue aberto, no canto do pátio. Que Deus te acompanhe lá embaixo, irmão.',
+          ]
+          : flags.chaveForte
+            ? ['As chaves! Corre ao cárcere, ao norte do pátio — abre os ferrolhos antes que mudem de ideia.']
+            : [
+              'Jorge?! Pensei que estivesses em Silena... Chegaste em má hora, irmão: o primeiro edito chegou antes de ti.',
+              'Marcelino recusou-se a queimar incenso ao imperador. Prenderam-no, e amanhã o entregam a Nicomédia.',
+              'E há coisa pior: desde a leitura do edito, possessos rondam o pátio leste. O carcereiro é um deles agora — e as chaves ficaram com AQUILO.',
+            ],
+      },
+      {
+        tx: 29, ty: 7, name: 'Marcelino, o preso',
+        sprite: 'anastacio',
+        lines: (flags) => flags.sebasteLivre
+          ? [
+            '"Abriste o ferrolho... Deus te pague, irmão. Sebastião também vestiu esta farda — e foi por ela que o flecharam."',
+            '"Escuta: os possessos subiram pelo poço velho, no canto leste do pátio. Lá embaixo arde a Fossa da Ira. Se buscas a bênção do santo, é por ali que se desce."',
+          ]
+          : [
+            '(Atrás das grades, um soldado jovem ora baixinho, o rosto sereno.)',
+            '"Se vieste zombar, zomba. Se vieste em nome Dele... então estas correntes já não pesam nada."',
+          ],
+      },
+      {
+        tx: 15, ty: 16, name: 'Prisca, a mercadora',
+        sprite: 'mira', vendor: 'prisca',
+        lines: () => ['Até aqui os denários chegam antes das más notícias.'],
+      },
+      {
+        tx: 10, ty: 12, name: 'Rufo, o ferreiro',
+        sprite: 'teodoro', vendor: 'rufo',
+        lines: () => ['A forja do Império agora marca ferro de denúncia. Prefiro afiar a tua lança.'],
+      },
+    ],
+    portals: [
+      { x: 0, y: 12, w: 1, h: 2, roads: true }, // de volta às Estradas do Império
+      { x: 31, y: 16, w: 2, h: 1, to: 'fossa_ira', tx: 4, ty: 3 }, // o poço da Ira
+    ],
+  },
+
   // ---------- Primeira Fossa: a Ira ----------
   fossa_ira: makeFossa({
     name: 'Primeira Fossa — A Ira',
     floor: T.HELLFLOOR, dark: 'hell', anteW: 8, arenaY: 19, alcoveY: 22,
     returnTo: { to: 'catacumbas', tx: 27, ty: 24 },
     descendTo: { to: 'fossa_inveja' },
+    // o poço velho de Forte Sebaste desemboca no teto da antecâmara (C1)
+    extraPortals: [{ x: 5, y: 2, w: 2, h: 1, to: 'sebaste', tx: 32, ty: 19 }],
     carve(m, f) {
       // descida serpenteante
       m.fillRect(8, 6, 3, 6, f);

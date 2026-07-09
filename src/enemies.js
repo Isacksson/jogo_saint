@@ -91,8 +91,10 @@ class Enemy {
       world.player.gainFury(12);
       world.player.addXp(this.xpValue, world);
       world.player.faith = Math.min(world.player.faithMax, world.player.faith + 6);
-      if (this.keyCarrier && !world.flags.temChave) {
-        world.groundItems.push(new GroundItem(this.x, this.y, { kind: 'chave' }));
+      if (this.keyCarrier && !world.flags[this.keyFlag || 'temChave']) {
+        world.groundItems.push(new GroundItem(this.x, this.y, {
+          kind: 'chave', flag: this.keyFlag, label: this.keyLabel,
+        }));
       }
       // missão cumprida: o chefe (ou mini-chefe) não revive ao reentrar/recarregar
       if (this.isBoss || this.keyCarrier) {
@@ -439,6 +441,39 @@ export class Possesso extends Imundo {
     const p = world.player;
     if (p.alive && Math.hypot(p.x - this.x, p.y - this.y) < 84) {
       p.takeDamage(14, this.x, this.y, world);
+    }
+  }
+}
+
+// ---------- Carcereiro: o chaveiro possesso de Forte Sebaste ----------
+
+export class Carcereiro extends Possesso {
+  constructor(tx, ty) {
+    super(tx, ty);
+    this.hpMax = 150;
+    this.hp = 150;
+    this.speed = 74;
+    this.dmg = 16;
+    this.xpValue = 80;
+    this.scale = 1.5;
+    this.hbW = 13 * SCALE;
+    this.hbH = 7 * SCALE;
+    this.keyCarrier = true;
+    this.keyFlag = 'chaveForte';
+    this.keyLabel = '✝ As chaves do Carcereiro!';
+  }
+
+  render(ctx, cam) {
+    super.render(ctx, cam);
+    if (this.alive) {
+      ctx.font = 'bold 12px Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.strokeStyle = 'rgba(10, 6, 2, 0.9)';
+      ctx.lineWidth = 3;
+      ctx.fillStyle = '#a8d060';
+      const y = this.y - cam.y - SPRITE_PX * this.scale - 12;
+      ctx.strokeText('O Carcereiro Possesso', this.x - cam.x, y);
+      ctx.fillText('O Carcereiro Possesso', this.x - cam.x, y);
     }
   }
 }

@@ -165,8 +165,24 @@ os padrões criados nele (portais, mapas, diálogo) são reaproveitados por todo
 *Cada capítulo = região de superfície + a fossa já existente + instrumento. ~2 sessões
 cada. Segue o roadmap do GDD §6 (T15–T26); as fossas são reaproveitadas, não refeitas.*
 
-- [ ] **C1 — Forte Sebaste** (superfície de São Sebastião) + reentrada na Fossa da Ira
-      + Corda de Sebastião + emboscada do Cavaleiro Guerra. *(GDD T15–T16)*
+- [x] **C1a — Forte Sebaste + reentrada na Fossa da Ira** *(GDD T15–T16, parte 1)* ✔ feito
+      Novo mapa `sebaste` (guarnição murada em pedra, casernas, pátio): chega-se
+      pelas **Estradas** (o nó abre quando `dragaoDerrotado`; Sabra aponta o caminho).
+      **Quest do soldado preso**: o Pregoeiro lê o 1º edito de Diocleciano; Cassiano
+      conta que Marcelino foi preso; o **Carcereiro Possesso** (mini-chefe `keyCarrier`
+      generalizado: `keyFlag`/`keyLabel`, chave e portão agora suportam múltiplos
+      mapas) guarda as chaves; abrir o cárcere liberta Marcelino (`sebasteLivre`,
+      persistente), que aponta o **poço velho** — nova entrada da Fossa da Ira
+      (`extraPortals` no `makeFossa`), com portal de volta ao forte. Rufo e Prisca
+      presentes no hub. **Fragmentos ativados**: toda bênção de santo agora entrega
+      também o fragmento de Ascalon correspondente (`MIRACLE_FRAGMENT`, para todos
+      os capítulos de uma vez). Testado (integração + screenshot): viagem, quest
+      completa (chave→cárcere→Marcelino), poço→fossa com 3 portais, bênção de
+      Sebastião concede Chuva de Setas + Farpa da Flecha. Sem erros.
+- [ ] **C1b — Corda de Sebastião + Cavaleiro Guerra** *(GDD T15–T16, parte 2)* —
+      o instrumento emprestado pelo santo (atravessar fossos / imobilizar inimigo
+      por 2 s) e a **emboscada do Cavaleiro Guerra** na estrada de chegada
+      (primeiro dos Quatro Cavaleiros, GDD §2.6).
 - [ ] **C2 — Porto de Luzia** + Fossa da Inveja + Espelho de Luzia + Cavaleiro Conquista. *(T17–T18)*
 - [ ] **C3 — Ermo de Antão** + Fossa da Gula + Cajado de Antão. *(T19–T20)*
 - [ ] **C4 — Distrito do Tesouro** (revisita) + Fossa da Avareza + Balança de Lourenço
