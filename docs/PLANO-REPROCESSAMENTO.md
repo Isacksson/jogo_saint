@@ -71,9 +71,15 @@ os padrões criados nele (portais, mapas, diálogo) são reaproveitados por todo
   no marcador do chão quando a saída entra em quadro). Topo com folga para não
   bater nas barras. Testado na Fossa da Ira e em Silena (2 saídas simultâneas).
 
-- [ ] **A5 — Polish de transição**
-  - Fade curto ao trocar de mapa (hoje o corte é seco).
-  - Refino de feedback sonoro nas transições e portais.
+- [x] **A5 — Polish de transição** ✔ feito
+  Troca de mapa agora tem fade: ao pisar num portal, o jogo congela e a tela
+  escurece (`FADE` 0.24s), a troca de mapa acontece no ponto mais escuro (o corte
+  não aparece) e a tela clareia no mapa novo. Testado silena→pântano; o jogo
+  volta a responder ao terminar. Casa com o banner do nome do local.
+
+> **Bloco A concluído** (fundação polida). Só resta o **A2b** (`makeFossa`),
+> adiado de propósito para ser feito junto com o primeiro capítulo do Bloco C
+> que reusar uma fossa. Pronto para começar o **Bloco B** (infra da v0.2).
 
 ---
 

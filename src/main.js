@@ -227,6 +227,8 @@ let dlg = null;
 let locName = '';
 let locTime = 0;
 let gameState = 'title'; // title | play
+let trans = null;        // transição de mapa com fade
+const FADE = 0.24;       // duração de cada metade do fade (escurecer / clarear)
 let last = performance.now();
 
 const saved = loadSave();
@@ -289,7 +291,8 @@ function checkPortals() {
   const ty = Math.floor(p.y / TILE_PX);
   for (const portal of world.portals) {
     if (tx >= portal.x && tx < portal.x + portal.w && ty >= portal.y && ty < portal.y + portal.h) {
-      enterMap(portal.to, portal.tx, portal.ty);
+      // não troca na hora: inicia a transição com fade (a troca ocorre no escuro)
+      trans = { t: 0, to: portal.to, tx: portal.tx, ty: portal.ty, swapped: false };
       return;
     }
   }
@@ -582,6 +585,15 @@ function frame(now) {
         }
       }
     }
+  } else if (trans) {
+    // transição de mapa: o jogo congela enquanto escurece e clareia;
+    // a troca acontece no ponto mais escuro, então o corte não aparece
+    trans.t += dt;
+    if (!trans.swapped && trans.t >= FADE) {
+      enterMap(trans.to, trans.tx, trans.ty);
+      trans.swapped = true;
+    }
+    if (trans.t >= FADE * 2) trans = null;
   } else if (invOpen) {
     // inventário aberto: navegação da bolsa
     if (input.wasPressed('inventory')) invOpen = false;
@@ -675,6 +687,13 @@ function frame(now) {
   if (!world.player.alive) renderDeath(ctx, deathTime);
   if (invOpen) renderInventory(ctx, world.player, invSel);
   if (dlg) renderDialogue(ctx, dlg);
+
+  // fade da transição de mapa, por cima de tudo (escurece → troca → clareia)
+  if (trans) {
+    const a = trans.t < FADE ? trans.t / FADE : 1 - (trans.t - FADE) / FADE;
+    ctx.fillStyle = `rgba(8, 6, 4, ${Math.max(0, Math.min(1, a))})`;
+    ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+  }
 
   input.endFrame();
   requestAnimationFrame(frame);
