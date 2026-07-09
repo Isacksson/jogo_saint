@@ -22,6 +22,7 @@ import {
 } from './hud.js';
 import { renderInventory } from './inventory.js';
 import { Shop, VENDORS, renderShop } from './economy.js';
+import { RoadsScreen, renderRoads, nodeForMap } from './roads.js';
 import { serializeWorld, applyPlayer, saveGame, loadSave } from './save.js';
 
 const canvas = document.getElementById('game');
@@ -220,6 +221,7 @@ function fullReset(data) {
   invOpen = false;
   dlg = null;
   shop = null;
+  roads = null;
 }
 
 let elapsed = 0;
@@ -228,6 +230,7 @@ let invOpen = false;
 let invSel = 0;
 let dlg = null;
 let shop = null;
+let roads = null;
 let locName = '';
 let locTime = 0;
 let gameState = 'title'; // title | play
@@ -299,6 +302,20 @@ function checkPortals() {
   const ty = Math.floor(p.y / TILE_PX);
   for (const portal of world.portals) {
     if (tx >= portal.x && tx < portal.x + portal.w && ty >= portal.y && ty < portal.y + portal.h) {
+      if (portal.roads) {
+        // encruzilhada: abre a tela de viagem. Recua o cavaleiro um passo para
+        // dentro do mapa, para que fechar a tela não a reabra no mesmo tile.
+        const side = portal.h >= portal.w
+          ? (portal.x <= world.map.w - (portal.x + portal.w) ? -1 : 1)
+          : 0;
+        const vert = portal.h >= portal.w
+          ? 0
+          : (portal.y <= world.map.h - (portal.y + portal.h) ? -1 : 1);
+        p.x -= side * TILE_PX * 1.6;
+        p.y -= vert * TILE_PX * 1.6;
+        roads = new RoadsScreen(nodeForMap(world.mapId), world.flags);
+        return;
+      }
       // não troca na hora: inicia a transição com fade (a troca ocorre no escuro)
       trans = { t: 0, to: portal.to, tx: portal.tx, ty: portal.ty, swapped: false };
       return;
@@ -428,7 +445,7 @@ function renderPortals(cam) {
     }
 
     // rótulo com o destino, posicionado longe da parede que o portal encosta
-    const name = MAP_DEFS[portal.to]?.name || 'Passagem';
+    const name = portal.roads ? 'Estradas do Império' : (MAP_DEFS[portal.to]?.name || 'Passagem');
     let lx = cx, ly;
     if (ay < 0) ly = ry + rh + 18;      // saída em cima → rótulo abaixo (dentro da sala)
     else if (ay > 0) ly = ry - 8;        // saída embaixo → rótulo acima
@@ -602,6 +619,20 @@ function frame(now) {
       trans.swapped = true;
     }
     if (trans.t >= FADE * 2) trans = null;
+  } else if (roads) {
+    // tela de viagem aberta: o mundo congela
+    if (input.wasPressed('inventory')) roads = null;
+    else {
+      if (input.wasPressed('left') || input.wasPressed('up')) roads.move(-1);
+      if (input.wasPressed('right') || input.wasPressed('down')) roads.move(1);
+      if (input.wasPressed('interact')) {
+        const dest = roads.confirm(world.flags);
+        if (dest) {
+          trans = { t: 0, to: dest.to, tx: dest.tx, ty: dest.ty, swapped: false };
+          roads = null;
+        }
+      }
+    }
   } else if (shop) {
     // loja aberta: o mundo congela como no inventário
     if (input.wasPressed('inventory')) shop = null;
@@ -655,7 +686,7 @@ function frame(now) {
   }
 
   // --- render ---
-  const shake = invOpen || dlg || shop ? 0 : world.fx.shake;
+  const shake = invOpen || dlg || shop || roads ? 0 : world.fx.shake;
   const cam = {
     x: camera.x + (Math.random() - 0.5) * shake,
     y: camera.y + (Math.random() - 0.5) * shake,
@@ -705,6 +736,7 @@ function frame(now) {
   if (!world.player.alive) renderDeath(ctx, deathTime);
   if (invOpen) renderInventory(ctx, world.player, invSel, world.flags);
   if (shop) renderShop(ctx, shop, world.player);
+  if (roads) renderRoads(ctx, roads, world.flags, elapsed);
   if (dlg) renderDialogue(ctx, dlg);
 
   // fade da transição de mapa, por cima de tudo (escurece → troca → clareia)

@@ -128,9 +128,19 @@ os padrões criados nele (portais, mapas, diálogo) são reaproveitados por todo
       + integração no jogo (reforço debita ouro e sobe o dano 24→27; inventário
       renderiza com fragmentos).
 
-> **Bloco B — 2 de 4.** Falta **B3 (Estradas do Império)** e **B4 (Anjo da Guarda)**.
-- [ ] **B3 — Estradas do Império** *(GDD T14)* — tela de viagem ligando Silena aos
-      hubs novos, com desbloqueio progressivo de destinos.
+> **Bloco B — 3 de 4.** Falta só o **B4 (Anjo da Guarda)**.
+- [x] **B3 — Estradas do Império** *(GDD T14)* ✔ feito
+      Novo `src/roads.js`: registro `NODES` com os 8 destinos (Capadócia e Silena
+      abertos; os 6 hubs do Bloco C fechados até `flags.roads[id] = true`, persistido
+      no save), arestas na ordem da história, `RoadsScreen` (seleção, recusa de
+      destino fechado com aviso) e `renderRoads` (pergaminho com nós, estradas
+      pontilhadas, marcador ✝ "estás aqui", descrição de cada região). Entrada por
+      um portal novo `roads: true` na encruzilhada leste de Silena (estrada estendida
+      até a borda); `checkPortals` abre a tela em vez de trocar de mapa e recua o
+      cavaleiro um passo (fechar não reabre). Viajar reusa o fade do A5. Cada hub
+      do Bloco C só precisa gravar a flag e preencher `dest`.
+      Testado (integração + screenshot): abre ao pisar na encruzilhada, recusa
+      Forte Sebaste fechado, viaja a Capadócia no nó certo, sem erros.
 - [ ] **B4 — Anjo da Guarda** *(GDD T14b)* — companheiro de IA com 7 patentes, dado
       no Prólogo, que evolui a cada bênção (GDD §3.6).
 

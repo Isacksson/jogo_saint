@@ -137,8 +137,8 @@ export const MAP_DEFS = {
       const rand = rng(313);
       m.border(2, T.TREE);
 
-      // estradas: oeste-leste (vinda da Capadócia) e descida ao pântano
-      for (let x = 0; x < m.w - 2; x++) {
+      // estradas: oeste-leste (da Capadócia à encruzilhada do Império) e descida ao pântano
+      for (let x = 0; x < m.w; x++) {
         m.set(x, 15, T.PATH);
         m.set(x, 16, T.PATH);
       }
@@ -222,6 +222,7 @@ export const MAP_DEFS = {
     portals: [
       { x: 0, y: 14, w: 1, h: 4, to: 'capadocia', tx: 45, ty: 18 },
       { x: 21, y: 29, w: 4, h: 1, to: 'pantano', tx: 22, ty: 3 },
+      { x: 43, y: 15, w: 1, h: 2, roads: true }, // encruzilhada: Estradas do Império
     ],
   },
 
