@@ -64,9 +64,12 @@ os padrões criados nele (portais, mapas, diálogo) são reaproveitados por todo
   translúcido). Testado com Sabra e o Espírito de São Sebastião.
   - Base pronta para o pregoeiro/editos de Diocleciano da v0.2.
 
-- [ ] **A4 — Navegação e orientação**
-  - Indicador na borda da tela apontando para a saída/objetivo quando fora de quadro.
-  - Opcional: bússola simples de objetivo atual no HUD.
+- [x] **A4 — Navegação e orientação** ✔ feito
+  `renderPortalCompass`: quando um portal está fora de quadro, uma seta dourada
+  na borda da tela aponta para ele (posição pela direção real ao alvo). Só seta,
+  sem rótulo (evita corte de texto e colisão com o HUD; o nome completo aparece
+  no marcador do chão quando a saída entra em quadro). Topo com folga para não
+  bater nas barras. Testado na Fossa da Ira e em Silena (2 saídas simultâneas).
 
 - [ ] **A5 — Polish de transição**
   - Fade curto ao trocar de mapa (hoje o corte é seco).

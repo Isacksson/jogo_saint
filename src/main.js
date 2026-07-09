@@ -434,6 +434,47 @@ function renderPortals(cam) {
   }
 }
 
+// Bússola de saídas: quando um portal está fora de quadro, uma seta na borda
+// da tela aponta para ele com o nome do destino — o jogador nunca fica perdido
+// sobre por onde sair, mesmo num mapa grande ou escuro.
+function renderPortalCompass(cam) {
+  // topo com folga para não colidir com as barras do HUD / barra de chefe
+  const padX = 34, padTop = 88, padBottom = 34;
+  const pulse = 0.7 + 0.2 * Math.sin(elapsed * 4);
+  for (const portal of world.portals) {
+    const sx = (portal.x + portal.w / 2) * TILE_PX - cam.x;
+    const sy = (portal.y + portal.h / 2) * TILE_PX - cam.y;
+    // se o portal aparece na tela, o marcador no chão já basta
+    if (sx > 40 && sx < VIEW_W - 40 && sy > 40 && sy < VIEW_H - 40) continue;
+
+    const ex = Math.max(padX, Math.min(VIEW_W - padX, sx));
+    const ey = Math.max(padTop, Math.min(VIEW_H - padBottom, sy));
+    const ang = Math.atan2(sy - ey, sx - ex);
+
+    ctx.save();
+    // disco de contraste + seta dourada apontando para a saída
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = 'rgba(14, 9, 5, 0.85)';
+    ctx.beginPath();
+    ctx.arc(ex, ey, 14, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = pulse;
+    ctx.translate(ex, ey);
+    ctx.rotate(ang);
+    ctx.beginPath();
+    ctx.moveTo(11, 0);
+    ctx.lineTo(-6, -7);
+    ctx.lineTo(-6, 7);
+    ctx.closePath();
+    ctx.fillStyle = '#f0d060';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(10, 6, 2, 0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
 // escuridão das profundezas: tocha nas catacumbas, brasa avermelhada nas fossas
 function renderDarkness(cam, mode) {
   const p = world.player;
@@ -614,6 +655,8 @@ function frame(now) {
 
   // marcadores de portal por cima da escuridão: exits sempre visíveis
   renderPortals(cam);
+  // bússola de borda para as saídas fora de quadro
+  renderPortalCompass(cam);
 
   // clarão da Luz que Cega
   if (world.fx.whiteFlash > 0) {
