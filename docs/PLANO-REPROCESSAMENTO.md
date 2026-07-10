@@ -228,8 +228,22 @@ cada. Segue o roadmap do GDD §6 (T15–T26); as fossas são reaproveitadas, nã
       Fossa da Gula ganhou despensa de Corda (130 denários + Loriga do Eremita)
       e a fala do Cajado na bênção. Testado (15 asserções + 2 screenshots na
       primeira execução). Sem erros.
-- [ ] **C4 — Distrito do Tesouro** (revisita) + Fossa da Avareza + Balança de Lourenço
-      + Cavaleiro Fome. *(T21–T22)*
+- [x] **C4 — Distrito do Tesouro** (revisita) + Fossa da Avareza + Balança de
+      Lourenço + Cavaleiro Fome *(T21–T22)* — bairro dos cofres da Cidade
+      Imperial (nó abre com `milagres.jejum`, derivado). **Quest de Lourenço**
+      (GDD): o Prefeito Símaco exige as esmolas; o Diácono Justo responde "nossos
+      tesouros são os pobres"; o **Cobrador Possesso** (mini-chefe, sangra ouro
+      ao ser ferido) carrega as chaves do **Cofre Grande** — portões-com-chave
+      generalizados na tabela `GATE_QUESTS` (pantano/sebaste/tesouro: needs/sets/
+      mensagens; tryInteract e persistência únicos). Sob o Cofre, a nova entrada
+      da Fossa da Avareza. O Pregoeiro **recusa-se a ler o 4º edito** (fecho do
+      arco). **Cavaleiro Fome** (`estrada_tesouro`, campos queimados): negro,
+      **rouba a vida que arranca** (cura-se do dano causado). **Balança de
+      Lourenço (R)**: `mirages` generalizadas por instrumento (`inst`/`label`/
+      `hint`/`msg`) — na Avareza, casa-forte de pesos e contrapesos com tesouro
+      (150 denários + Lâmina do Diácono); passiva: converte ⌈dano/3⌉ recebido em
+      denários (esmola forçada, GDD §3.7). Corrigido: `makeFossa` agora repassa
+      `mirages`. Testado (16 asserções + 2 screenshots). Sem erros.
 - [ ] **C5 — Vila do Jardim de Inês** + Fossa da Luxúria + Grinalda de Inês. *(T23–T24)*
 - [ ] **C6 — Mosteiro de Núrsia** + Fossa da Preguiça + Sino de Bento + Cavaleiro Morte
       + **cena da forja de Ascalon** (fecho do Ato II). *(T25–T26)*

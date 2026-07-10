@@ -162,6 +162,18 @@ class Enemy {
       }
     }
 
+    // nome de mini-chefe pairando sobre a criatura
+    if (this.miniName && this.alive) {
+      ctx.font = 'bold 12px Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.strokeStyle = 'rgba(10, 6, 2, 0.9)';
+      ctx.lineWidth = 3;
+      ctx.fillStyle = this.miniNameColor || '#e8c860';
+      const ny = this.y - cam.y - px - 12;
+      ctx.strokeText(this.miniName, this.x - cam.x, ny);
+      ctx.fillText(this.miniName, this.x - cam.x, ny);
+    }
+
     // barra de vida (só quando ferido recentemente)
     if (this.hurtTimer > 0 && this.alive) {
       const w = 30 * this.scale;
@@ -418,6 +430,39 @@ export class Invejoso extends Imundo {
   }
 }
 
+// ---------- Cobrador: o coletor possesso do Distrito do Tesouro ----------
+
+export class Cobrador extends Invejoso {
+  constructor(tx, ty) {
+    super(tx, ty);
+    this.hpMax = 180;
+    this.hp = 180;
+    this.speed = 115;
+    this.dmg = 18;
+    this.xpValue = 110;
+    this.scale = 1.5;
+    this.hbW = 13 * SCALE;
+    this.hbH = 7 * SCALE;
+    this.keyCarrier = true;
+    this.keyFlag = 'chaveCofre';
+    this.keyLabel = '✝ As chaves do Cofre Grande!';
+    this.miniName = 'O Cobrador Possesso';
+    this.miniNameColor = '#a8d060';
+  }
+
+  // ferido, deixa escapar o que cobrou dos pobres
+  takeDamage(dmg, kbX, kbY, world) {
+    const wasAlive = this.alive;
+    super.takeDamage(dmg, kbX, kbY, world);
+    if (wasAlive && Math.random() < 0.3) {
+      world.groundItems.push(new GroundItem(this.x, this.y, {
+        kind: 'gold',
+        amount: 2 + Math.floor(Math.random() * 5),
+      }));
+    }
+  }
+}
+
 // ---------- Leviatã: príncipe da Fossa da Inveja ----------
 
 export class Leviata extends Amon {
@@ -645,6 +690,37 @@ export class Dart {
     ctx.rotate(Math.atan2(this.vy, this.vx));
     ctx.drawImage(img, -img.width * 1.5, -img.height * 1.5, img.width * 3, img.height * 3);
     ctx.restore();
+  }
+}
+
+// Fome: balança, cavalo negro — apetites que nunca se saciam. O que ele
+// arranca de ti o alimenta: cada golpe que acerta lhe devolve a carne.
+export class CavaleiroFome extends CavaleiroGuerra {
+  constructor(tx, ty) {
+    super(tx, ty);
+    this.hpMax = 460;
+    this.hp = 460;
+    this.dmg = 24;
+    this.xpValue = 320;
+    this.blood = '#3a3020';
+    this.bossName = 'FOME, o Terceiro Cavaleiro';
+    this.minionType = Possesso;
+    this.summonCry = 'TUDO DEVORO — E NADA ME FARTA!';
+    this.horseman = 'fome';
+    this.tint = 'brightness(0.3) saturate(0.4) contrast(1.4)'; // cavalo negro
+    this.aura = '120, 90, 30';
+    this.farewell = '"A fome volta sempre, cavaleiro. Sempre."';
+  }
+
+  update(dt, world) {
+    const before = world.player.hp;
+    super.update(dt, world);
+    const dealt = before - world.player.hp;
+    if (dealt > 0 && this.alive) {
+      this.hp = Math.min(this.hpMax, this.hp + dealt);
+      world.fx.text(this.x, this.y - 70, 'A Fome se farta de ti!', '#c8a860');
+      world.fx.burst(this.x, this.y - 30, '#3a3020', 8, 130);
+    }
   }
 }
 

@@ -11,7 +11,7 @@ import { Player } from './player.js';
 import {
   Imundo, ImundoChefe, Amon, Dragao, Serpe,
   Invejoso, Leviata, Possesso, Belzebu, Mamon, Asmodeu, Belfegor,
-  Carcereiro, CavaleiroGuerra, CavaleiroConquista,
+  Carcereiro, CavaleiroGuerra, CavaleiroConquista, CavaleiroFome, Cobrador,
 } from './enemies.js';
 import { initAudio, updateMusic, setMood, toggleMute, sfx } from './audio.js';
 import { Npc } from './npc.js';
@@ -103,6 +103,7 @@ const ENEMY_TYPES = {
   invejoso: Invejoso, leviata: Leviata,
   possesso: Possesso, belzebu: Belzebu, mamon: Mamon, asmodeu: Asmodeu, belfegor: Belfegor,
   carcereiro: Carcereiro, guerra: CavaleiroGuerra, conquista: CavaleiroConquista,
+  fome: CavaleiroFome, cobrador: Cobrador,
 };
 
 // os Quatro Cavaleiros emboscam a primeira viagem a cada destino (GDD §2.6):
@@ -115,6 +116,29 @@ const AMBUSHES = {
   porto_luzia: {
     need: 'conquista', to: 'estrada_porto', tx: 2, ty: 7,
     warn: 'Um vulto branco como osso aguarda na estrada da costa...',
+  },
+  tesouro: {
+    need: 'fome', to: 'estrada_tesouro', tx: 2, ty: 7,
+    warn: 'Um cavaleiro negro pesa uma balança sobre os campos queimados...',
+  },
+};
+
+// portões trancados por chave de mini-chefe, por mapa: E diante do portão
+const GATE_QUESTS = {
+  pantano: {
+    needs: 'temChave', sets: 'catacumbasAbertas',
+    open: 'O portão range e cede...',
+    locked: 'Trancado. Os imundos levaram a chave...',
+  },
+  sebaste: {
+    needs: 'chaveForte', sets: 'sebasteLivre',
+    open: 'Os ferrolhos do cárcere cedem!',
+    locked: 'Trancado. As chaves ficaram com o Carcereiro...',
+  },
+  tesouro: {
+    needs: 'chaveCofre', sets: 'cofreAberto',
+    open: 'Os ferrolhos do Cofre Grande cedem!',
+    locked: 'Selado. As chaves tinem no cinto do Cobrador...',
   },
 };
 
@@ -195,8 +219,9 @@ function enterMap(id, tx, ty) {
   // miragens que o Cajado de Antão desfaz (chão falso vira passagem real);
   // as já reveladas são reaplicadas ao tilemap, que é cacheado entre visitas
   world.mirages = (def.mirages || []).map((mir, i) => ({
+    ...mir,
     x: (mir.tx + 0.5) * TILE_PX, y: (mir.ty + 0.5) * TILE_PX,
-    key: `${id}:${i}`, tiles: mir.tiles, to: mir.to,
+    key: `${id}:${i}`,
   }));
   for (const mir of world.mirages) {
     if (world.flags.miragens?.[mir.key]) {
@@ -207,10 +232,8 @@ function enterMap(id, tx, ty) {
   world.spells = [];
   world.total = (def.spawns || []).length;
 
-  // o portão das catacumbas permanece aberto se já foi destrancado
-  if (id === 'pantano' && world.flags.catacumbasAbertas) map.openGates();
-  // o cárcere de Forte Sebaste permanece aberto depois de Marcelino livre
-  if (id === 'sebaste' && world.flags.sebasteLivre) map.openGates();
+  // portões de quest já destrancados permanecem abertos
+  if (GATE_QUESTS[id] && world.flags[GATE_QUESTS[id].sets]) map.openGates();
   // o poço da Gula permanece escancarado depois do banquete rompido
   if (id === 'ermo_antao' && world.flags.miragemRompida) map.openGates();
   // alcovas de fossa cujo selo já foi rompido continuam abertas
@@ -344,35 +367,19 @@ function tryInteract() {
     }
   }
 
-  // o cárcere de Forte Sebaste: as chaves do Carcereiro soltam Marcelino
-  if (world.mapId === 'sebaste') {
-    const gate = gateCenter();
-    if (gate && Math.hypot(p.x - gate.x, p.y - gate.y) < 130) {
-      if (world.flags.chaveForte) {
-        world.map.openGates();
-        world.flags.sebasteLivre = true;
-        world.fx.text(gate.x, gate.y - 40, 'Os ferrolhos do cárcere cedem!', '#e8dcb8');
-        world.fx.burst(gate.x, gate.y, '#c8c8d0', 16, 140);
-        world.fx.addShake(4);
-      } else {
-        world.fx.text(gate.x, gate.y - 40, 'Trancado. As chaves ficaram com o Carcereiro...', '#c0b090');
-      }
-    }
-    return;
-  }
-
-  // destrancar o portão das catacumbas (o da fossa só abre com a queda de Amon)
-  if (world.mapId !== 'pantano') return;
+  // portões de quest: a chave do mini-chefe local destranca (GATE_QUESTS)
+  const gq = GATE_QUESTS[world.mapId];
+  if (!gq) return;
   const gate = gateCenter();
   if (gate && Math.hypot(p.x - gate.x, p.y - gate.y) < 130) {
-    if (world.flags.temChave) {
+    if (world.flags[gq.needs]) {
       world.map.openGates();
-      world.flags.catacumbasAbertas = true;
-      world.fx.text(gate.x, gate.y - 40, 'O portão range e cede...', '#e8dcb8');
+      world.flags[gq.sets] = true;
+      world.fx.text(gate.x, gate.y - 40, gq.open, '#e8dcb8');
       world.fx.burst(gate.x, gate.y, '#c8c8d0', 16, 140);
       world.fx.addShake(4);
     } else {
-      world.fx.text(gate.x, gate.y - 40, 'Trancado. Os imundos levaram a chave...', '#c0b090');
+      world.fx.text(gate.x, gate.y - 40, gq.locked, '#c0b090');
     }
   }
 }
@@ -549,7 +556,6 @@ function renderBeacons(cam) {
 // miragens: o ar treme sobre o chão falso até o Cajado de Antão prová-lo
 function renderMirages(cam) {
   const p = world.player;
-  const temCajado = hasInstrument(world.flags, 'cajado');
   for (const mir of world.mirages) {
     if (world.flags.miragens?.[mir.key]) continue;
     const x = mir.x - cam.x, y = mir.y - cam.y;
@@ -570,14 +576,16 @@ function renderMirages(cam) {
     }
     ctx.restore();
 
-    if (temCajado && p.alive && Math.hypot(p.x - mir.x, p.y - mir.y) < 200) {
+    if (hasInstrument(world.flags, mir.inst || 'cajado')
+        && p.alive && Math.hypot(p.x - mir.x, p.y - mir.y) < 200) {
+      const label = `R — ${mir.label || 'Cajado'}`;
       ctx.font = 'bold 12px Georgia, serif';
       ctx.textAlign = 'center';
       ctx.strokeStyle = 'rgba(10, 6, 2, 0.9)';
       ctx.lineWidth = 3;
-      ctx.strokeText('R — Cajado', x, y - 48);
+      ctx.strokeText(label, x, y - 48);
       ctx.fillStyle = '#e8cf9a';
-      ctx.fillText('R — Cajado', x, y - 48);
+      ctx.fillText(label, x, y - 48);
     }
   }
 }

@@ -57,6 +57,7 @@ function makeFossa(cfg) {
     spawns,
     anchors: cfg.anchors,
     treasures: cfg.treasures,
+    mirages: cfg.mirages,
     altars: [[4, 4]],
     npcs: [{
       tx: 31, ty: gateY, name: spirit.name, sprite: spirit.sprite,
@@ -804,6 +805,141 @@ export const MAP_DEFS = {
     ],
   },
 
+  // ---------- Capítulo 4: Distrito do Tesouro (superfície de São Lourenço) ----------
+  tesouro: {
+    name: 'Distrito do Tesouro',
+    w: 40, h: 26,
+    mood: 'dark',
+    gateFloor: T.STONE,
+    generate(m) {
+      const rand = rng(258);
+      m.border(2, T.TREE);
+
+      // a estrada do Império chega pelo oeste
+      m.fillRect(0, 14, 8, 2, T.PATH);
+
+      // o distrito calçado da Cidade Imperial
+      m.fillRect(8, 4, 28, 18, T.STONE);
+
+      // as casas do fisco
+      for (const [hx, hy] of [[10, 6], [16, 6], [10, 17], [16, 17]]) {
+        m.fillRect(hx, hy, 4, 3, T.ROOF);
+      }
+
+      // o Cofre Grande: a tesouraria selada, e sob ela a Fossa da Avareza
+      m.fillRect(26, 6, 9, 9, T.CWALL);
+      m.fillRect(27, 7, 7, 7, T.STONE);
+      m.set(28, 14, T.GATE);
+      m.set(29, 14, T.GATE);
+      m.set(30, 9, T.STAIRS);
+      m.set(31, 9, T.STAIRS);
+
+      m.scatter(rand, T.FLOWER, 8);
+    },
+    stamps: [
+      ['houseCream', 10, 6], ['houseCream', 16, 6],
+      ['houseThatch', 10, 17], ['houseCream', 16, 17],
+    ],
+    spawns: [
+      ['invejoso', 22, 10], ['invejoso', 24, 18], ['invejoso', 32, 18],
+      ['invejoso', 20, 20], ['cobrador', 30, 18],
+    ],
+    altars: [[13, 13]],
+    npcs: [
+      {
+        tx: 10, ty: 13, name: 'Pregoeiro Imperial',
+        sprite: 'anastacio',
+        lines: () => [
+          '(Ele segura um edito lacrado, sem abri-lo.) "Quarto edito. TODOS sacrificarão aos deuses, sob pena de morte. Todos. Até as crianças."',
+          'Ele te encara pela primeira vez. "Eu li três. Este eu não leio. Prende-me tu mesmo, se quiseres — já não sirvo a essa voz."',
+        ],
+      },
+      {
+        tx: 20, ty: 10, name: 'Prefeito Símaco',
+        sprite: 'teodoro',
+        lines: (flags) => flags.milagres?.fogo
+          ? [
+            '"Tu... cheiras a fumaça. Como ELE cheirava." O prefeito recua um passo.',
+            '"Fica com as esmolas. Fica com os pobres. Fica com tudo — mas leva esse fogo para longe de mim."',
+          ]
+          : flags.cofreAberto
+            ? ['"Quem te deu as chaves do MEU cofre?! Guardas! ...Guardas?" Ninguém vem. Os guardas também sumiram.']
+            : [
+              '"Ah, um soldado. Que oportuno. A Igreja de Roma esconde tesouros, e o edito os declara do Império — MEUS de administrar."',
+              '"O diácono jura que os cofres da Igreja estão vazios. Mentira: mandei o cobrador recolher as esmolas à força. Queres trabalho? Traze-me o resto."',
+            ],
+      },
+      {
+        tx: 14, ty: 15, name: 'Diácono Justo',
+        sprite: 'anastacio',
+        lines: (flags) => flags.milagres?.fogo
+          ? ['"Lourenço te deu a chama... Então é verdade o que ele disse na grelha: a noite desta cidade é que vai queimar."']
+          : flags.cofreAberto
+            ? ['"Abriste o Cofre Grande... As esmolas roubadas estão lá dentro — e o buraco por onde a avareza sobe. Desce e fecha-o na raiz, irmão."']
+            : flags.chaveCofre
+              ? ['"As chaves do Cobrador! O portão do Cofre Grande fica ao norte, no grande edifício. As esmolas dos pobres estão lá dentro."']
+              : [
+                '"O prefeito exigiu os tesouros da Igreja. Eu lhe respondi como Lourenço: nossos tesouros são os pobres."',
+                '"Ele mandou o cobrador — e o que voltou não era mais um homem. AQUILO arrastou o baú das esmolas para o Cofre Grande, e as chaves tinem no cinto dele."',
+              ],
+      },
+      {
+        tx: 18, ty: 16, name: 'Inácio, o mendigo',
+        sprite: 'teodoro',
+        lines: (flags) => flags.cofreAberto
+          ? ['"Devolveram o pão de hoje, cavaleiro. Deus conta os teus passos — e os teus denários também."']
+          : ['"O cobrador levou até a tigela. A TIGELA, moço." Ele ri sem dentes. "Sou tesouro da Igreja, dizem. Tesouro enferrujado..."'],
+      },
+      {
+        tx: 12, ty: 10, name: 'Prisca, a mercadora',
+        sprite: 'mira', vendor: 'prisca',
+        lines: () => ['No bairro do dinheiro, tudo custa o dobro. Menos de mim — só uns trocados a mais.'],
+      },
+      {
+        tx: 22, ty: 15, name: 'Rufo, o ferreiro',
+        sprite: 'teodoro', vendor: 'rufo',
+        lines: () => ['Forjei grades para o fisco a vida toda. Afiar tua lança paga melhor a alma.'],
+      },
+    ],
+    portals: [
+      { x: 0, y: 13, w: 1, h: 4, roads: true }, // de volta às Estradas do Império
+      { x: 30, y: 9, w: 2, h: 1, to: 'fossa_avareza', tx: 4, ty: 3 }, // sob o Cofre
+    ],
+  },
+
+  // ---------- a emboscada do Cavaleiro Fome na estrada dos campos ----------
+  estrada_tesouro: {
+    name: 'Estrada dos Campos Queimados',
+    w: 36, h: 16,
+    mood: 'dark',
+    gateFloor: T.PATH,
+    generate(m) {
+      const rand = rng(304);
+      m.border(2, T.TREE);
+      // a via entre o Ermo e a Cidade Imperial
+      for (let x = 0; x < m.w; x++) {
+        m.set(x, 7, T.PATH);
+        m.set(x, 8, T.PATH);
+      }
+      // campos de trigo queimados: lama e tocos por onde a Fome passou
+      m.fillRect(6, 3, 10, 3, T.MUD);
+      m.fillRect(20, 10, 11, 4, T.MUD);
+      m.scatter(rand, T.DEADTREE, 18);
+      m.scatter(rand, T.BONES, 6);
+    },
+    spawns: [['fome', 20, 7]],
+    altars: [[4, 11]],
+    npcs: [],
+    portals: [
+      { x: 0, y: 6, w: 1, h: 4, roads: true }, // recuar para as Estradas
+      {
+        x: 35, y: 6, w: 1, h: 4, to: 'tesouro', tx: 2, ty: 14,
+        locked: (f) => !f.cavaleiros?.fome,
+        lockedMsg: '"Uma medida de trigo por um denário — e a tua carne de graça." O Cavaleiro barra a estrada.',
+      },
+    ],
+  },
+
   // ---------- Primeira Fossa: a Ira ----------
   fossa_ira: makeFossa({
     name: 'Primeira Fossa — A Ira',
@@ -951,11 +1087,28 @@ export const MAP_DEFS = {
     floor: T.TREASURE, dark: 'torch', arenaY: 20, alcoveY: 22,
     returnTo: { to: 'fossa_gula', tx: 30, ty: 26 },
     descendTo: { to: 'fossa_luxuria' },
+    // a fenda sob o Cofre Grande desemboca no teto da antecâmara (C4)
+    extraPortals: [{ x: 5, y: 2, w: 2, h: 1, to: 'tesouro', tx: 28, ty: 16 }],
+    // a casa-forte selada a peso e contrapeso: só a Balança de Lourenço abre
+    mirages: [
+      {
+        tx: 15, ty: 13, tiles: [[15, 10], [15, 11]], to: T.TREASURE,
+        inst: 'balanca', label: 'Balança',
+        msg: 'Os contrapesos descem — a porta de ferro da casa-forte sobe!',
+        hint: 'Pesos e contrapesos selam a porta. Falta-te a Balança do diácono.',
+      },
+    ],
+    treasures: [
+      { tx: 14, ty: 8, item: { kind: 'gold', amount: 150 } },
+      { tx: 16, ty: 8, item: { kind: 'equip', slot: 'arma', rarity: 2, name: 'Lâmina do Diácono', value: 8 } },
+    ],
     carve(m, f) {
       // o corredor dos cofres
       m.fillRect(8, 6, 3, 7, f);
       m.fillRect(8, 12, 15, 4, f);
       m.fillRect(20, 15, 3, 5, f);
+      // a casa-forte murada ao norte do corredor (porta em 15,10-11)
+      m.fillRect(13, 7, 5, 3, f);
       // pilhas de ouro amaldiçoado (obstáculos)
       m.fillRect(12, 13, 1, 2, T.CWALL);
       m.fillRect(17, 12, 1, 2, T.CWALL);
@@ -975,6 +1128,7 @@ export const MAP_DEFS = {
           'Sobre as moedas frias, um jovem diácono irradia calor como brasa viva.',
           '"O prefeito exigiu os tesouros da Igreja. Eu lhe trouxe os pobres. Ele me deitou na grelha."',
           '"Aprendi no fogo o que o avarento nunca aprende: só é teu o que deste. Toma a minha chama."',
+          '"E leva a minha Balança. Ela move pesos e contrapesos selados (tecla R) — e cobra dos que te ferem a esmola que negaram."',
           '✝ Milagre recebido: FOGO QUE PURIFICA — tecla 5 (40 de Fé)',
         ],
     },

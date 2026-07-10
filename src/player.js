@@ -368,7 +368,8 @@ export class Player {
     const temCorda = hasInstrument(world.flags, 'corda');
     const temEspelho = hasInstrument(world.flags, 'espelho');
     const temCajado = hasInstrument(world.flags, 'cajado');
-    if (!temCorda && !temEspelho && !temCajado) return;
+    const temBalanca = hasInstrument(world.flags, 'balanca');
+    if (!temCorda && !temEspelho && !temCajado && !temBalanca) return;
 
     // 1) o Espelho diante de uma pira apagada: a luz da santa a reacende
     for (const b of world.beacons || []) {
@@ -393,12 +394,13 @@ export class Player {
       return;
     }
 
-    // 2) o Cajado diante de uma miragem: prova o chão falso e o revela
+    // 2) um selo no cenário (miragem, contrapeso...): o instrumento certo o desfaz
     for (const mir of world.mirages || []) {
       if (world.flags.miragens?.[mir.key]) continue;
       if (Math.hypot(mir.x - this.x, mir.y - this.y) > 90) continue;
-      if (!temCajado) {
-        world.fx.text(this.x, this.y - 58, 'O ar treme sobre a água... Falta-te o Cajado do eremita.', '#c0b090');
+      if (!hasInstrument(world.flags, mir.inst || 'cajado')) {
+        world.fx.text(this.x, this.y - 58,
+          mir.hint || 'O ar treme sobre a água... Falta-te o Cajado do eremita.', '#c0b090');
         this.ropeCd = 0.6;
         return;
       }
@@ -409,7 +411,8 @@ export class Player {
         world.fx.burst((mx + 0.5) * TILE_PX, (my + 0.5) * TILE_PX, '#e8d8a0', 12, 140);
       }
       sfx('cast');
-      world.fx.text(this.x, this.y - 58, 'O Cajado desfaz a miragem: há chão sob a água!', '#e8d8a0');
+      world.fx.text(this.x, this.y - 58,
+        mir.msg || 'O Cajado desfaz a miragem: há chão sob a água!', '#e8d8a0');
       this.ropeCd = 0.6;
       return;
     }
@@ -534,6 +537,12 @@ export class Player {
     if (!this.alive || this.invuln > 0 || this.state === 'dodge') return;
     const dmg = Math.max(1, rawDmg - this.defense);
     this.hp -= dmg;
+    // a Balança de Lourenço cobra dos agressores a esmola que negaram
+    if (hasInstrument(world.flags, 'balanca')) {
+      const esmola = Math.ceil(dmg / 3);
+      this.gold += esmola;
+      world.fx.text(this.x + 26, this.y - 40, `+${esmola}⚖`, '#f0d060');
+    }
     sfx('hurt');
     this.hurtFlash = 0.16;
     this.invuln = 0.9;

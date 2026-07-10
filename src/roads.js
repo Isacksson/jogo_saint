@@ -48,8 +48,9 @@ export const NODES = [
   {
     id: 'tesouro', name: 'Distrito do Tesouro', px: 0.56, py: 0.50,
     desc: 'Os cofres do Império, guardados a sete chaves — e a sete pecados.',
-    dest: null, // C4
-    unlocked: (f) => !!f.roads?.tesouro,
+    dest: { to: 'tesouro', tx: 2, ty: 14 },
+    // o Jejum de Antão sustenta a volta à Cidade Imperial
+    unlocked: (f) => !!f.milagres?.jejum || !!f.roads?.tesouro,
   },
   {
     id: 'jardim_ines', name: 'Vila do Jardim de Inês', px: 0.48, py: 0.80,
