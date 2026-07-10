@@ -12,6 +12,7 @@ import {
   Imundo, ImundoChefe, Amon, Dragao, Serpe,
   Invejoso, Leviata, Possesso, Belzebu, Mamon, Asmodeu, Belfegor,
   Carcereiro, CavaleiroGuerra, CavaleiroConquista, CavaleiroFome, Cobrador,
+  Pretendente,
 } from './enemies.js';
 import { initAudio, updateMusic, setMood, toggleMute, sfx } from './audio.js';
 import { Npc } from './npc.js';
@@ -103,7 +104,7 @@ const ENEMY_TYPES = {
   invejoso: Invejoso, leviata: Leviata,
   possesso: Possesso, belzebu: Belzebu, mamon: Mamon, asmodeu: Asmodeu, belfegor: Belfegor,
   carcereiro: Carcereiro, guerra: CavaleiroGuerra, conquista: CavaleiroConquista,
-  fome: CavaleiroFome, cobrador: Cobrador,
+  fome: CavaleiroFome, cobrador: Cobrador, pretendente: Pretendente,
 };
 
 // os Quatro Cavaleiros emboscam a primeira viagem a cada destino (GDD §2.6):
@@ -139,6 +140,11 @@ const GATE_QUESTS = {
     needs: 'chaveCofre', sets: 'cofreAberto',
     open: 'Os ferrolhos do Cofre Grande cedem!',
     locked: 'Selado. As chaves tinem no cinto do Cobrador...',
+  },
+  jardim_ines: {
+    needs: 'chaveJardim', sets: 'roseiralAberto',
+    open: 'O portão do roseiral se abre entre pétalas!',
+    locked: 'Trancado. A chave anda com a Sombra do Pretendente...',
   },
 };
 

@@ -463,6 +463,30 @@ export class Cobrador extends Invejoso {
   }
 }
 
+// ---------- A Sombra do Pretendente: a obsessão de Corvino, encarnada ----------
+// (não é o homem — é o desejo dele com dentes; vencê-la o liberta, como Inês
+// devolveu ao pretendente a vida que a própria cobiça lhe tirou)
+
+export class Pretendente extends Invejoso {
+  constructor(tx, ty) {
+    super(tx, ty);
+    this.hpMax = 200;
+    this.hp = 200;
+    this.speed = 120;
+    this.dmg = 18;
+    this.xpValue = 120;
+    this.scale = 1.5;
+    this.hbW = 13 * SCALE;
+    this.hbH = 7 * SCALE;
+    this.blood = '#8a2040';
+    this.keyCarrier = true;
+    this.keyFlag = 'chaveJardim';
+    this.keyLabel = '✝ A chave do roseiral!';
+    this.miniName = 'A Sombra do Pretendente';
+    this.miniNameColor = '#f090b0';
+  }
+}
+
 // ---------- Leviatã: príncipe da Fossa da Inveja ----------
 
 export class Leviata extends Amon {

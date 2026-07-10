@@ -244,7 +244,22 @@ cada. Segue o roadmap do GDD §6 (T15–T26); as fossas são reaproveitadas, nã
       (150 denários + Lâmina do Diácono); passiva: converte ⌈dano/3⌉ recebido em
       denários (esmola forçada, GDD §3.7). Corrigido: `makeFossa` agora repassa
       `mirages`. Testado (16 asserções + 2 screenshots). Sem erros.
-- [ ] **C5 — Vila do Jardim de Inês** + Fossa da Luxúria + Grinalda de Inês. *(T23–T24)*
+- [x] **C5 — Vila do Jardim de Inês** + Fossa da Luxúria + Grinalda de Inês
+      *(T23–T24)* — vila de vinhas e roseirais (nó abre com `milagres.fogo`,
+      derivado; sem Cavaleiro). **Quest do pretendente rejeitado** (GDD, eco de
+      Santa Inês): Corvino, recusado por Ágata ("já sou prometida — a Deus"),
+      trancou-se no roseiral; quem ronda os muros é a **Sombra do Pretendente**
+      (mini-chefe keyCarrier) — vencê-la não mata Corvino: **liberta-o** (falas
+      via `flags.defeated`, misericórdia de Inês). Chave abre o roseiral murado
+      (`GATE_QUESTS`), onde o poço desce à Luxúria (`extraPortals`, retorno fora
+      do muro). O **pregoeiro fugido** reaparece na vila e planta o fio de
+      Nicomédia (Ato III). **Grinalda de Inês (R)**: porta de sebes "que só se
+      abre a algo puro" na fossa (selo `inst:'grinalda'`) com jardim escondido
+      (170 denários + Relicário das Rosas); em combate, **zona da paz**
+      (`CalmZone`: 3+ inimigos ≤220 px → círculo de 5 s que aquieta quem estiver
+      dentro, cd 9 s; corrigido raio da zona = raio do gatilho). Prioridade do
+      R: pira → selo → âncora → repelão → zona → clarão → laço. Testado
+      (13 asserções + 2 screenshots). Sem erros.
 - [ ] **C6 — Mosteiro de Núrsia** + Fossa da Preguiça + Sino de Bento + Cavaleiro Morte
       + **cena da forja de Ascalon** (fecho do Ato II). *(T25–T26)*
 

@@ -55,8 +55,9 @@ export const NODES = [
   {
     id: 'jardim_ines', name: 'Vila do Jardim de Inês', px: 0.48, py: 0.80,
     desc: 'Vinhas e roseirais. Dizem que as rosas florescem fora de estação.',
-    dest: null, // C5
-    unlocked: (f) => !!f.roads?.jardim_ines,
+    dest: { to: 'jardim_ines', tx: 2, ty: 14 },
+    // a chama de Lourenço ilumina o caminho do sul
+    unlocked: (f) => !!f.milagres?.fogo || !!f.roads?.jardim_ines,
   },
   {
     id: 'nursia', name: 'Mosteiro de Núrsia', px: 0.70, py: 0.16,

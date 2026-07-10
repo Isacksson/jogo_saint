@@ -369,7 +369,8 @@ export class Player {
     const temEspelho = hasInstrument(world.flags, 'espelho');
     const temCajado = hasInstrument(world.flags, 'cajado');
     const temBalanca = hasInstrument(world.flags, 'balanca');
-    if (!temCorda && !temEspelho && !temCajado && !temBalanca) return;
+    const temGrinalda = hasInstrument(world.flags, 'grinalda');
+    if (!temCorda && !temEspelho && !temCajado && !temBalanca && !temGrinalda) return;
 
     // 1) o Espelho diante de uma pira apagada: a luz da santa a reacende
     for (const b of world.beacons || []) {
@@ -458,7 +459,21 @@ export class Player {
       }
     }
 
-    // 5) o clarão do Espelho: cega o grupo que cerca o cavaleiro
+    // 5) a zona da paz da Grinalda: uma horda inteira (3+) se aquieta
+    if (temGrinalda) {
+      const roda = world.enemies.filter(
+        (e) => e.alive && Math.hypot(e.x - this.x, e.y - this.y) < 220
+      );
+      if (roda.length >= 3) {
+        world.spells.push(new CalmZone(this.x, this.cy));
+        sfx('pray');
+        world.fx.text(this.x, this.y - 58, 'A paz da Grinalda se espalha...', '#f0b0c8');
+        this.ropeCd = 9;
+        return;
+      }
+    }
+
+    // 6) o clarão do Espelho: cega o grupo que cerca o cavaleiro
     if (temEspelho) {
       const cercam = world.enemies.filter(
         (e) => e.alive && Math.hypot(e.x - this.x, e.y - this.y) < 220
@@ -473,7 +488,7 @@ export class Player {
       }
     }
 
-    // 6) o laço: amarra o inimigo mais próximo
+    // 7) o laço: amarra o inimigo mais próximo
     if (!temCorda) {
       world.fx.text(this.x, this.y - 58, 'Nenhum instrumento acha uso aqui...', '#c0b090');
       this.ropeCd = 0.4;
@@ -700,6 +715,60 @@ export class Player {
         : 'brightness(1.15) saturate(0.7)';
     }
     ctx.drawImage(frame, -size / 2, -size / 2, size, size);
+    ctx.restore();
+  }
+}
+
+// ---------- a zona da paz da Grinalda de Inês (GDD §3.7) ----------
+// um círculo de calmaria: enquanto dura, quem está dentro esquece a fúria
+
+class CalmZone {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.r = 220; // cobre todo o gatilho: quem a acionou está dentro dela
+    this.life = 5;
+    this.t = 0;
+    this.dead = false;
+  }
+
+  update(dt, world) {
+    this.t += dt;
+    this.life -= dt;
+    if (this.life <= 0) {
+      this.dead = true;
+      return;
+    }
+    for (const e of world.enemies) {
+      if (!e.alive) continue;
+      if (Math.hypot(e.x - this.x, e.y - this.y) < this.r) {
+        e.stunT = Math.max(e.stunT || 0, 0.35); // aquietado enquanto dentro
+      }
+    }
+    // pétalas à deriva
+    if (Math.random() < dt * 16) {
+      const a = Math.random() * Math.PI * 2;
+      const d = Math.random() * this.r;
+      world.fx.spark(this.x + Math.cos(a) * d, this.y + Math.sin(a) * d - 10, '#f0b0c8');
+    }
+  }
+
+  render(ctx, cam) {
+    const x = this.x - cam.x;
+    const y = this.y - cam.y;
+    const fade = Math.min(1, this.life / 1.2);
+    const g = ctx.createRadialGradient(x, y, 20, x, y, this.r);
+    g.addColorStop(0, `rgba(240, 176, 200, ${0.16 * fade})`);
+    g.addColorStop(1, 'rgba(240, 176, 200, 0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(x - this.r, y - this.r, this.r * 2, this.r * 2);
+    ctx.save();
+    ctx.globalAlpha = (0.4 + 0.2 * Math.sin(this.t * 3)) * fade;
+    ctx.strokeStyle = '#f0b0c8';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, y, this.r * (0.94 + 0.06 * Math.sin(this.t * 2)), 0, Math.PI * 2);
+    ctx.stroke();
     ctx.restore();
   }
 }

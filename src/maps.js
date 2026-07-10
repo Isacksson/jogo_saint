@@ -940,6 +940,114 @@ export const MAP_DEFS = {
     ],
   },
 
+  // ---------- Capítulo 5: Vila do Jardim de Inês (superfície de Santa Inês) ----------
+  jardim_ines: {
+    name: 'Vila do Jardim de Inês',
+    w: 42, h: 28,
+    mood: 'peace',
+    gateFloor: T.GRASS,
+    generate(m) {
+      const rand = rng(121);
+      m.border(2, T.TREE);
+
+      // a estrada do Império chega pelo oeste, entre as vinhas
+      m.fillRect(0, 14, 30, 2, T.PATH);
+
+      // os renques de videira, com falhas por onde se passa
+      for (const vy of [5, 8, 11]) {
+        for (let x = 4; x <= 24; x++) {
+          if (x % 6 !== 2) m.set(x, vy, T.TREE);
+        }
+      }
+
+      // o casario da vila
+      for (const [hx, hy] of [[6, 18], [12, 20], [18, 18]]) {
+        m.fillRect(hx, hy, 4, 3, T.ROOF);
+      }
+
+      // o roseiral murado: dentro, o poço que desce à Fossa da Luxúria
+      m.fillRect(30, 6, 8, 8, T.CWALL);
+      m.fillRect(31, 7, 6, 6, T.GRASS);
+      m.set(33, 13, T.GATE);
+      m.set(34, 13, T.GATE);
+      m.set(33, 9, T.STAIRS);
+      m.set(34, 9, T.STAIRS);
+      for (let i = 0; i < 10; i++) {
+        const x = 31 + Math.floor(rand() * 6);
+        const y = 7 + Math.floor(rand() * 6);
+        if (m.get(x, y) === T.GRASS) m.set(x, y, T.FLOWER);
+      }
+
+      m.scatter(rand, T.FLOWER, 40);
+      m.scatter(rand, T.ROCK, 4);
+    },
+    stamps: [
+      ['houseThatch', 6, 18], ['houseCream', 12, 20], ['houseThatch', 18, 18],
+    ],
+    spawns: [
+      ['invejoso', 28, 18], ['invejoso', 32, 20], ['invejoso', 26, 22],
+      ['invejoso', 36, 17], ['pretendente', 32, 18],
+    ],
+    altars: [[9, 16]],
+    npcs: [
+      {
+        tx: 14, ty: 13, name: 'Ágata, a vinhateira',
+        sprite: 'mira',
+        lines: (flags) => flags.milagres?.cordeiro
+          ? [
+            'As rosas floresceram fora de estação — TODAS, numa noite só. A vila inteira cheira a jardim.',
+            '"O Cordeiro passou por aqui", disse o velho Vidal. Eu acho que ele passou contigo, cavaleiro.',
+          ]
+          : [
+            'Corvino pediu-me em casamento três vezes. Três vezes eu disse: já sou prometida — a Deus.',
+            'Ele não aceitou. Trancou-se no roseiral com a chave da vila... e o que anda lá dentro agora NÃO é ele.',
+          ],
+      },
+      {
+        tx: 10, ty: 21, name: 'Corvino, o pretendente',
+        sprite: 'teodoro',
+        lines: (flags) => flags.defeated?.jardim_ines
+          ? [
+            '(A cor voltou-lhe ao rosto.) "Eu vi... eu vi o que o meu querer virou, cavaleiro. Tinha os MEUS olhos."',
+            '"Dize a Ágata que não a incomodo mais. Um homem que viu a própria sombra aprende a andar no sol."',
+          ]
+          : ['(Um homem jaz de olhos abertos, pálido, murmurando.) "...ela será minha... a rosa é minha... o jardim inteiro... meu..."'],
+      },
+      {
+        tx: 16, ty: 21, name: 'Vidal, o vinhateiro',
+        sprite: 'teodoro',
+        lines: (flags) => flags.roseiralAberto
+          ? ['"O roseiral aberto de novo... Cuidado com o poço velho lá dentro, moço. Meu avô dizia que ele desce até onde o desejo não tem fundo."']
+          : [
+            'O roseiral era da vila inteira: casamentos, colheitas, batizados. Corvino o tomou como quem toma uma noiva à força.',
+            'A sombra dele ronda os muros à noite. Traze a chave de volta, cavaleiro — mas não faças mal ao rapaz, se puderes. Ele já era bom.',
+          ],
+      },
+      {
+        tx: 20, ty: 14, name: 'O pregoeiro fugido',
+        sprite: 'anastacio',
+        lines: () => [
+          '"Lembras-te de mim, soldado? Eu lia os editos. Agora leio vinhas — este silêncio paga melhor."',
+          '"Foge de Nicomédia enquanto podes. Dizem que o imperador pergunta pelo cavaleiro dos milagres... pelo NOME."',
+        ],
+      },
+      {
+        tx: 12, ty: 16, name: 'Prisca, a mercadora',
+        sprite: 'mira', vendor: 'prisca',
+        lines: () => ['Vinho eu não vendo — o Vidal me mataria. Poções, por sorte, não são da terra.'],
+      },
+      {
+        tx: 22, ty: 16, name: 'Rufo, o ferreiro',
+        sprite: 'teodoro', vendor: 'rufo',
+        lines: () => ['Ferrei cavalos a vida toda nesta vila. Tua lança é o primeiro trabalho que me faz rezar antes de malhar.'],
+      },
+    ],
+    portals: [
+      { x: 0, y: 13, w: 1, h: 4, roads: true }, // de volta às Estradas do Império
+      { x: 33, y: 9, w: 2, h: 1, to: 'fossa_luxuria', tx: 4, ty: 3 }, // o poço do roseiral
+    ],
+  },
+
   // ---------- Primeira Fossa: a Ira ----------
   fossa_ira: makeFossa({
     name: 'Primeira Fossa — A Ira',
@@ -1140,7 +1248,24 @@ export const MAP_DEFS = {
     floor: T.ROSEFLOOR, dark: 'hell', arenaY: 19, alcoveY: 22,
     returnTo: { to: 'fossa_avareza', tx: 30, ty: 27 },
     descendTo: { to: 'fossa_preguica' },
+    // o poço do roseiral desemboca no teto da antecâmara (C5)
+    extraPortals: [{ x: 5, y: 2, w: 2, h: 1, to: 'jardim_ines', tx: 33, ty: 15 }],
+    // a porta de sebes vivas que só se abre a algo puro: a Grinalda de Inês
+    mirages: [
+      {
+        tx: 8, ty: 22, tiles: [[7, 22]], to: T.ROSEFLOOR,
+        inst: 'grinalda', label: 'Grinalda',
+        msg: 'As sebes se afastam diante da Grinalda: a porta pura se abre!',
+        hint: 'As sebes vivas recusam tua mão. Só se abrem a algo puro...',
+      },
+    ],
+    treasures: [
+      { tx: 4, ty: 22, item: { kind: 'gold', amount: 170 } },
+      { tx: 5, ty: 23, item: { kind: 'equip', slot: 'medalha', rarity: 2, name: 'Relicário das Rosas', value: 110 } },
+    ],
     carve(m, f) {
+      // o jardim escondido atrás da porta de sebes (7,22)
+      m.fillRect(3, 21, 4, 3, f);
       // o corredor perfumado, serpenteante
       m.fillRect(8, 4, 3, 5, f);
       m.fillRect(11, 7, 6, 3, f);
@@ -1167,6 +1292,7 @@ export const MAP_DEFS = {
           'No meio do jardim envenenado, uma menina de doze anos segura um cordeiro que não está lá.',
           '"Prometeram-me casamentos, riquezas, prazeres. Eu já tinha esposo: aquele a quem os anjos servem."',
           '"Recusei até a espada. Leva contigo o meu Cordeiro — ele guarda os que guardam o coração."',
+          '"E leva a minha Grinalda. As portas de jardim se abrem a ela (tecla R) — e, cercado, ergue-a: a paz que ela espalha acalma até o desejo."',
           '✝ Milagre recebido: CORDEIRO GUARDIÃO — tecla 6 (45 de Fé)',
         ],
     },
