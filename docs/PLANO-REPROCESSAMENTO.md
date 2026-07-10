@@ -195,7 +195,23 @@ cada. Segue o roadmap do GDD §6 (T15–T26); as fossas são reaproveitadas, nã
       GDD §2.6) — render: sprite de Jorge tingido de vermelho + aura (sem asset
       novo). Testado (integração, 14 asserções + 2 screenshots): emboscada,
       laço, bloqueio, dissolução, travessia e tesouro. Sem erros.
-- [ ] **C2 — Porto de Luzia** + Fossa da Inveja + Espelho de Luzia + Cavaleiro Conquista. *(T17–T18)*
+- [x] **C2 — Porto de Luzia** + Fossa da Inveja + Espelho de Luzia + Cavaleiro
+      Conquista *(T17–T18)* — cidade-farol: nó das Estradas abre com a bênção
+      de Sebastião (derivado, `milagres.setas`); **quest do farol** (GDD): Zósimo,
+      o mercador, comprou todo o óleo para cobiçar o farol da santa; Lucila, a
+      faroleira cega, aponta o porão do armazém velho → **nova entrada da Fossa
+      da Inveja** (`extraPortals`), que ganhou saliência de Corda com tesouro
+      (110 denários + Pavês de Luzia). **Espelho de Luzia (R)**: novo elemento
+      `beacons` (piras; aceso persiste em `flags.farois`) — reacender o Farol dá
+      120 denários, muda as falas de Zósimo/Lucila/Talassia e **abre o nó do Ermo
+      (C3, derivado)**; em combate, clarão que cega 2+ inimigos a ≤220 px (1,3 s,
+      cd 6 s). `useInstrument` agora prioriza: pira → âncora → clarão → laço.
+      **Cavaleiro Conquista** (`estrada_porto`, costa): branco-osso, herda o
+      repertório de Guerra + **rajadas de 3 flechas** (`Dart`) quando o alvo
+      guarda distância; dissolução generalizada (`horseman`/`tint`/`aura`/
+      `farewell` parametrizados) e tabela `AMBUSHES` no main (emboscada por
+      destino, dados-driven para C3–C6). Pregoeiro lê o 2º edito (fio de
+      Diocleciano). Testado (integração, 15 asserções + 2 screenshots). Sem erros.
 - [ ] **C3 — Ermo de Antão** + Fossa da Gula + Cajado de Antão. *(T19–T20)*
 - [ ] **C4 — Distrito do Tesouro** (revisita) + Fossa da Avareza + Balança de Lourenço
       + Cavaleiro Fome. *(T21–T22)*

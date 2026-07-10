@@ -536,6 +536,152 @@ export const MAP_DEFS = {
     ],
   },
 
+  // ---------- Capítulo 2: Porto de Luzia (superfície de Santa Luzia) ----------
+  porto_luzia: {
+    name: 'Porto de Luzia',
+    w: 42, h: 28,
+    mood: 'peace',
+    generate(m) {
+      const rand = rng(1304);
+      m.border(2, T.TREE);
+
+      // o mar a leste, com a faixa de areia da praia
+      m.fillRect(34, 0, 8, 28, T.WATER);
+      m.fillRect(32, 0, 2, 28, T.SAND);
+
+      // a estrada do Império chega pelo oeste e morre no cais
+      m.fillRect(0, 14, 34, 2, T.PATH);
+      // o cais de tábuas, avançando sobre a água até o farol
+      m.fillRect(34, 14, 6, 2, T.PATH);
+
+      // o farol da santa, num pontão de pedra sobre o mar
+      m.fillRect(36, 10, 3, 4, T.CWALL);
+
+      // praça do mercado
+      m.fillRect(17, 11, 9, 5, T.PATH);
+
+      // casario do porto
+      for (const [hx, hy] of [[6, 6], [14, 5], [24, 6], [8, 20], [16, 21]]) {
+        m.fillRect(hx, hy, 4, 3, T.ROOF);
+      }
+
+      // o armazém velho, de pedra — sob ele, escadas que ninguém cavou
+      m.fillRect(25, 20, 6, 5, T.CWALL);
+      m.fillRect(26, 21, 4, 3, T.STONE);
+      m.set(25, 22, T.STONE); // a porta arrombada, a oeste
+
+      m.scatter(rand, T.FLOWER, 18);
+      m.scatter(rand, T.ROCK, 6);
+    },
+    stamps: [
+      ['houseThatch', 6, 6], ['houseCream', 14, 5], ['houseThatch', 24, 6],
+      ['houseCream', 8, 20], ['houseThatch', 16, 21],
+    ],
+    spawns: [
+      ['invejoso', 28, 18], ['invejoso', 22, 19], ['invejoso', 30, 16],
+      ['invejoso', 24, 23], ['serpe', 27, 17],
+    ],
+    altars: [[19, 12]],
+    // a pira do farol, apagada desde os editos: o Espelho de Luzia a reacende
+    beacons: [
+      { tx: 37, ty: 14, msg: '✝ O Farol de Luzia arde de novo! A rota do Ermo reabre.', gold: 120 },
+    ],
+    npcs: [
+      {
+        tx: 10, ty: 13, name: 'Pregoeiro Imperial',
+        sprite: 'anastacio',
+        lines: () => [
+          '"SEGUNDO EDITO DO DIVINO IMPERADOR: os bispos, presbíteros e diáconos dos cristãos serão lançados ao cárcere. As escrituras, entregues ao fogo."',
+          'Ele baixa a voz: "O primeiro edito tomou os bens. Este toma os pastores. Não me perguntes o que o terceiro tomará, soldado."',
+        ],
+      },
+      {
+        tx: 22, ty: 12, name: 'Zósimo, o mercador',
+        sprite: 'teodoro',
+        lines: (flags) => flags.farois?.['porto_luzia:0']
+          ? [
+            'O farol... aceso? Sem óleo, sem pavio, sem pagar NADA?',
+            'Ele conta moedas sem te olhar. "Fica com a tua luz, cavaleiro. Há coisas que não se compram... eu odeio isso."',
+          ]
+          : [
+            'Aquele farol devia ser MEU. Quem guia os navios cobra o preço que quiser — e a cega velha o deixa apagar!',
+            '"Comprei o óleo de toda a costa. Sem óleo, sem farol; sem farol, compram de mim as lamparinas. É só... comércio."',
+          ],
+      },
+      {
+        tx: 38, ty: 15, name: 'Lucila, a faroleira cega',
+        sprite: 'mira',
+        lines: (flags) => flags.farois?.['porto_luzia:0']
+          ? [
+            '"Sinto o calor no rosto... a pira arde! Deus te pague, cavaleiro."',
+            '"Eu não preciso dela para ver — mas o mar precisa. E a costa do deserto, a LESTE, volta a ter caminho."',
+          ]
+          : flags.milagres?.luz
+            ? ['"Trazes a luz da santa contigo — eu a sinto. Sobe ao cais e ergue o Espelho diante da pira (tecla R)."']
+            : [
+              '"O óleo, Zósimo comprou todo. Mas a pira desta torre nunca ardeu de óleo, cavaleiro — ardia da luz de Luzia."',
+              '"Desde os editos, a chama morreu, e o que subiu do porão do armazém velho não foi fumaça... Desce lá, se tens coragem. A santa espera no fundo."',
+            ],
+      },
+      {
+        tx: 30, ty: 15, name: 'Talassia, a pescadora',
+        sprite: 'mira',
+        lines: (flags) => flags.milagres?.luz
+          ? ['Os olhos verdes sumiram das águas... Os peixes voltam, cavaleiro. Ainda haverá ceia neste porto.']
+          : [
+            'O peixe fugiu da baía. Dizem que há OLHOS verdes na água, cobiçando as redes dos outros.',
+            'E no armazém velho apareceram escadas que ninguém cavou. Ninguém desce. Quem desceu não conta.',
+          ],
+      },
+      {
+        tx: 18, ty: 16, name: 'Prisca, a mercadora',
+        sprite: 'mira', vendor: 'prisca',
+        lines: () => ['Num porto sem navios, até poção vende mais que peixe.'],
+      },
+      {
+        tx: 24, ty: 16, name: 'Rufo, o ferreiro',
+        sprite: 'teodoro', vendor: 'rufo',
+        lines: () => ['Âncoras enferrujam no cais. Tua lança, não — ela tem para onde ir.'],
+      },
+    ],
+    portals: [
+      { x: 0, y: 13, w: 1, h: 4, roads: true }, // de volta às Estradas do Império
+      { x: 28, y: 22, w: 1, h: 1, to: 'fossa_inveja', tx: 4, ty: 3 }, // o porão do armazém
+    ],
+  },
+
+  // ---------- a emboscada do Cavaleiro Conquista na estrada costeira ----------
+  estrada_porto: {
+    name: 'Estrada Costeira do Porto',
+    w: 36, h: 16,
+    mood: 'dark',
+    generate(m) {
+      const rand = rng(618);
+      m.border(2, T.TREE);
+      // o mar beira a estrada ao norte
+      m.fillRect(0, 0, 36, 3, T.WATER);
+      m.fillRect(0, 3, 36, 2, T.SAND);
+      // a via costeira, reta de oeste a leste
+      for (let x = 0; x < m.w; x++) {
+        m.set(x, 7, T.PATH);
+        m.set(x, 8, T.PATH);
+      }
+      m.scatter(rand, T.DEADTREE, 10);
+      m.scatter(rand, T.ROCK, 8);
+    },
+    spawns: [['conquista', 20, 7]],
+    altars: [[4, 11]],
+    npcs: [],
+    portals: [
+      { x: 0, y: 6, w: 1, h: 4, roads: true }, // recuar para as Estradas
+      {
+        x: 35, y: 6, w: 1, h: 4, to: 'porto_luzia', tx: 2, ty: 14,
+        locked: (f) => !f.cavaleiros?.conquista,
+        lockedMsg: '"Este porto será MEU, como tudo o mais." O Cavaleiro barra a estrada.',
+      },
+    ],
+  },
+
   // ---------- Primeira Fossa: a Ira ----------
   fossa_ira: makeFossa({
     name: 'Primeira Fossa — A Ira',
@@ -587,6 +733,14 @@ export const MAP_DEFS = {
     floor: T.ENVYFLOOR, dark: 'torch', arenaY: 20, alcoveY: 22,
     returnTo: { to: 'fossa_ira', tx: 30, ty: 27 },
     descendTo: { to: 'fossa_gula' },
+    // o porão do armazém velho do Porto desemboca no teto da antecâmara (C2)
+    extraPortals: [{ x: 5, y: 2, w: 2, h: 1, to: 'porto_luzia', tx: 26, ty: 22 }],
+    // a saliência do tesouro, além do charco de cobiça: só a Corda alcança
+    anchors: [[5, 23], [11, 23]],
+    treasures: [
+      { tx: 5, ty: 22, item: { kind: 'gold', amount: 110 } },
+      { tx: 6, ty: 24, item: { kind: 'equip', slot: 'escudo', rarity: 2, name: 'Pavês de Luzia', value: 5 } },
+    ],
     carve(m, f) {
       // galeria em zigue-zague
       m.fillRect(7, 6, 3, 7, f);
@@ -598,6 +752,8 @@ export const MAP_DEFS = {
       // charcos nas bordas da arena
       m.fillRect(8, 20, 2, 9, T.POISON);
       m.fillRect(26, 20, 2, 9, T.POISON);
+      // a saliência isolada além do veneno, a oeste da arena
+      m.fillRect(4, 22, 4, 3, f);
     },
     spawns: [
       ['invejoso', 8, 8], ['invejoso', 9, 13], ['serpe', 14, 14],
@@ -612,6 +768,7 @@ export const MAP_DEFS = {
           'Entre as pedras verdes de cobiça, ergue-se uma jovem de olhar sereno — sereno, embora tenham-lhe tirado os olhos.',
           '"Quiseram apagar a minha vista, e eu passei a ver mais longe. A inveja é isto: olhos que ardem pelo que não lhes pertence."',
           '"Toma a minha Luz. Diante dela, todo olho maligno se fecha."',
+          '"E leva o meu Espelho. Ergue-o diante das piras apagadas (tecla R) — e, no aperto, seu clarão cega os que te cercam."',
           '✝ Milagre recebido: LUZ QUE CEGA — tecla 3 (35 de Fé)',
         ],
     },

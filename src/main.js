@@ -11,7 +11,7 @@ import { Player } from './player.js';
 import {
   Imundo, ImundoChefe, Amon, Dragao, Serpe,
   Invejoso, Leviata, Possesso, Belzebu, Mamon, Asmodeu, Belfegor,
-  Carcereiro, CavaleiroGuerra,
+  Carcereiro, CavaleiroGuerra, CavaleiroConquista,
 } from './enemies.js';
 import { initAudio, updateMusic, setMood, toggleMute, sfx } from './audio.js';
 import { Npc } from './npc.js';
@@ -102,7 +102,20 @@ const ENEMY_TYPES = {
   amon: Amon, dragao: Dragao,
   invejoso: Invejoso, leviata: Leviata,
   possesso: Possesso, belzebu: Belzebu, mamon: Mamon, asmodeu: Asmodeu, belfegor: Belfegor,
-  carcereiro: Carcereiro, guerra: CavaleiroGuerra,
+  carcereiro: Carcereiro, guerra: CavaleiroGuerra, conquista: CavaleiroConquista,
+};
+
+// os Quatro Cavaleiros emboscam a primeira viagem a cada destino (GDD §2.6):
+// viajar para `dest` sem a flag `need` desvia para o mapa da estrada
+const AMBUSHES = {
+  sebaste: {
+    need: 'guerra', to: 'estrada_sebaste', tx: 2, ty: 7,
+    warn: 'Um cavaleiro vermelho barra a estrada adiante...',
+  },
+  porto_luzia: {
+    need: 'conquista', to: 'estrada_porto', tx: 2, ty: 7,
+    warn: 'Um vulto branco como osso aguarda na estrada da costa...',
+  },
 };
 
 // o navegador só libera áudio após o primeiro gesto do usuário
@@ -119,6 +132,7 @@ const world = {
   groundItems: [],
   altars: [],
   anchors: [],
+  beacons: [],
   props: [],
   npcs: [],
   portals: [],
@@ -172,6 +186,11 @@ function enterMap(id, tx, ty) {
   world.anchors = (def.anchors || []).map(([ax, ay]) => ({
     x: (ax + 0.5) * TILE_PX, y: (ay + 0.5) * TILE_PX,
   }));
+  // piras que o Espelho de Luzia reacende (aceso fica em flags.farois)
+  world.beacons = (def.beacons || []).map((b, i) => ({
+    x: (b.tx + 0.5) * TILE_PX, y: (b.ty + 0.5) * TILE_PX,
+    key: `${id}:${i}`, msg: b.msg, gold: b.gold,
+  }));
   world.projectiles = [];
   world.spells = [];
   world.total = (def.spawns || []).length;
@@ -218,9 +237,10 @@ function enterMap(id, tx, ty) {
   locName = def.name;
   locTime = 3.5;
 
-  // a emboscada: um vulto vermelho barra a estrada adiante (GDD §2.6)
-  if (id === 'estrada_sebaste' && !world.flags.cavaleiros?.guerra) {
-    world.fx.text(world.player.x, world.player.y - 70, 'Um cavaleiro vermelho barra a estrada adiante...', '#e88060');
+  // a emboscada: um Cavaleiro barra a estrada adiante (GDD §2.6)
+  const amb = Object.values(AMBUSHES).find((a) => a.to === id);
+  if (amb && !world.flags.cavaleiros?.[amb.need]) {
+    world.fx.text(world.player.x, world.player.y - 70, amb.warn, '#e88060');
   }
 }
 
@@ -464,6 +484,50 @@ function renderAnchors(cam) {
       ctx.strokeText('R — Corda', x, y - 34);
       ctx.fillStyle = '#e8cf9a';
       ctx.fillText('R — Corda', x, y - 34);
+    }
+  }
+}
+
+// piras de farol: apagadas até o Espelho de Luzia refleti-las de volta à vida
+function renderBeacons(cam) {
+  const p = world.player;
+  const temEspelho = hasInstrument(world.flags, 'espelho');
+  for (const b of world.beacons) {
+    const x = b.x - cam.x, y = b.y - cam.y;
+    const lit = !!world.flags.farois?.[b.key];
+
+    // o pedestal de pedra com a taça da pira
+    ctx.fillStyle = '#6a6a72';
+    ctx.fillRect(x - 5, y - 26, 10, 28);
+    ctx.fillStyle = '#8a8a92';
+    ctx.fillRect(x - 5, y - 26, 4, 28);
+    ctx.fillStyle = '#4a4a52';
+    ctx.fillRect(x - 9, y - 30, 18, 6);
+
+    if (lit) {
+      // a chama e o halo do farol aceso
+      const fl = 0.75 + 0.25 * Math.sin(elapsed * 11) + 0.1 * Math.sin(elapsed * 27);
+      const g = ctx.createRadialGradient(x, y - 34, 3, x, y - 34, 70);
+      g.addColorStop(0, `rgba(248, 216, 120, ${0.5 * fl})`);
+      g.addColorStop(1, 'rgba(248, 216, 120, 0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(x - 70, y - 104, 140, 140);
+      ctx.fillStyle = '#f8d878';
+      ctx.beginPath();
+      ctx.ellipse(x, y - 36, 5, 8 * fl, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fff4c8';
+      ctx.beginPath();
+      ctx.ellipse(x, y - 34, 2.5, 4 * fl, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (temEspelho && p.alive && Math.hypot(p.x - b.x, p.y - b.y) < 200) {
+      ctx.font = 'bold 12px Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.strokeStyle = 'rgba(10, 6, 2, 0.9)';
+      ctx.lineWidth = 3;
+      ctx.strokeText('R — Espelho', x, y - 40);
+      ctx.fillStyle = '#e8cf9a';
+      ctx.fillText('R — Espelho', x, y - 40);
     }
   }
 }
@@ -735,10 +799,9 @@ function frame(now) {
       if (input.wasPressed('right') || input.wasPressed('down')) roads.move(1);
       if (input.wasPressed('interact')) {
         let dest = roads.confirm(world.flags);
-        // o Cavaleiro Guerra embosca quem toma a estrada de Sebaste (GDD §2.6)
-        if (dest?.to === 'sebaste' && !world.flags.cavaleiros?.guerra) {
-          dest = { to: 'estrada_sebaste', tx: 2, ty: 7 };
-        }
+        // um Cavaleiro do Apocalipse embosca a primeira ida a cada destino
+        const amb = dest && AMBUSHES[dest.to];
+        if (amb && !world.flags.cavaleiros?.[amb.need]) dest = amb;
         if (dest) {
           trans = { t: 0, to: dest.to, tx: dest.tx, ty: dest.ty, swapped: false };
           roads = null;
@@ -810,6 +873,7 @@ function frame(now) {
   renderMap(cam);
   renderAltars(cam);
   renderAnchors(cam);
+  renderBeacons(cam);
   for (const g of world.groundItems) g.render(ctx, cam);
 
   // entidades e cenografia ordenadas por Y (quem está mais ao sul desenha por cima)

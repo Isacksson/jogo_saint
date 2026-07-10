@@ -263,7 +263,7 @@ export class Player {
       this.didHit = false;
       sfx('heavy');
     } else if (input.wasPressed('corda')) {
-      this.tryRope(world);
+      this.useInstrument(world);
     } else if (input.wasPressed('dodge') && this.dodgeCd <= 0) {
       const v = this.moving
         ? { x: dx / Math.hypot(dx, dy), y: dy / Math.hypot(dx, dy) }
@@ -359,33 +359,81 @@ export class Player {
     if (this.stateTime >= HEAVY.dur) this.setState('normal');
   }
 
-  // Corda de Sebastião (R): âncora à frente → travessia por sobre o fosso;
-  // sem âncora, laça e imobiliza o inimigo mais próximo por 2 s (GDD §3.7)
-  tryRope(world) {
-    if (!hasInstrument(world.flags, 'corda') || this.ropeCd > 0) return;
-    const v = DIR_VEC[this.facing];
+  // Os instrumentos das fossas (R), por prioridade de contexto (GDD §3.7):
+  // pira apagada → Espelho de Luzia; âncora à frente → Corda (travessia);
+  // grupo em volta → clarão do Espelho; senão → laço da Corda (imobiliza 2 s)
+  useInstrument(world) {
+    if (this.ropeCd > 0) return;
+    const temCorda = hasInstrument(world.flags, 'corda');
+    const temEspelho = hasInstrument(world.flags, 'espelho');
+    if (!temCorda && !temEspelho) return;
 
-    // 1) uma âncora alinhada com o olhar: lança-se por sobre o que houver
-    let best = null, bestD = Infinity;
-    for (const a of world.anchors || []) {
-      const dx = a.x - this.x, dy = a.y - this.y;
-      const d = Math.hypot(dx, dy);
-      if (d < 40 || d > 330) continue;
-      if ((dx * v.x + dy * v.y) / d < 0.72) continue;
-      if (d < bestD) { best = a; bestD = d; }
-    }
-    if (best) {
-      this.grapple = { x: best.x, y: best.y };
-      this.invuln = Math.max(this.invuln, 1);
+    // 1) o Espelho diante de uma pira apagada: a luz da santa a reacende
+    for (const b of world.beacons || []) {
+      if (world.flags.farois?.[b.key]) continue;
+      if (Math.hypot(b.x - this.x, b.y - this.y) > 90) continue;
+      if (!temEspelho) {
+        world.fx.text(this.x, this.y - 58, 'A pira está fria. Só a luz da santa a acende...', '#c0b090');
+        this.ropeCd = 0.6;
+        return;
+      }
+      world.flags.farois = world.flags.farois || {};
+      world.flags.farois[b.key] = true;
+      world.fx.whiteFlash = Math.max(world.fx.whiteFlash, 0.25);
+      world.fx.burst(b.x, b.y - 30, '#f8e8a0', 26, 220);
+      sfx('pray');
+      if (b.msg) world.fx.text(b.x, b.y - 74, b.msg, '#f8d860');
+      if (b.gold) {
+        this.gold += b.gold;
+        world.fx.text(this.x, this.y - 46, `+${b.gold} denários dos gratos do porto`, '#f0d060');
+      }
       this.ropeCd = 0.6;
-      sfx('swing');
-      this.setState('grapple');
       return;
     }
 
-    // 2) o laço: amarra o inimigo mais próximo
-    let e0 = null;
-    bestD = 240;
+    // 2) uma âncora alinhada com o olhar: lança-se por sobre o que houver
+    const v = DIR_VEC[this.facing];
+    if (temCorda) {
+      let best = null, bestD = Infinity;
+      for (const a of world.anchors || []) {
+        const dx = a.x - this.x, dy = a.y - this.y;
+        const d = Math.hypot(dx, dy);
+        if (d < 40 || d > 330) continue;
+        if ((dx * v.x + dy * v.y) / d < 0.72) continue;
+        if (d < bestD) { best = a; bestD = d; }
+      }
+      if (best) {
+        this.grapple = { x: best.x, y: best.y };
+        this.invuln = Math.max(this.invuln, 1);
+        this.ropeCd = 0.6;
+        sfx('swing');
+        this.setState('grapple');
+        return;
+      }
+    }
+
+    // 3) o clarão do Espelho: cega o grupo que cerca o cavaleiro
+    if (temEspelho) {
+      const cercam = world.enemies.filter(
+        (e) => e.alive && Math.hypot(e.x - this.x, e.y - this.y) < 220
+      );
+      if (cercam.length >= 2) {
+        for (const e of cercam) e.stunT = Math.max(e.stunT || 0, 1.3);
+        world.fx.whiteFlash = Math.max(world.fx.whiteFlash, 0.16);
+        sfx('cast');
+        world.fx.text(this.x, this.y - 58, 'O clarão do Espelho!', '#f8f4d8');
+        this.ropeCd = 6;
+        return;
+      }
+    }
+
+    // 4) o laço: amarra o inimigo mais próximo
+    if (!temCorda) {
+      world.fx.text(this.x, this.y - 58, 'O Espelho não acha o que refletir...', '#c0b090');
+      this.ropeCd = 0.4;
+      return;
+    }
+    let e0 = null, bestD = 240;
     for (const e of world.enemies) {
       if (!e.alive) continue;
       const d = Math.hypot(e.x - this.x, e.y - this.y);

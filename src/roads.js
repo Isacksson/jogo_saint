@@ -34,14 +34,16 @@ export const NODES = [
   {
     id: 'porto_luzia', name: 'Porto de Luzia', px: 0.72, py: 0.62,
     desc: 'Porto do trigo e das lamparinas. Nenhum navio atraca desde os editos.',
-    dest: null, // C2
-    unlocked: (f) => !!f.roads?.porto_luzia,
+    dest: { to: 'porto_luzia', tx: 2, ty: 14 },
+    // a peregrinação segue: a bênção de Sebastião abre a estrada da costa
+    unlocked: (f) => !!f.milagres?.setas || !!f.roads?.porto_luzia,
   },
   {
     id: 'ermo_antao', name: 'Ermo de Antão', px: 0.88, py: 0.38,
     desc: 'O deserto dos eremitas. Só loucos e santos cruzam essas areias.',
     dest: null, // C3
-    unlocked: (f) => !!f.roads?.ermo_antao,
+    // sem o Farol de Luzia aceso, ninguém acha o caminho da costa deserta
+    unlocked: (f) => !!f.farois?.['porto_luzia:0'] || !!f.roads?.ermo_antao,
   },
   {
     id: 'tesouro', name: 'Distrito do Tesouro', px: 0.56, py: 0.50,
