@@ -117,6 +117,10 @@ export class Player {
   refreshStats() {
     this.hpMax = 90 + this.level * 10 + (this.equip.armadura?.value || 0);
     this.hp = Math.min(this.hp, this.hpMax);
+    // a Fé também cresce com o nível (GDD §3.3: Força, Fé, Vigor) — sem isso,
+    // os 7 milagres e os drenos do Ato III espremem um poço que nunca aumenta
+    this.faithMax = 100 + (this.level - 1) * 4;
+    this.faith = Math.min(this.faith, this.faithMax);
   }
 
   addXp(n, world) {
@@ -164,8 +168,10 @@ export class Player {
   usePotion(world) {
     if (this.potions <= 0 || this.hp >= this.hpMax || !this.alive) return;
     this.potions--;
-    this.hp = Math.min(this.hpMax, this.hp + 40);
-    world.fx.text(this.x, this.y - 58, '+40', '#78d060');
+    // a cura acompanha o vigor do cavaleiro: 40 no início (40% de 100), sempre 40%
+    const heal = Math.max(40, Math.round(this.hpMax * 0.4));
+    this.hp = Math.min(this.hpMax, this.hp + heal);
+    world.fx.text(this.x, this.y - 58, `+${heal}`, '#78d060');
     world.fx.burst(this.x, this.cy, '#78d060', 10, 130);
   }
 

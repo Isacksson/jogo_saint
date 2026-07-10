@@ -31,7 +31,7 @@ export const VENDORS = {
     broke: 'Volta quando teus denários pesarem mais.',
     buysLoot: true,
     stock: [
-      { id: 'potion', name: 'Poção de cura', desc: 'restaura 40 de vida', price: 30 },
+      { id: 'potion', name: 'Poção de cura', desc: 'restaura quase metade da vida', price: 30 },
     ],
   },
   rufo: {
@@ -43,7 +43,7 @@ export const VENDORS = {
     buysLoot: false,
     reforge: true, // acrescenta o serviço de reforço da lança à aba de compra
     stock: [
-      { id: 'potion', name: 'Poção de cura', desc: 'restaura 40 de vida', price: 35 },
+      { id: 'potion', name: 'Poção de cura', desc: 'restaura quase metade da vida', price: 35 },
     ],
   },
 };

@@ -919,7 +919,7 @@ function renderTitleScreen() {
 
   ctx.fillStyle = '#9a8a62';
   ctx.font = '13px Georgia, serif';
-  ctx.fillText('WASD mover · J espada · K lança · ESPAÇO esquiva · L fúria · 1-2 milagres', VIEW_W / 2, 400);
+  ctx.fillText('WASD mover · J espada · K lança · ESPAÇO esquiva · L fúria · 1-7 milagres', VIEW_W / 2, 400);
   ctx.fillText('E falar/orar · Q poção · R corda · I bolsa · M silenciar', VIEW_W / 2, 422);
   ctx.restore();
 }

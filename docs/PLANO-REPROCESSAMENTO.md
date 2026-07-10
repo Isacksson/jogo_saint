@@ -326,7 +326,30 @@ cada. Segue o roadmap do GDD §6 (T15–T26); as fossas são reaproveitadas, nã
       Silena batizada (pós-jogo salvo, Sabra com falas finais).
       `window.gameState` exposto para testes. Testado (15 asserções + 2
       screenshots, verde na 1ª execução). Sem erros.
-- [ ] **D3 — Balanceamento e polish final** — curva de dano/vida/preços, tela de vitória. *(GDD T29)*
+- [x] **D3 — Balanceamento e polish final** *(GDD T29 — FECHA O PLANO)* —
+      **Auditoria da curva** (verificada por teste, chefe a chefe no nível
+      esperado com a lança do momento): lançadas-para-vencer sobem em rampa
+      monótona 9→14 pelos Atos II–III, com o Dragão do Ato I como a parede
+      relativa do clímax (17); nenhum chefe derruba Jorge em menos de 7
+      golpes. **Furos corrigidos**: (1) a **Fé agora cresce com o nível**
+      (`faithMax = 100 + (nível−1)×4` em `refreshStats`; GDD §3.3 prometia
+      Força/Fé/Vigor e a Fé era fixa em 100 contra 7 milagres + os drenos de
+      Morte/Tentações — derivado, retroativo para saves antigos); (2) a
+      **poção escala**: cura 40% da vida máxima (mín. 40 — exatamente os 40
+      de sempre no nível 1; ~88 no Ato III), descrições das lojas atualizadas;
+      (3) tela de título corrigida ('1-7 milagres'). A "tela de vitória" do
+      T29 é o epílogo do D2. Teste: varredura de regressão pelos 24 mapas sem
+      erro + curva dos 14 chefes (TTK 8–18, sobrevivência ≥5) + escalas de
+      poção/Fé (6 asserções agregadas + 2 screenshots). Sem erros.
+
+---
+
+## ✝ PLANO CONCLUÍDO — v0.2 completa
+Os três atos são jogáveis de ponta a ponta: do sonho na Capadócia ao Dragão
+de Silena; as sete bênçãos, fossas e instrumentos com os Quatro Cavaleiros
+nas estradas; a forja de Ascalon; as Portas do Abismo, o Arauto, a
+consagração, a Serpente Antiga; Nicomédia, a Tentação recusada, o epílogo
+das rosas e o pós-jogo em Silena batizada.
 
 ---
 

@@ -239,9 +239,9 @@ Turnos 1–11 da v0.1 permanecem como histórico (motor, combate, loot, Ato I co
 - [ ] **T21 — Distrito do Tesouro (volta a Forte Sebaste) + T22 — Fossa da Avareza** (idem, Balança de Lourenço) **+ emboscada do Cavaleiro Fome**.
 - [ ] **T23 — Vila do Jardim de Inês + T24 — Fossa da Luxúria** (idem, já existe a fossa, Grinalda de Inês).
 - [ ] **T25 — Mosteiro de Núrsia + T26 — Fossa da Preguiça**: príncipe Belfegor, milagre Vade Retro, Sino de Bento, **emboscada do Cavaleiro Morte**, **cena da forja de Ascalon** (fecho do Ato II).
-- [ ] **T27 — Portas do Abismo**: mapa final do Ato III + os Quatro Cavaleiros fundidos como arauto + Serpente Antiga fases 1–2.
-- [ ] **T28 — Nicomédia e a Tentação**: eco final do fio de Diocleciano, fase 3 da Serpente, epílogo das rosas, créditos.
-- [ ] **T29 — Balanceamento e polish final**: curva de dano/vida/preços, tela de vitória.
+- [x] **T27 — Portas do Abismo**: mapa final do Ato III + os Quatro Cavaleiros fundidos como arauto + Serpente Antiga fases 1–2.
+- [x] **T28 — Nicomédia e a Tentação**: eco final do fio de Diocleciano, fase 3 da Serpente, epílogo das rosas, créditos.
+- [x] **T29 — Balanceamento e polish final**: curva de dano/vida/preços, tela de vitória.
 
 ---
 
