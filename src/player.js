@@ -372,12 +372,13 @@ export class Player {
     const temGrinalda = hasInstrument(world.flags, 'grinalda');
     if (!temCorda && !temEspelho && !temCajado && !temBalanca && !temGrinalda) return;
 
-    // 1) o Espelho diante de uma pira apagada: a luz da santa a reacende
+    // 1) um mecanismo adormecido (pira, sino...): o instrumento certo o desperta
     for (const b of world.beacons || []) {
       if (world.flags.farois?.[b.key]) continue;
       if (Math.hypot(b.x - this.x, b.y - this.y) > 90) continue;
-      if (!temEspelho) {
-        world.fx.text(this.x, this.y - 58, 'A pira está fria. Só a luz da santa a acende...', '#c0b090');
+      if (!hasInstrument(world.flags, b.inst || 'espelho')) {
+        world.fx.text(this.x, this.y - 58,
+          b.hint || 'A pira está fria. Só a luz da santa a acende...', '#c0b090');
         this.ropeCd = 0.6;
         return;
       }

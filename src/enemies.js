@@ -748,6 +748,43 @@ export class CavaleiroFome extends CavaleiroGuerra {
   }
 }
 
+// Morte: o cavalo pálido — e o Inferno o seguia (Ap 6,8). O último e o
+// pior: perto dele, a própria Fé escorre — o torpor que faz a alma desistir.
+export class CavaleiroMorte extends CavaleiroGuerra {
+  constructor(tx, ty) {
+    super(tx, ty);
+    this.hpMax = 520;
+    this.hp = 520;
+    this.dmg = 26;
+    this.xpValue = 380;
+    this.blood = '#4a5a48';
+    this.bossName = 'MORTE, o Quarto Cavaleiro';
+    this.minionType = Possesso;
+    this.summonCry = 'E O INFERNO O SEGUIA...';
+    this.horseman = 'morte';
+    this.tint = 'sepia(1) hue-rotate(60deg) saturate(1.4) brightness(0.8)'; // cavalo pálido
+    this.aura = '150, 170, 140';
+    this.farewell = '"Guardei-te por último, cavaleiro. Até a hora — e ela vem."';
+    this.torporT = 0;
+  }
+
+  update(dt, world) {
+    super.update(dt, world);
+    if (!this.alive || this.stunT > 0 || this.bindT > 0) return;
+
+    // o torpor da Morte: perto dele, a Fé escorre da alma
+    const p = world.player;
+    if (p.alive && Math.hypot(p.x - this.x, p.y - this.y) < 280) {
+      p.faith = Math.max(0, p.faith - 7 * dt);
+      this.torporT -= dt;
+      if (this.torporT <= 0) {
+        this.torporT = 2.5;
+        world.fx.text(p.x, p.y - 76, 'O torpor rouba tua Fé...', '#a8b8a0');
+      }
+    }
+  }
+}
+
 // ---------- Belzebu: príncipe da Fossa da Gula ----------
 
 export class Belzebu extends Amon {

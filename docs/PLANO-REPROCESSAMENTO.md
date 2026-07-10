@@ -260,8 +260,24 @@ cada. Segue o roadmap do GDD §6 (T15–T26); as fossas são reaproveitadas, nã
       dentro, cd 9 s; corrigido raio da zona = raio do gatilho). Prioridade do
       R: pira → selo → âncora → repelão → zona → clarão → laço. Testado
       (13 asserções + 2 screenshots). Sem erros.
-- [ ] **C6 — Mosteiro de Núrsia** + Fossa da Preguiça + Sino de Bento + Cavaleiro Morte
-      + **cena da forja de Ascalon** (fecho do Ato II). *(T25–T26)*
+- [x] **C6 — Mosteiro de Núrsia** + Fossa da Preguiça + Sino de Bento + Cavaleiro
+      Morte + **forja de Ascalon** *(T25–T26, FECHA O BLOCO C / ATO II)* —
+      mosteiro na montanha em torpor demoníaco (nó abre com `milagres.cordeiro`).
+      **Cavaleiro Morte** (`estrada_nursia`): cavalo pálido-esverdeado (Ap 6,8),
+      **drena a Fé** a 7/s num raio de 280 px ("o torpor rouba tua Fé"); os
+      Quatro estão completos em `flags.cavaleiros`. **Quest do despertar**: só o
+      Abade Honorato resiste ao sono; monges dormem de pé (falas via
+      `flags.farois['nursia:0']`); a cripta desce à Preguiça (`extraPortals`).
+      **Sino de Bento (R)**: `beacons` generalizados por instrumento
+      (`inst`/`label`/`hint` + variante `bell` com sino balançando e ondas
+      sonoras) — tocar o campanário desperta o mosteiro; na fossa, mecanismo
+      emperrado (selo `inst:'sino'`) com a cela esquecida (190 denários + Escudo
+      do Abade); o eco ofensivo do Sino é o próprio Vade Retro (tecla 7, GDD).
+      **FORJA DE ASCALON**: a Forja Fria (NPC-relíquia `forge: true`, campo novo
+      copiado no Npc — fix) — com os 7 fragmentos E o mosteiro desperto, a cena
+      chama `spear.forge()` → **Ascalon, dano 44** + `flags.ascalonForjada`;
+      Abade aponta as Portas do Abismo (gancho do D1). Testado (14 asserções +
+      2 screenshots). Sem erros.
 
 ---
 

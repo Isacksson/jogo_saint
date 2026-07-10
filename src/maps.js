@@ -3,6 +3,7 @@
 
 import { T } from './constants.js';
 import { rng } from './map.js';
+import { FRAGMENT_TOTAL, fragmentCount } from './fragments.js';
 
 // Fábrica das Fossas: monta a estrutura comum a todas (antecâmara, arena, alcova
 // selada com portões, escada de descida, altar, portais e o espírito do santo) e
@@ -1048,6 +1049,153 @@ export const MAP_DEFS = {
     ],
   },
 
+  // ---------- Capítulo 6: Mosteiro de Núrsia (superfície de São Bento) ----------
+  nursia: {
+    name: 'Mosteiro de Núrsia',
+    w: 40, h: 26,
+    mood: 'dark',
+    outside: T.ROCK,
+    generate(m) {
+      const rand = rng(480);
+      m.border(2, T.ROCK);
+
+      // a subida da montanha chega pelo oeste
+      m.fillRect(0, 14, 10, 2, T.PATH);
+
+      // o mosteiro murado e seu claustro de pedra
+      m.fillRect(10, 4, 24, 16, T.CWALL);
+      m.fillRect(11, 5, 22, 14, T.STONE);
+      m.set(10, 14, T.STONE); // o portal do mosteiro, sempre aberto
+      m.set(10, 15, T.STONE);
+
+      // o jardim do claustro
+      m.fillRect(17, 8, 6, 4, T.GRASS);
+      m.set(18, 9, T.FLOWER);
+      m.set(21, 10, T.FLOWER);
+
+      // o campanário mudo
+      m.fillRect(28, 6, 3, 3, T.CWALL);
+
+      // a cripta: a escada desce à Fossa da Preguiça
+      m.set(13, 7, T.STAIRS);
+      m.set(14, 7, T.STAIRS);
+
+      m.scatter(rand, T.ROCK, 14);
+      m.scatter(rand, T.DEADTREE, 8);
+    },
+    spawns: [
+      ['possesso', 20, 7], ['possesso', 24, 13], ['possesso', 16, 12],
+      ['possesso', 28, 15], ['possesso', 21, 17],
+    ],
+    altars: [[12, 17]],
+    // o sino de bronze do campanário: só o Sino de Bento o faz cantar de novo
+    beacons: [
+      {
+        tx: 29, ty: 10, inst: 'sino', label: 'Sino', bell: true,
+        msg: '✝ O sino canta — e o mosteiro DESPERTA!',
+        hint: 'O bronze está mudo de torpor. Só o Sino do santo o desperta...',
+      },
+    ],
+    npcs: [
+      {
+        tx: 13, ty: 15, name: 'Abade Honorato',
+        sprite: 'anastacio',
+        lines: (flags) => flags.ascalonForjada
+          ? [
+            '"Ascalon... Setenta gerações de monges guardaram esta forja sem saber para quem. Agora sabemos."',
+            '"Vai, cavaleiro. As Portas do Abismo dormem sob Silena — e o que dorme lá embaixo não é sono: é espera."',
+          ]
+          : flags.farois?.['nursia:0']
+            ? ['"O sino... há meses eu não ouvia o sino. Os irmãos acordam, as vozes voltam ao coro. Deus te pague — e a forja te espera, se trouxeres os sete."']
+            : [
+              'Bem-vindo a Núrsia, cavaleiro. Perdoa os irmãos: não é preguiça — é FEITIÇO. Um torpor sobe da cripta como neblina fria.',
+              'Eu resisto rezando as horas em voz alta, mas estou só. Os salmos morrem na boca deles, o sino está mudo.',
+              'Desce à cripta, se tens coragem. O que ronca lá embaixo é o dono deste sono.',
+            ],
+      },
+      {
+        tx: 24, ty: 12, name: 'Irmão Góis, o ferreiro-monge',
+        sprite: 'teodoro',
+        lines: (flags) => flags.ascalonForjada
+          ? ['"Meu malho serviu ao céu hoje." Ele mostra as mãos chamuscadas, feliz. "Setenta anos de brasas não valeram este dia."']
+          : flags.farois?.['nursia:0']
+            ? ['"Acordei com o sino e o malho na mão, como se soubesse. A Forja Fria é ali adiante — traze os fragmentos, e ela arderá."']
+            : ['(De pé, o malho caído aos pés, ele dorme.) "...zzz... o ferro... espera... zzz..."'],
+      },
+      {
+        tx: 19, ty: 9, name: 'Monge Plácido',
+        sprite: 'anastacio',
+        lines: (flags) => flags.farois?.['nursia:0']
+          ? ['"Cantávamos as vésperas quando o sono veio... Que dia é hoje? Que MÊS?" Ele corre para o coro, envergonhado.']
+          : ['(Ajoelhado no jardim, dorme sobre as próprias mãos.) "...zzz... et ne nos inducas... zzz..."'],
+      },
+      {
+        tx: 27, ty: 16, name: 'Monge Mauro',
+        sprite: 'teodoro',
+        lines: (flags) => flags.farois?.['nursia:0']
+          ? ['"O Abade resistiu sozinho todo esse tempo?... Nunca mais reclamo das vigílias. NUNCA."']
+          : ['(Deitado atravessado na porta, ressona.) "...zzz... só mais uma hora, irmão celeireiro... zzz..."'],
+      },
+      {
+        tx: 26, ty: 8, name: 'A Forja Fria de Núrsia',
+        relic: true, forge: true,
+        lines: (flags) => flags.ascalonForjada
+          ? ['A forja ainda arde, mansa. Sobre a bigorna, só cinza dourada — Ascalon já canta na tua mão.']
+          : !flags.farois?.['nursia:0']
+            ? ['Uma forja antiga, fria como sepulcro. O fole está imóvel; o ferreiro dorme em pé ao lado. Nada arderá enquanto o mosteiro dormir.']
+            : fragmentCount(flags) < FRAGMENT_TOTAL
+              ? [`A forja respira, morna, à espera. Sete encaixes na bigorna aguardam as relíquias dos mártires — trazes ${fragmentCount(flags)} de ${FRAGMENT_TOTAL}.`]
+              : [
+                'Os sete fragmentos saltam da tua bolsa como chamados: o prego, a farpa, o elo, a cruz, a grelha, a lâmina, a medalha.',
+                'Góis malha, e cada golpe soa como sino. O ferro comum da tua lança bebe as sete relíquias, uma a uma.',
+                'Quando o clarão morre, o que jaz na bigorna já não é lança de guarnição. Tem nome antigo. Tem GUME de martírio.',
+                '⚔ ASCALON — a lança forjada dos sete mártires.',
+              ],
+      },
+      {
+        tx: 15, ty: 17, name: 'Rufo, o ferreiro',
+        sprite: 'teodoro', vendor: 'rufo',
+        lines: () => ['Subi a montanha só para ver ESTA forja. Se ela um dia arder, cavaleiro, meu ofício inteiro terá valido.'],
+      },
+    ],
+    portals: [
+      { x: 0, y: 13, w: 1, h: 4, roads: true }, // de volta às Estradas do Império
+      { x: 13, y: 7, w: 2, h: 1, to: 'fossa_preguica', tx: 4, ty: 3 }, // a cripta
+    ],
+  },
+
+  // ---------- a emboscada do Cavaleiro Morte na subida da montanha ----------
+  estrada_nursia: {
+    name: 'Subida de Núrsia',
+    w: 36, h: 16,
+    mood: 'dark',
+    outside: T.ROCK,
+    generate(m) {
+      const rand = rng(68);
+      m.border(2, T.ROCK);
+      // a estrada da montanha, entre penhascos
+      for (let x = 0; x < m.w; x++) {
+        m.set(x, 7, T.PATH);
+        m.set(x, 8, T.PATH);
+      }
+      // por onde a Morte passa, ficam ossadas e árvores mortas
+      m.scatter(rand, T.ROCK, 16);
+      m.scatter(rand, T.DEADTREE, 12);
+      m.scatter(rand, T.BONES, 10);
+    },
+    spawns: [['morte', 20, 7]],
+    altars: [[4, 11]],
+    npcs: [],
+    portals: [
+      { x: 0, y: 6, w: 1, h: 4, roads: true }, // recuar para as Estradas
+      {
+        x: 35, y: 6, w: 1, h: 4, to: 'nursia', tx: 2, ty: 14,
+        locked: (f) => !f.cavaleiros?.morte,
+        lockedMsg: '"O mosteiro já é meu. Dorme, cavaleiro — todos dormem no fim." A Morte barra a subida.',
+      },
+    ],
+  },
+
   // ---------- Primeira Fossa: a Ira ----------
   fossa_ira: makeFossa({
     name: 'Primeira Fossa — A Ira',
@@ -1304,7 +1452,24 @@ export const MAP_DEFS = {
     floor: T.SLOTHFLOOR, dark: 'torch', arenaY: 19, alcoveY: 22,
     returnTo: { to: 'fossa_luxuria', tx: 30, ty: 27 },
     descendTo: null, // última fossa: sem descida
+    // a cripta do mosteiro desemboca no teto da antecâmara (C6)
+    extraPortals: [{ x: 5, y: 2, w: 2, h: 1, to: 'nursia', tx: 13, ty: 9 }],
+    // o mecanismo emperrado de torpor: só o Sino de Bento o desperta
+    mirages: [
+      {
+        tx: 8, ty: 22, tiles: [[7, 22]], to: T.SLOTHFLOOR,
+        inst: 'sino', label: 'Sino',
+        msg: 'O Sino canta — engrenagens seculares despertam e a porta desce!',
+        hint: 'Um mecanismo emperrado de musgo e torpor. Nada o move... a não ser um chamado.',
+      },
+    ],
+    treasures: [
+      { tx: 4, ty: 22, item: { kind: 'gold', amount: 190 } },
+      { tx: 5, ty: 23, item: { kind: 'equip', slot: 'escudo', rarity: 2, name: 'Escudo do Abade', value: 6 } },
+    ],
     carve(m, f) {
+      // a cela esquecida atrás do mecanismo (7,22)
+      m.fillRect(3, 21, 4, 3, f);
       // corredor lento e arrastado
       m.fillRect(8, 5, 3, 6, f);
       m.fillRect(8, 10, 15, 4, f);
@@ -1328,6 +1493,7 @@ export const MAP_DEFS = {
           'Entre os escombros do descuido, um velho monge de olhos vivos aponta uma cruz de metal.',
           '"A preguiça não é o descanso — é a alma que desiste de lutar. Eu enfrentei o demônio no meu próprio copo de vinho envenenado, e o parti com o sinal da cruz."',
           '"Grava na tua lança as palavras que gravei na minha medalha: VADE RETRO. Diante delas, as legiões recuam."',
+          '"E leva o meu Sino. O que dorme de torpor — monge, bronze ou engrenagem — desperta ao seu chamado (tecla R)."',
           '✝ Milagre recebido: VADE RETRO — tecla 7 (40 de Fé)',
         ],
     },

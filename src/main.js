@@ -12,7 +12,7 @@ import {
   Imundo, ImundoChefe, Amon, Dragao, Serpe,
   Invejoso, Leviata, Possesso, Belzebu, Mamon, Asmodeu, Belfegor,
   Carcereiro, CavaleiroGuerra, CavaleiroConquista, CavaleiroFome, Cobrador,
-  Pretendente,
+  Pretendente, CavaleiroMorte,
 } from './enemies.js';
 import { initAudio, updateMusic, setMood, toggleMute, sfx } from './audio.js';
 import { Npc } from './npc.js';
@@ -24,7 +24,7 @@ import {
 } from './hud.js';
 import { renderInventory } from './inventory.js';
 import { Shop, VENDORS, renderShop } from './economy.js';
-import { FRAGMENTS, MIRACLE_FRAGMENT, grantFragment } from './fragments.js';
+import { FRAGMENTS, MIRACLE_FRAGMENT, grantFragment, hasAllFragments } from './fragments.js';
 import { MIRACLE_INSTRUMENT, hasInstrument } from './instruments.js';
 import { GroundItem } from './items.js';
 import { RoadsScreen, renderRoads, nodeForMap } from './roads.js';
@@ -105,6 +105,7 @@ const ENEMY_TYPES = {
   possesso: Possesso, belzebu: Belzebu, mamon: Mamon, asmodeu: Asmodeu, belfegor: Belfegor,
   carcereiro: Carcereiro, guerra: CavaleiroGuerra, conquista: CavaleiroConquista,
   fome: CavaleiroFome, cobrador: Cobrador, pretendente: Pretendente,
+  morte: CavaleiroMorte,
 };
 
 // os Quatro Cavaleiros emboscam a primeira viagem a cada destino (GDD §2.6):
@@ -121,6 +122,10 @@ const AMBUSHES = {
   tesouro: {
     need: 'fome', to: 'estrada_tesouro', tx: 2, ty: 7,
     warn: 'Um cavaleiro negro pesa uma balança sobre os campos queimados...',
+  },
+  nursia: {
+    need: 'morte', to: 'estrada_nursia', tx: 2, ty: 7,
+    warn: 'Um cavalo pálido aguarda na subida... e o Inferno o segue.',
   },
 };
 
@@ -355,7 +360,8 @@ function tryInteract() {
       }
       dlg = {
         name: npc.name, lines: npc.getLines(world), idx: 0, grant: npc.grant,
-        grantFlag: npc.grantFlag, portrait: npc.sprite, ghost: npc.ghost, reveal: 0,
+        grantFlag: npc.grantFlag, forge: npc.forge,
+        portrait: npc.sprite, ghost: npc.ghost, reveal: 0,
       };
       return;
     }
@@ -518,20 +524,55 @@ function renderAnchors(cam) {
 // piras de farol: apagadas até o Espelho de Luzia refleti-las de volta à vida
 function renderBeacons(cam) {
   const p = world.player;
-  const temEspelho = hasInstrument(world.flags, 'espelho');
   for (const b of world.beacons) {
     const x = b.x - cam.x, y = b.y - cam.y;
     const lit = !!world.flags.farois?.[b.key];
 
-    // o pedestal de pedra com a taça da pira
-    ctx.fillStyle = '#6a6a72';
-    ctx.fillRect(x - 5, y - 26, 10, 28);
-    ctx.fillStyle = '#8a8a92';
-    ctx.fillRect(x - 5, y - 26, 4, 28);
-    ctx.fillStyle = '#4a4a52';
-    ctx.fillRect(x - 9, y - 30, 18, 6);
+    if (b.bell) {
+      // o sino de bronze na sua armação de madeira
+      ctx.fillStyle = '#4a3420';
+      ctx.fillRect(x - 14, y - 34, 4, 36);
+      ctx.fillRect(x + 10, y - 34, 4, 36);
+      ctx.fillRect(x - 16, y - 38, 32, 5);
+      const sway = lit ? Math.sin(elapsed * 6) * 0.18 : 0;
+      ctx.save();
+      ctx.translate(x, y - 32);
+      ctx.rotate(sway);
+      ctx.fillStyle = lit ? '#c8963c' : '#6a5a3c';
+      ctx.beginPath();
+      ctx.moveTo(-8, 14);
+      ctx.quadraticCurveTo(-8, -2, 0, -2);
+      ctx.quadraticCurveTo(8, -2, 8, 14);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#3a2c18';
+      ctx.fillRect(-1.5, 12, 3, 6);
+      ctx.restore();
+      // rung: ondas sonoras douradas irradiando
+      if (lit) {
+        ctx.save();
+        ctx.strokeStyle = '#f0d060';
+        for (let i = 0; i < 2; i++) {
+          const ph = (elapsed * 0.9 + i * 0.5) % 1;
+          ctx.globalAlpha = 0.5 * (1 - ph);
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(x, y - 26, 14 + ph * 34, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+    } else {
+      // o pedestal de pedra com a taça da pira
+      ctx.fillStyle = '#6a6a72';
+      ctx.fillRect(x - 5, y - 26, 10, 28);
+      ctx.fillStyle = '#8a8a92';
+      ctx.fillRect(x - 5, y - 26, 4, 28);
+      ctx.fillStyle = '#4a4a52';
+      ctx.fillRect(x - 9, y - 30, 18, 6);
+    }
 
-    if (lit) {
+    if (lit && !b.bell) {
       // a chama e o halo do farol aceso
       const fl = 0.75 + 0.25 * Math.sin(elapsed * 11) + 0.1 * Math.sin(elapsed * 27);
       const g = ctx.createRadialGradient(x, y - 34, 3, x, y - 34, 70);
@@ -547,14 +588,16 @@ function renderBeacons(cam) {
       ctx.beginPath();
       ctx.ellipse(x, y - 34, 2.5, 4 * fl, 0, 0, Math.PI * 2);
       ctx.fill();
-    } else if (temEspelho && p.alive && Math.hypot(p.x - b.x, p.y - b.y) < 200) {
+    } else if (!lit && hasInstrument(world.flags, b.inst || 'espelho')
+        && p.alive && Math.hypot(p.x - b.x, p.y - b.y) < 200) {
+      const label = `R — ${b.label || 'Espelho'}`;
       ctx.font = 'bold 12px Georgia, serif';
       ctx.textAlign = 'center';
       ctx.strokeStyle = 'rgba(10, 6, 2, 0.9)';
       ctx.lineWidth = 3;
-      ctx.strokeText('R — Espelho', x, y - 40);
+      ctx.strokeText(label, x, y - 44);
       ctx.fillStyle = '#e8cf9a';
-      ctx.fillText('R — Espelho', x, y - 40);
+      ctx.fillText(label, x, y - 44);
     }
   }
 }
@@ -856,6 +899,18 @@ function frame(now) {
                 world.fx.burst(m.x, m.y - 10, '#8ab040', 12, 160);
               }
             }
+          }
+          // a forja de Ascalon: sete fragmentos + o mosteiro desperto (C6)
+          if (dlg.forge && !player.spear.forged
+              && world.flags.farois?.['nursia:0'] && hasAllFragments(world.flags)) {
+            player.spear.forge();
+            world.flags.ascalonForjada = true;
+            sfx('level');
+            world.fx.addShake(8);
+            world.fx.burst(player.x, player.cy, '#f0c040', 40, 300);
+            world.fx.burst(player.x, player.cy, '#fff4c8', 24, 220);
+            world.fx.whiteFlash = Math.max(world.fx.whiteFlash, 0.3);
+            world.fx.text(player.x, player.y - 96, '⚔ ASCALON, A LANÇA DOS SETE MÁRTIRES!', '#f8d860');
           }
           dlg = null;
         }

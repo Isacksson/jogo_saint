@@ -14,6 +14,7 @@ export class Npc {
     this.ghost = !!def.ghost;
     this.grant = def.grant;
     this.grantFlag = def.grantFlag; // flag de mundo concedida ao fim da conversa
+    this.forge = !!def.forge; // a Forja Fria de Núrsia (cena de Ascalon, C6)
     this.vendor = def.vendor; // id do mercador (economy.js), se for uma loja
     this.lines = def.lines;
     this.sprite = this.relic ? buildAltarSprite() : npcSprite(def.sprite || 'mira').down[0];

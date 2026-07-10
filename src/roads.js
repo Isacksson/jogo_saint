@@ -62,8 +62,9 @@ export const NODES = [
   {
     id: 'nursia', name: 'Mosteiro de Núrsia', px: 0.70, py: 0.16,
     desc: 'O mosteiro na montanha, e a forja fria que espera os sete fragmentos.',
-    dest: null, // C6
-    unlocked: (f) => !!f.roads?.nursia,
+    dest: { to: 'nursia', tx: 2, ty: 14 },
+    // o Cordeiro guia a última subida da peregrinação
+    unlocked: (f) => !!f.milagres?.cordeiro || !!f.roads?.nursia,
   },
 ];
 
