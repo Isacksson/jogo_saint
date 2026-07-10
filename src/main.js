@@ -133,6 +133,7 @@ const world = {
   altars: [],
   anchors: [],
   beacons: [],
+  mirages: [],
   props: [],
   npcs: [],
   portals: [],
@@ -191,6 +192,17 @@ function enterMap(id, tx, ty) {
     x: (b.tx + 0.5) * TILE_PX, y: (b.ty + 0.5) * TILE_PX,
     key: `${id}:${i}`, msg: b.msg, gold: b.gold,
   }));
+  // miragens que o Cajado de Antão desfaz (chão falso vira passagem real);
+  // as já reveladas são reaplicadas ao tilemap, que é cacheado entre visitas
+  world.mirages = (def.mirages || []).map((mir, i) => ({
+    x: (mir.tx + 0.5) * TILE_PX, y: (mir.ty + 0.5) * TILE_PX,
+    key: `${id}:${i}`, tiles: mir.tiles, to: mir.to,
+  }));
+  for (const mir of world.mirages) {
+    if (world.flags.miragens?.[mir.key]) {
+      for (const [mx, my] of mir.tiles) map.set(mx, my, mir.to);
+    }
+  }
   world.projectiles = [];
   world.spells = [];
   world.total = (def.spawns || []).length;
@@ -199,6 +211,8 @@ function enterMap(id, tx, ty) {
   if (id === 'pantano' && world.flags.catacumbasAbertas) map.openGates();
   // o cárcere de Forte Sebaste permanece aberto depois de Marcelino livre
   if (id === 'sebaste' && world.flags.sebasteLivre) map.openGates();
+  // o poço da Gula permanece escancarado depois do banquete rompido
+  if (id === 'ermo_antao' && world.flags.miragemRompida) map.openGates();
   // alcovas de fossa cujo selo já foi rompido continuam abertas
   if (world.flags.sealsBroken?.[id]) map.openGates();
 
@@ -532,6 +546,42 @@ function renderBeacons(cam) {
   }
 }
 
+// miragens: o ar treme sobre o chão falso até o Cajado de Antão prová-lo
+function renderMirages(cam) {
+  const p = world.player;
+  const temCajado = hasInstrument(world.flags, 'cajado');
+  for (const mir of world.mirages) {
+    if (world.flags.miragens?.[mir.key]) continue;
+    const x = mir.x - cam.x, y = mir.y - cam.y;
+
+    // ondas de calor tremulando sobre a miragem
+    ctx.save();
+    ctx.strokeStyle = '#f0e8c0';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 3; i++) {
+      const ph = elapsed * 3 + i * 2.1;
+      ctx.globalAlpha = 0.25 + 0.2 * Math.sin(ph * 1.7);
+      ctx.beginPath();
+      const oy = y - 18 - i * 10 + Math.sin(ph) * 3;
+      ctx.moveTo(x - 10, oy);
+      ctx.quadraticCurveTo(x - 5, oy - 4, x, oy);
+      ctx.quadraticCurveTo(x + 5, oy + 4, x + 10, oy);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    if (temCajado && p.alive && Math.hypot(p.x - mir.x, p.y - mir.y) < 200) {
+      ctx.font = 'bold 12px Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.strokeStyle = 'rgba(10, 6, 2, 0.9)';
+      ctx.lineWidth = 3;
+      ctx.strokeText('R — Cajado', x, y - 48);
+      ctx.fillStyle = '#e8cf9a';
+      ctx.fillText('R — Cajado', x, y - 48);
+    }
+  }
+}
+
 // Marca TODO portal com um limiar luminoso + seta de direção, para que toda
 // saída seja visível — inclusive as de volta das catacumbas e das fossas, que
 // antes eram piso comum colado na parede. Desenhado depois da escuridão para
@@ -777,6 +827,21 @@ function frame(now) {
               world.fx.text(player.x, player.y - 66, '✝ Anjo da Guarda!', '#b8d8f8');
               world.fx.burst(player.x, player.y - 40, '#d8e8ff', 24, 220);
             }
+            // o banquete do Ermo se desfaz em possessos e escancara o poço
+            if (dlg.grantFlag === 'miragemRompida') {
+              world.map.openGates();
+              world.fx.addShake(7);
+              world.fx.text(player.x, player.y - 66, 'A miragem se desfaz! O poço da Gula se escancara...', '#e88060');
+              for (let i = 0; i < 3; i++) {
+                const a = (i / 3) * Math.PI * 2 + 0.5;
+                const m = new Possesso(0, 0);
+                m.x = player.x + Math.cos(a) * 90;
+                m.y = player.y + Math.sin(a) * 90;
+                world.enemies.push(m);
+                world.total += 1;
+                world.fx.burst(m.x, m.y - 10, '#8ab040', 12, 160);
+              }
+            }
           }
           dlg = null;
         }
@@ -874,6 +939,7 @@ function frame(now) {
   renderAltars(cam);
   renderAnchors(cam);
   renderBeacons(cam);
+  renderMirages(cam);
   for (const g of world.groundItems) g.render(ctx, cam);
 
   // entidades e cenografia ordenadas por Y (quem está mais ao sul desenha por cima)

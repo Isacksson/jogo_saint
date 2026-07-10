@@ -360,13 +360,15 @@ export class Player {
   }
 
   // Os instrumentos das fossas (R), por prioridade de contexto (GDD §3.7):
-  // pira apagada → Espelho de Luzia; âncora à frente → Corda (travessia);
-  // grupo em volta → clarão do Espelho; senão → laço da Corda (imobiliza 2 s)
+  // pira apagada → Espelho; miragem → Cajado; âncora → Corda (travessia);
+  // horda colada → repelão do Cajado; grupo em volta → clarão do Espelho;
+  // senão → laço da Corda (imobiliza o mais próximo por 2 s)
   useInstrument(world) {
     if (this.ropeCd > 0) return;
     const temCorda = hasInstrument(world.flags, 'corda');
     const temEspelho = hasInstrument(world.flags, 'espelho');
-    if (!temCorda && !temEspelho) return;
+    const temCajado = hasInstrument(world.flags, 'cajado');
+    if (!temCorda && !temEspelho && !temCajado) return;
 
     // 1) o Espelho diante de uma pira apagada: a luz da santa a reacende
     for (const b of world.beacons || []) {
@@ -391,7 +393,28 @@ export class Player {
       return;
     }
 
-    // 2) uma âncora alinhada com o olhar: lança-se por sobre o que houver
+    // 2) o Cajado diante de uma miragem: prova o chão falso e o revela
+    for (const mir of world.mirages || []) {
+      if (world.flags.miragens?.[mir.key]) continue;
+      if (Math.hypot(mir.x - this.x, mir.y - this.y) > 90) continue;
+      if (!temCajado) {
+        world.fx.text(this.x, this.y - 58, 'O ar treme sobre a água... Falta-te o Cajado do eremita.', '#c0b090');
+        this.ropeCd = 0.6;
+        return;
+      }
+      world.flags.miragens = world.flags.miragens || {};
+      world.flags.miragens[mir.key] = true;
+      for (const [mx, my] of mir.tiles) {
+        world.map.set(mx, my, mir.to);
+        world.fx.burst((mx + 0.5) * TILE_PX, (my + 0.5) * TILE_PX, '#e8d8a0', 12, 140);
+      }
+      sfx('cast');
+      world.fx.text(this.x, this.y - 58, 'O Cajado desfaz a miragem: há chão sob a água!', '#e8d8a0');
+      this.ropeCd = 0.6;
+      return;
+    }
+
+    // 3) uma âncora alinhada com o olhar: lança-se por sobre o que houver
     const v = DIR_VEC[this.facing];
     if (temCorda) {
       let best = null, bestD = Infinity;
@@ -412,7 +435,27 @@ export class Player {
       }
     }
 
-    // 3) o clarão do Espelho: cega o grupo que cerca o cavaleiro
+    // 4) o repelão do Cajado: empurra a horda colada ao cavaleiro
+    if (temCajado) {
+      const colados = world.enemies.filter(
+        (e) => e.alive && Math.hypot(e.x - this.x, e.y - this.y) < 130
+      );
+      if (colados.length >= 2) {
+        for (const e of colados) {
+          const dx = e.x - this.x, dy = e.y - this.y;
+          const d = Math.hypot(dx, dy) || 1;
+          e.takeDamage(8, (dx / d) * 520, (dy / d) * 520, world);
+        }
+        sfx('heavy');
+        world.fx.burst(this.x, this.cy, '#e8d8a0', 18, 240);
+        world.fx.text(this.x, this.y - 58, 'O golpe de recuo do Cajado!', '#e8d8a0');
+        world.fx.addShake(4);
+        this.ropeCd = 5;
+        return;
+      }
+    }
+
+    // 5) o clarão do Espelho: cega o grupo que cerca o cavaleiro
     if (temEspelho) {
       const cercam = world.enemies.filter(
         (e) => e.alive && Math.hypot(e.x - this.x, e.y - this.y) < 220
@@ -427,9 +470,9 @@ export class Player {
       }
     }
 
-    // 4) o laço: amarra o inimigo mais próximo
+    // 6) o laço: amarra o inimigo mais próximo
     if (!temCorda) {
-      world.fx.text(this.x, this.y - 58, 'O Espelho não acha o que refletir...', '#c0b090');
+      world.fx.text(this.x, this.y - 58, 'Nenhum instrumento acha uso aqui...', '#c0b090');
       this.ropeCd = 0.4;
       return;
     }

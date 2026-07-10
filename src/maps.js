@@ -650,6 +650,128 @@ export const MAP_DEFS = {
     ],
   },
 
+  // ---------- Capítulo 3: Ermo de Antão (superfície de Santo Antão) ----------
+  ermo_antao: {
+    name: 'Ermo de Antão',
+    w: 44, h: 30,
+    base: T.SAND,
+    outside: T.ROCK,
+    mood: 'peace',
+    gateFloor: T.STONE,
+    generate(m) {
+      const rand = rng(251);
+      m.border(2, T.ROCK);
+
+      // a estrada do Império morre na areia, a oeste
+      m.fillRect(0, 14, 14, 2, T.PATH);
+
+      // o oásis dos eremitas, com sua ilhota inalcançável
+      for (let y = 4; y <= 12; y++) {
+        for (let x = 5; x <= 15; x++) {
+          const dx = (x - 10) / 4.2;
+          const dy = (y - 8) / 3;
+          if (dx * dx + dy * dy <= 1) m.set(x, y, T.WATER);
+        }
+      }
+      m.set(10, 8, T.SAND); // a ilhota do tesouro, cercada d'água
+
+      // as celas de barro dos eremitas
+      m.fillRect(6, 18, 4, 3, T.ROOF);
+      m.fillRect(13, 20, 4, 3, T.ROOF);
+
+      // o sítio escavado do banquete, no fundo do deserto: a boca da Gula
+      m.fillRect(31, 15, 6, 5, T.CWALL);
+      m.fillRect(32, 16, 4, 3, T.STONE);
+      m.set(33, 15, T.GATE);
+      m.set(34, 15, T.GATE);
+      m.set(33, 18, T.STAIRS);
+      m.set(34, 18, T.STAIRS);
+
+      // dunas, ossadas e árvores ressequidas
+      m.scatter(rand, T.ROCK, 16);
+      m.scatter(rand, T.DEADTREE, 12);
+      m.scatter(rand, T.BONES, 10);
+    },
+    stamps: [
+      ['houseThatch', 6, 18], ['houseThatch', 13, 20],
+    ],
+    spawns: [
+      ['imundo', 20, 10], ['serpe', 24, 18], ['imundo', 28, 8],
+      ['serpe', 18, 24], ['imundo', 36, 10], ['imundo', 30, 24],
+    ],
+    altars: [[8, 16]],
+    // a miragem do oásis: com o Cajado, a água falsa vira o passadiço da ilhota
+    mirages: [
+      { tx: 10, ty: 12, tiles: [[10, 9], [10, 10], [10, 11]], to: T.SAND },
+    ],
+    treasures: [
+      { tx: 10, ty: 8, item: { kind: 'gold', amount: 140 } },
+    ],
+    npcs: [
+      {
+        tx: 4, ty: 13, name: 'Pregoeiro Imperial',
+        sprite: 'anastacio',
+        lines: () => [
+          '"TERCEIRO EDITO DO DIVINO IMPERADOR: os sacerdotes presos que sacrificarem aos deuses serão soltos. Os que recusarem conhecerão os tormentos."',
+          'A voz dele falha no fim. "Vim ler para a areia, soldado. Até os lagartos têm mais fé que Nicomédia."',
+        ],
+      },
+      {
+        tx: 9, ty: 15, name: 'Eremita Paulo',
+        sprite: 'anastacio',
+        lines: (flags) => flags.milagres?.jejum
+          ? ['"Voltaste com o Jejum do santo... Sinto no teu passo: a fome já não te morde. Vai em paz, cavaleiro."']
+          : flags.miragemRompida
+            ? ['"Rompeste o banquete... Deus seja louvado. O poço da Gula está aberto — desce, e que Antão te guarde do que ronca lá embaixo."']
+            : [
+              'Bem-vindo ao Ermo, cavaleiro. Aqui jejuamos por escolha — mas ultimamente a fome anda... com fome de nós.',
+              'Miragens de mesas fartas caminham sobre as dunas. O irmão Hilário seguiu o cheiro de pão assado para LESTE, três dias faz.',
+              'Se o encontrares, não proves NADA do que a areia te oferecer.',
+            ],
+      },
+      {
+        tx: 12, ty: 17, name: 'Eremita Macário',
+        sprite: 'teodoro',
+        lines: () => [
+          'Antão viveu oitenta anos nestas areias. Os demônios lhe mostravam banquetes, ouro, glória — e ele respondia com o silêncio.',
+          '"A barriga vazia", dizia ele, "ouve melhor a Deus."',
+        ],
+      },
+      {
+        tx: 35, ty: 14, name: 'Irmão Hilário',
+        sprite: 'anastacio',
+        lines: (flags) => flags.miragemRompida
+          ? [
+            '"O pão... virou areia na minha boca. Três dias comi areia, irmão." Ele chora de vergonha e alívio.',
+            '"Lá embaixo mora o dono da mesa: Belzebu, o Senhor das Moscas. Eu ouvia as asas dele em cada bocado. Cuidado."',
+          ]
+          : ['(Ele olha o vazio, salivando.) "Sentes o cheiro? Pão quente... mel... Senta comigo, irmão. A mesa é farta e a anfitriã não cobra nada..."'],
+      },
+      {
+        tx: 33, ty: 13, name: 'A Anfitriã do Banquete',
+        sprite: 'espirito', ghost: true, relic: true,
+        grantFlag: 'miragemRompida',
+        lines: (flags) => flags.miragemRompida
+          ? ['Restam só mesas de areia desfeita e um cheiro doce de podridão. O poço escancarado ronca lá embaixo.']
+          : [
+            'Entre as dunas, mesas se estendem a perder de vista: pão quente, vinho, mel, carne assada. Uma figura de véus te acena.',
+            '"Senta, peregrino. Comeste tão pouco, andaste tão longe... Prova. PROVA."',
+            'Jorge fecha os olhos e ergue a cruz da lança. "O meu pão é fazer a vontade dAquele que me enviou."',
+            'O banquete GRITA.',
+          ],
+      },
+      {
+        tx: 15, ty: 16, name: 'Prisca, a mercadora',
+        sprite: 'mira', vendor: 'prisca',
+        lines: () => ['Vendo água no deserto. Chama-se comércio, cavaleiro — os eremitas chamam de outra coisa.'],
+      },
+    ],
+    portals: [
+      { x: 0, y: 13, w: 1, h: 4, roads: true }, // de volta às Estradas do Império
+      { x: 33, y: 18, w: 2, h: 1, to: 'fossa_gula', tx: 4, ty: 3 }, // o poço da Gula
+    ],
+  },
+
   // ---------- a emboscada do Cavaleiro Conquista na estrada costeira ----------
   estrada_porto: {
     name: 'Estrada Costeira do Porto',
@@ -780,6 +902,14 @@ export const MAP_DEFS = {
     floor: T.FEASTFLOOR, dark: 'hell', arenaY: 19, alcoveY: 21,
     returnTo: { to: 'fossa_inveja', tx: 30, ty: 27 },
     descendTo: { to: 'fossa_avareza' },
+    // o poço do banquete do Ermo desemboca no teto da antecâmara (C3)
+    extraPortals: [{ x: 5, y: 2, w: 2, h: 1, to: 'ermo_antao', tx: 33, ty: 17 }],
+    // a despensa isolada além do fogo: só a Corda alcança
+    anchors: [[5, 22], [11, 22]],
+    treasures: [
+      { tx: 5, ty: 21, item: { kind: 'gold', amount: 130 } },
+      { tx: 6, ty: 23, item: { kind: 'equip', slot: 'armadura', rarity: 2, name: 'Loriga do Eremita', value: 55 } },
+    ],
     carve(m, f) {
       // corredor das migalhas
       m.fillRect(8, 6, 3, 6, f);
@@ -793,6 +923,8 @@ export const MAP_DEFS = {
       m.fillRect(26, 19, 2, 9, T.LAVA);
       // a mesa interminável (obstáculo)
       m.fillRect(13, 22, 8, 1, T.CWALL);
+      // a despensa isolada além do fogo, a oeste do salão
+      m.fillRect(4, 21, 4, 3, f);
     },
     spawns: [
       ['possesso', 9, 8], ['possesso', 10, 13], ['serpe', 16, 13],
@@ -807,6 +939,7 @@ export const MAP_DEFS = {
           'Junto ao banquete apodrecido, um eremita de hábito branco ora de olhos fechados, indiferente ao festim.',
           '"No deserto, os demônios me ofereceram mesas fartas. Recusei — e cada recusa me fez mais forte que a fome."',
           '"Aprende o meu Jejum: quando a carne renuncia, nem o dente da besta a atravessa."',
+          '"E leva o meu Cajado. Ele prova o chão falso das miragens (tecla R) — e, de perto, repele a gula que te cerca."',
           '✝ Milagre recebido: JEJUM QUE FORTALECE — tecla 4 (30 de Fé)',
         ],
     },

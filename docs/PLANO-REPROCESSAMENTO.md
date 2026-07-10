@@ -212,7 +212,22 @@ cada. Segue o roadmap do GDD §6 (T15–T26); as fossas são reaproveitadas, nã
       `farewell` parametrizados) e tabela `AMBUSHES` no main (emboscada por
       destino, dados-driven para C3–C6). Pregoeiro lê o 2º edito (fio de
       Diocleciano). Testado (integração, 15 asserções + 2 screenshots). Sem erros.
-- [ ] **C3 — Ermo de Antão** + Fossa da Gula + Cajado de Antão. *(T19–T20)*
+- [x] **C3 — Ermo de Antão** + Fossa da Gula + Cajado de Antão *(T19–T20)* —
+      deserto de eremitas (nó já abria com o Farol do C2; sem Cavaleiro — o Fome
+      é na estrada do C4). **Quest do banquete** (GDD "resistir a um banquete
+      ilusório antes de descer"): eremitas Paulo/Macário contam que Hilário
+      seguiu o cheiro de pão; a **Anfitriã do Banquete** (relíquia-fantasma,
+      `grantFlag: miragemRompida`) se desfaz em 3 possessos e escancara o poço
+      da Gula (GATE + persistência em enterMap) — nova entrada da fossa
+      (`extraPortals`). Pregoeiro lê o 3º edito. **Cajado de Antão (R)**: novo
+      elemento `mirages` (chão falso `tiles`+`to`, revelado persiste em
+      `flags.miragens` e é reaplicado ao tilemap cacheado) — no oásis, a água
+      falsa vira passadiço até a ilhota do tesouro (140 denários); em combate,
+      **golpe de recuo** (2+ inimigos ≤130 px: dano 8 + knockback 520, cd 5 s).
+      Prioridade do R agora: pira → miragem → âncora → repelão → clarão → laço.
+      Fossa da Gula ganhou despensa de Corda (130 denários + Loriga do Eremita)
+      e a fala do Cajado na bênção. Testado (15 asserções + 2 screenshots na
+      primeira execução). Sem erros.
 - [ ] **C4 — Distrito do Tesouro** (revisita) + Fossa da Avareza + Balança de Lourenço
       + Cavaleiro Fome. *(T21–T22)*
 - [ ] **C5 — Vila do Jardim de Inês** + Fossa da Luxúria + Grinalda de Inês. *(T23–T24)*

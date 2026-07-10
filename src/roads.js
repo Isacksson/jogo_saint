@@ -41,7 +41,7 @@ export const NODES = [
   {
     id: 'ermo_antao', name: 'Ermo de Antão', px: 0.88, py: 0.38,
     desc: 'O deserto dos eremitas. Só loucos e santos cruzam essas areias.',
-    dest: null, // C3
+    dest: { to: 'ermo_antao', tx: 2, ty: 14 },
     // sem o Farol de Luzia aceso, ninguém acha o caminho da costa deserta
     unlocked: (f) => !!f.farois?.['porto_luzia:0'] || !!f.roads?.ermo_antao,
   },
