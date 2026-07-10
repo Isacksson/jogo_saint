@@ -187,7 +187,13 @@ export const MAP_DEFS = {
       {
         tx: 25, ty: 17, name: 'Princesa Sabra',
         sprite: 'sabra',
-        lines: (flags) => flags.dragaoDerrotado
+        lines: (flags) => flags.ascalonForjada
+          ? [
+            'Ascalon... Vejo-a brilhar daqui, cavaleiro. Os sete mártires numa só haste.',
+            'O poço da praça. As mães ouvem sussurros subindo dele à noite — as Portas esperam por ti, lá embaixo.',
+            'Silena inteira reza por ti. Vai... e volta.',
+          ]
+          : flags.dragaoDerrotado
           ? [
             'O Dragão... tombou? Silena está livre do tributo!',
             'Que as rosas floresçam onde teu sangue caiu, cavaleiro. Mas eu sinto... isto ainda não é o fim. As Portas continuam abertas lá embaixo.',
@@ -242,6 +248,12 @@ export const MAP_DEFS = {
       { x: 0, y: 14, w: 1, h: 4, to: 'capadocia', tx: 45, ty: 18 },
       { x: 21, y: 29, w: 4, h: 1, to: 'pantano', tx: 22, ty: 3 },
       { x: 43, y: 15, w: 1, h: 2, roads: true }, // encruzilhada: Estradas do Império
+      // o poço da praça: a descida às Portas do Abismo (Ato III, D1)
+      {
+        x: 20, y: 13, w: 2, h: 1, to: 'portas_abismo', tx: 17, ty: 3,
+        locked: (f) => !f.ascalonForjada,
+        lockedMsg: 'Do poço sobe um sussurro antigo. O que dorme lá embaixo só teme uma lança que ainda não foi forjada.',
+      },
     ],
   },
 
@@ -1498,4 +1510,101 @@ export const MAP_DEFS = {
         ],
     },
   }),
+
+  // ---------- Ato III (D1): as Portas do Abismo, sob o poço de Silena ----------
+  portas_abismo: {
+    name: 'As Portas do Abismo',
+    w: 36, h: 34,
+    base: T.HELLWALL, outside: T.HELLWALL, gateFloor: T.HELLFLOOR,
+    dark: 'hell', mood: 'dark',
+    generate(m) {
+      const rand = rng(666333);
+      m.fillRect(15, 2, 6, 5, T.HELLFLOOR);   // antecâmara sob o poço da praça
+      m.fillRect(16, 7, 4, 6, T.HELLFLOOR);   // a descida talhada na rocha viva
+      m.fillRect(8, 13, 20, 11, T.HELLFLOOR); // o átrio onde o Arauto espera
+      m.fillRect(9, 14, 3, 2, T.LAVA);        // fogo líquido vertendo das paredes
+      m.fillRect(24, 21, 3, 2, T.LAVA);
+      // as grandes Portas, ao sul do átrio — só cedem com o Arauto
+      m.fillRect(15, 25, 6, 5, T.HELLFLOOR);  // salão atrás das Portas
+      for (let x = 16; x <= 19; x++) m.set(x, 24, T.GATE);
+      m.set(17, 29, T.STAIRS);                // a escada que desce à Garganta
+      m.set(18, 29, T.STAIRS);
+      // ossadas dos que desceram antes
+      for (let i = 0; i < 24; i++) {
+        const x = Math.floor(rand() * m.w);
+        const y = Math.floor(rand() * m.h);
+        if (m.get(x, y) === T.HELLFLOOR && rand() < 0.6) m.set(x, y, T.BONES);
+      }
+    },
+    spawns: [
+      ['arauto', 18, 18],
+      ['possesso', 11, 21], ['possesso', 25, 15],
+      ['serpe', 10, 16], ['serpe', 26, 22],
+    ],
+    altars: [[17, 4]],
+    npcs: [],
+    portals: [
+      { x: 15, y: 2, w: 6, h: 1, to: 'silena', tx: 20, ty: 14 },
+      { x: 17, y: 29, w: 2, h: 1, to: 'garganta', tx: 17, ty: 3 },
+    ],
+  },
+
+  // ---------- a Garganta do Abismo: o covil da Serpente Antiga ----------
+  garganta: {
+    name: 'A Garganta do Abismo',
+    w: 34, h: 32,
+    base: T.HELLWALL, outside: T.HELLWALL, gateFloor: T.HELLFLOOR,
+    dark: 'hell', mood: 'dark',
+    generate(m) {
+      const rand = rng(121212);
+      m.fillRect(15, 2, 5, 4, T.HELLFLOOR);   // chegada da escada
+      m.fillRect(6, 6, 22, 4, T.LAVA);        // o rio de fogo
+      m.fillRect(16, 6, 3, 4, T.HELLFLOOR);   // a ponte de rocha sobre ele
+      m.fillRect(12, 10, 11, 4, T.HELLFLOOR); // a borda do Fogo do Abismo
+      // a arena da Serpente: o fundo oval da Garganta
+      const cx = 17, cy = 21, rx = 12, ry = 7;
+      for (let y = 0; y < m.h; y++) {
+        for (let x = 0; x < m.w; x++) {
+          const dx = (x - cx) / rx;
+          const dy = (y - cy) / ry;
+          if (dx * dx + dy * dy <= 1) m.set(x, y, T.HELLFLOOR);
+        }
+      }
+      m.fillRect(8, 18, 2, 2, T.LAVA);
+      m.fillRect(25, 23, 2, 2, T.LAVA);
+      // o fundo selado da Garganta (abre quando a Serpente recua, ferida)
+      m.fillRect(16, 28, 2, 1, T.HELLFLOOR);
+      m.set(16, 29, T.GATE);
+      m.set(17, 29, T.GATE);
+      m.fillRect(14, 30, 6, 2, T.HELLFLOOR);
+      m.set(16, 31, T.STAIRS); // a descida que a Serpente guardava (Ato III/D2)
+      m.set(17, 31, T.STAIRS);
+      for (let i = 0; i < 20; i++) {
+        const x = Math.floor(rand() * m.w);
+        const y = Math.floor(rand() * m.h);
+        if (m.get(x, y) === T.HELLFLOOR && rand() < 0.6) m.set(x, y, T.BONES);
+      }
+    },
+    spawns: [
+      ['serpente', 17, 21],
+      ['serpe', 10, 20], ['serpe', 24, 20],
+    ],
+    altars: [[13, 11]],
+    npcs: [
+      {
+        tx: 21, ty: 11, name: 'O Fogo do Abismo',
+        relic: true, consecrate: true,
+        lines: (flags) => flags.ascalonConsagrada
+          ? ['A fenda arde, mansa. O fogo que caiu com os anjos agora arde do teu lado da guerra.']
+          : [
+            'Uma fenda no chão verte um fogo que não é desta terra — o mesmo que caiu com os anjos, no princípio.',
+            'Ascalon vibra na tua mão, faminta. O que o Abismo forjou contra ti pode ser temperado contra o próprio Abismo.',
+            '⚔ Mergulha a lança: ASCALON É CONSAGRADA no fogo que a esperava.',
+          ],
+      },
+    ],
+    portals: [
+      { x: 15, y: 2, w: 5, h: 1, to: 'portas_abismo', tx: 17, ty: 28 },
+    ],
+  },
 };

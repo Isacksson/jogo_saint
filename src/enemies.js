@@ -107,7 +107,7 @@ class Enemy {
         world.map.openGates();
         world.flags.sealsBroken = world.flags.sealsBroken || {};
         world.flags.sealsBroken[world.mapId] = true;
-        world.fx.text(this.x, this.y - 60, 'Os selos da fossa se rompem!', '#e8dcb8');
+        world.fx.text(this.x, this.y - 60, this.gateCry || 'Os selos da fossa se rompem!', '#e8dcb8');
         world.fx.addShake(6);
       }
       this.onDeath?.(world);
@@ -785,6 +785,118 @@ export class CavaleiroMorte extends CavaleiroGuerra {
   }
 }
 
+// ---------- O Arauto: os Quatro Cavaleiros, fundidos (Ato III) ----------
+//
+// Prometeram voltar "quando a hora chegar" — e voltaram como um só corpo,
+// plantado diante das grandes Portas. O rosto do Arauto muda a cada quarto de
+// vida, e com ele a mecânica: Guerra investe, Conquista dispara o arco, Fome
+// devora o que arranca, Morte drena a Fé. Vencê-lo escancara as Portas.
+
+const ARAUTO_ASPECTS = [
+  { above: 0.75, id: 'guerra', cry: '"EU SOU GUERRA — E ABRO O CAMINHO!"',
+    tint: 'sepia(1) saturate(9) hue-rotate(-42deg) brightness(0.52)', aura: '200, 40, 24' },
+  { above: 0.5, id: 'conquista', cry: '"EU SOU CONQUISTA — E TUDO É MEU!"',
+    tint: 'saturate(0.12) brightness(1.45) contrast(1.15)', aura: '225, 225, 240' },
+  { above: 0.25, id: 'fome', cry: '"EU SOU FOME — E NADA ME FARTA!"',
+    tint: 'brightness(0.3) saturate(0.4) contrast(1.4)', aura: '120, 90, 30' },
+  { above: 0, id: 'morte', cry: '"EU SOU MORTE — E O INFERNO ME SEGUE."',
+    tint: 'sepia(1) hue-rotate(60deg) saturate(1.4) brightness(0.8)', aura: '150, 170, 140' },
+];
+
+export class Arauto extends CavaleiroGuerra {
+  constructor(tx, ty) {
+    super(tx, ty);
+    this.hpMax = 720;
+    this.hp = 720;
+    this.dmg = 26;
+    this.xpValue = 520;
+    this.scale = 2.2;
+    this.blood = '#3a2a30';
+    this.bossName = 'O ARAUTO — os Quatro, num só corpo';
+    this.opensGate = true; // as grandes Portas só cedem com ele
+    this.gateCry = 'As grandes Portas do Abismo rangem e se escancaram!';
+    this.minionType = Possesso;
+    this.summonCry = 'A HORA CHEGOU!';
+    this.aspect = 'guerra'; // tint/aura de Guerra já herdados do pai
+    this.aspectIdx = 0;     // os rostos só avançam (a cura de Fome não o rejuvenesce)
+    this.volleyCd = 1.2;
+    this.torporT = 0;
+  }
+
+  update(dt, world) {
+    if (!this.alive) return;
+
+    // o rosto do Arauto muda a cada quarto de vida — e nunca volta atrás
+    const ratio = this.hp / this.hpMax;
+    let idx = ARAUTO_ASPECTS.findIndex((a) => ratio > a.above);
+    if (idx < 0) idx = ARAUTO_ASPECTS.length - 1;
+    if (idx > this.aspectIdx) {
+      this.aspectIdx = idx;
+      const asp = ARAUTO_ASPECTS[idx];
+      this.aspect = asp.id;
+      this.tint = asp.tint;
+      this.aura = asp.aura;
+      this.volleyCd = 1;
+      sfx('roar');
+      world.fx.addShake(7);
+      world.fx.burst(this.x, this.y - 24, `rgb(${asp.aura})`, 26, 240);
+      world.fx.text(this.x, this.y - 88, asp.cry, '#e8c860');
+    }
+
+    // o arco de Conquista: leque de flechas quando o alvo guarda distância
+    this.volleyCd = Math.max(0, this.volleyCd - dt);
+    const livre = this.stunT <= 0 && (this.bindT || 0) <= 0
+      && this.windup <= 0 && this.chargeT <= 0;
+    const p = world.player;
+    if (this.aspect === 'conquista' && livre && this.volleyCd <= 0 && p.alive) {
+      const dx = p.x - this.x;
+      const dy = p.y - this.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      if (dist > 130 && dist < 470) {
+        this.volleyCd = 2.6;
+        const base = Math.atan2(dy, dx);
+        for (let i = -1; i <= 1; i++) {
+          const a = base + i * 0.18;
+          world.projectiles.push(new Dart(this.x + Math.cos(a) * 30, this.y - 24, Math.cos(a), Math.sin(a)));
+        }
+        sfx('swing');
+      }
+    }
+
+    const before = p.hp;
+    super.update(dt, world); // as investidas de Guerra e a fúria acelerada, herdadas
+    if (!this.alive) return;
+
+    // a boca de Fome: o dano causado lhe devolve a carne
+    const dealt = before - p.hp;
+    if (this.aspect === 'fome' && dealt > 0) {
+      this.hp = Math.min(this.hpMax, this.hp + dealt);
+      world.fx.text(this.x, this.y - 70, 'A Fome se farta de ti!', '#c8a860');
+      world.fx.burst(this.x, this.y - 30, '#3a3020', 8, 130);
+    }
+
+    // o torpor de Morte: perto dele, a Fé escorre da alma
+    if (this.aspect === 'morte' && this.stunT <= 0 && this.bindT <= 0
+        && p.alive && Math.hypot(p.x - this.x, p.y - this.y) < 280) {
+      p.faith = Math.max(0, p.faith - 7 * dt);
+      this.torporT -= dt;
+      if (this.torporT <= 0) {
+        this.torporT = 2.5;
+        world.fx.text(p.x, p.y - 76, 'O torpor rouba tua Fé...', '#a8b8a0');
+      }
+    }
+  }
+
+  onDeath(world) {
+    world.flags.arautoDerrotado = true;
+    world.fx.addShake(10);
+    world.fx.burst(this.x, this.y - 20, this.blood, 44, 320);
+    world.fx.burst(this.x, this.y - 20, '#e8c860', 24, 240);
+    world.fx.text(this.x, this.y - 96, '"Nós só anunciamos, cavaleiro. O que anunciamos... desperta."', '#e88060');
+    world.fx.text(this.x, this.y - 72, 'Os Quatro se desfazem de vez — em cinza, ferro, trigo e osso.', '#e8dcb8');
+  }
+}
+
 // ---------- Belzebu: príncipe da Fossa da Gula ----------
 
 export class Belzebu extends Amon {
@@ -1018,6 +1130,7 @@ export class Dragao extends Enemy {
     this.biteCd = 0;
     this.altitude = 0; // altura do voo, em px
     this.roared = false;
+    this.flyCry = 'O Dragão alça voo!'; // a Serpente Antiga grita outra coisa
   }
 
   get enraged() {
@@ -1080,7 +1193,7 @@ export class Dragao extends Enemy {
         if (this.hp <= this.hpMax * 0.6 && this.flyCd <= 0 && dist < 500) {
           this.setAct('rise');
           sfx('roar');
-          world.fx.text(this.x, this.y - 80, 'O Dragão alça voo!', '#e88060');
+          world.fx.text(this.x, this.y - 80, this.flyCry, '#e88060');
           break;
         }
         if (this.spitCd <= 0 && dist < 420 && dist > 70) {
@@ -1158,8 +1271,8 @@ export class Dragao extends Enemy {
     const animSpeed = this.airborne ? 14 : 6;
     const sprite = sheet[this.dir][Math.floor(this.animTime * animSpeed) % 4];
 
-    // sombra no chão (encolhe quando voa)
-    const shScale = 1 - this.altitude / 240;
+    // sombra no chão (encolhe quando voa; nunca negativa — a retirada sobe alto)
+    const shScale = Math.max(0, 1 - this.altitude / 240);
     ctx.fillStyle = `rgba(0, 0, 0, ${0.35 * shScale})`;
     ctx.beginPath();
     ctx.ellipse(this.x - cam.x, this.y - cam.y + 4, 34 * shScale, 12 * shScale, 0, 0, Math.PI * 2);
@@ -1168,8 +1281,14 @@ export class Dragao extends Enemy {
     const sx = Math.round(this.x - cam.x - DRAGON_PX / 2);
     const sy = Math.round(this.y - cam.y - DRAGON_PX * 0.85 - this.altitude);
     ctx.save();
-    if (this.flash > 0) ctx.filter = 'brightness(2.6) saturate(0.3)';
-    else if (this.enraged) ctx.filter = 'saturate(1.6) hue-rotate(90deg)';
+    if (this.flash > 0) {
+      ctx.filter = 'brightness(2.6) saturate(0.3)';
+    } else {
+      // a Serpente Antiga carrega um tingimento próprio por baixo da fúria
+      const f = [this.baseFilter, this.enraged ? 'saturate(1.6) hue-rotate(90deg)' : '']
+        .filter(Boolean).join(' ');
+      if (f) ctx.filter = f;
+    }
     ctx.drawImage(sprite, sx, sy, DRAGON_PX, DRAGON_PX);
     ctx.restore();
 
@@ -1182,6 +1301,99 @@ export class Dragao extends Enemy {
       ctx.fillStyle = '#a8281e';
       ctx.fillRect(bx, by, (this.hp / this.hpMax) * w, 3);
     }
+  }
+}
+
+// ---------- A Serpente Antiga: a forma verdadeira do Dragão (Ap 12,9) ----------
+//
+// Guardiã das Portas, no fundo da Garganta. Nesta descida luta duas fases:
+// rasteira, cuspindo fogo (o repertório do Dragão, mais pesado); depois alça
+// voo e chama as crias. Aos 25% de vida ela NÃO morre — recua para as trevas,
+// ferida, guardando a tentação para Nicomédia (fase 3, Ato III/D2).
+
+export class SerpenteAntiga extends Dragao {
+  constructor(tx, ty) {
+    super(tx, ty);
+    this.hpMax = 900;
+    this.hp = 900;
+    this.dmg = 30;
+    this.xpValue = 600;
+    this.blood = '#4a1c3c';
+    this.bossName = 'A SERPENTE ANTIGA';
+    this.baseFilter = 'hue-rotate(140deg) saturate(1.25) brightness(0.75)'; // violeta das trevas
+    this.flyCry = 'A Serpente Antiga cobre o céu da Garganta!';
+    this.summonedBrood = false;
+    this.retreating = false;
+    this.retreatT = 0;
+  }
+
+  // fúria mais cedo que o Dragão: há menos vida utilizável até a retirada
+  get enraged() {
+    return this.hp <= this.hpMax * 0.45;
+  }
+
+  takeDamage(dmg, kbX, kbY, world) {
+    if (this.retreating) return;
+    if (this.airborne) {
+      world.fx.text(this.x, this.y - 80, 'Fora de alcance!', '#c0b090');
+      return;
+    }
+    // aos 25% ela não morre: recua para o fundo — a hora dela é outra (D2)
+    if (this.hp - dmg <= this.hpMax * 0.25) {
+      this.hp = this.hpMax * 0.25;
+      this.retreating = true;
+      this.retreatT = 2.6;
+      sfx('roar');
+      world.fx.addShake(10);
+      world.fx.burst(this.x, this.y - 20, this.blood, 36, 300);
+      world.fx.text(this.x, this.y - 110, '"BASTA. Ainda não é a hora — nem a minha, nem a TUA."', '#f090b0');
+      world.fx.text(this.x, this.y - 86, '"Desce, se ousas, cavaleiro. Falaremos do teu futuro... e de Nicomédia."', '#f090b0');
+      world.fx.text(this.x, this.y - 62, 'A Serpente recua, ferida — e o fundo da Garganta se escancara!', '#e8dcb8');
+      world.player.addXp(350, world);
+      world.flags.serpenteFerida = true;
+      // ferida não renasce ao reentrar; o selo do fundo fica rompido
+      world.flags.defeated = world.flags.defeated || {};
+      world.flags.defeated[world.mapId] = true;
+      world.map.openGates();
+      world.flags.sealsBroken = world.flags.sealsBroken || {};
+      world.flags.sealsBroken[world.mapId] = true;
+      return;
+    }
+    super.takeDamage(dmg, kbX, kbY, world);
+  }
+
+  update(dt, world) {
+    if (!this.alive) return;
+
+    // ferida, mergulha nas trevas do poço e some — sem cadáver, sem espólio
+    if (this.retreating) {
+      this.retreatT -= dt;
+      this.altitude = Math.min(320, this.altitude + 170 * dt);
+      this.animTime += dt;
+      if (Math.random() < dt * 24) {
+        world.fx.spark(this.x + (Math.random() - 0.5) * 90, this.y - this.altitude, '#8a4a7a');
+      }
+      if (this.retreatT <= 0) {
+        this.dead = true;
+        world.fx.burst(this.x, this.y - 40, '#2a1030', 30, 260);
+      }
+      return;
+    }
+
+    // segunda fase: na altura do primeiro voo, chama as crias
+    if (!this.summonedBrood && this.hp <= this.hpMax * 0.6) {
+      this.summonedBrood = true;
+      world.fx.text(this.x, this.y - 88, '"VINDE, MINHAS CRIAS!"', '#f090b0');
+      for (const off of [-90, 90]) {
+        const s = new Serpe(0, 0);
+        s.x = this.x + off;
+        s.y = this.y + 40;
+        world.enemies.push(s);
+        world.fx.burst(s.x, s.y - 10, '#3c6428', 12, 160);
+      }
+    }
+
+    super.update(dt, world);
   }
 }
 

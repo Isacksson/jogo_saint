@@ -282,8 +282,30 @@ cada. Segue o roadmap do GDD §6 (T15–T26); as fossas são reaproveitadas, nã
 ---
 
 ## BLOCO D — Ato III e Fecho
-- [ ] **D1 — Portas do Abismo** — mapa final + Quatro Cavaleiros como arauto +
-      Serpente Antiga fases 1–2. *(GDD T27)*
+- [x] **D1 — Portas do Abismo** — mapas finais + o ARAUTO (os Quatro fundidos) +
+      consagração de Ascalon + Serpente Antiga fases 1–2 *(GDD T27)* —
+      **Entrada**: o poço da praça de Silena (portal `locked` até
+      `ascalonForjada`; Sabra ganha falas do Ato III apontando-o).
+      **`portas_abismo`**: antecâmara sob o poço (altar), descida, átrio com
+      lava e ossadas; **O ARAUTO** (`Arauto extends CavaleiroGuerra`, 720 hp):
+      o rosto muda a cada quarto de vida e NUNCA volta atrás (`aspectIdx`
+      one-way — a cura de Fome não o rejuvenesce; corrigido) — Guerra investe,
+      Conquista dispara o leque de flechas, Fome devora o dano causado, Morte
+      drena a Fé (7/s ≤280 px); cada troca grita ("EU SOU...") e retinge a
+      silhueta; `opensGate` + `gateCry` parametrizado escancara as grandes
+      Portas (persistem via `sealsBroken`), `flags.arautoDerrotado`.
+      **`garganta`**: rio de fogo com ponte, a borda do Fogo do Abismo
+      (NPC-relíquia `consecrate: true`, campo copiado no Npc): com Ascalon
+      forjada, a cena chama `spear.consecrate()` → **Ascalon Consagrada,
+      dano 60, alcance 104** + `flags.ascalonConsagrada`. **A SERPENTE ANTIGA**
+      (`SerpenteAntiga extends Dragao`, 900 hp, tinta violeta via `baseFilter`
+      novo no render do Dragão; `flyCry` parametrizado): fase 1 rasteira
+      cuspindo fogo; fase 2 (≤60%) alça voo e convoca 2 Serpes; **aos 25% NÃO
+      morre** — recua ferida ("Falaremos do teu futuro... e de Nicomédia"),
+      +350 XP, `flags.serpenteFerida` + `defeated.garganta`, e o fundo selado
+      da Garganta se escancara (escada pronta para o D2). Corrigido: sombra do
+      Dragão com raio negativo em altitude alta (clamp). Testado (16 asserções
+      + 2 screenshots). Sem erros.
 - [ ] **D2 — Nicomédia e a Tentação** — eco final de Diocleciano, fase 3 da Serpente,
       epílogo das rosas, créditos. *(GDD T28)*
 - [ ] **D3 — Balanceamento e polish final** — curva de dano/vida/preços, tela de vitória. *(GDD T29)*

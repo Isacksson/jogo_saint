@@ -12,7 +12,7 @@ import {
   Imundo, ImundoChefe, Amon, Dragao, Serpe,
   Invejoso, Leviata, Possesso, Belzebu, Mamon, Asmodeu, Belfegor,
   Carcereiro, CavaleiroGuerra, CavaleiroConquista, CavaleiroFome, Cobrador,
-  Pretendente, CavaleiroMorte,
+  Pretendente, CavaleiroMorte, Arauto, SerpenteAntiga,
 } from './enemies.js';
 import { initAudio, updateMusic, setMood, toggleMute, sfx } from './audio.js';
 import { Npc } from './npc.js';
@@ -105,7 +105,7 @@ const ENEMY_TYPES = {
   possesso: Possesso, belzebu: Belzebu, mamon: Mamon, asmodeu: Asmodeu, belfegor: Belfegor,
   carcereiro: Carcereiro, guerra: CavaleiroGuerra, conquista: CavaleiroConquista,
   fome: CavaleiroFome, cobrador: Cobrador, pretendente: Pretendente,
-  morte: CavaleiroMorte,
+  morte: CavaleiroMorte, arauto: Arauto, serpente: SerpenteAntiga,
 };
 
 // os Quatro Cavaleiros emboscam a primeira viagem a cada destino (GDD §2.6):
@@ -360,7 +360,7 @@ function tryInteract() {
       }
       dlg = {
         name: npc.name, lines: npc.getLines(world), idx: 0, grant: npc.grant,
-        grantFlag: npc.grantFlag, forge: npc.forge,
+        grantFlag: npc.grantFlag, forge: npc.forge, consecrate: npc.consecrate,
         portrait: npc.sprite, ghost: npc.ghost, reveal: 0,
       };
       return;
@@ -911,6 +911,17 @@ function frame(now) {
             world.fx.burst(player.x, player.cy, '#fff4c8', 24, 220);
             world.fx.whiteFlash = Math.max(world.fx.whiteFlash, 0.3);
             world.fx.text(player.x, player.y - 96, '⚔ ASCALON, A LANÇA DOS SETE MÁRTIRES!', '#f8d860');
+          }
+          // a consagração no fogo do próprio Abismo (D1, GDD §2.3)
+          if (dlg.consecrate && player.spear.forged && !player.spear.consecrated) {
+            player.spear.consecrate();
+            world.flags.ascalonConsagrada = true;
+            sfx('level');
+            world.fx.addShake(8);
+            world.fx.burst(player.x, player.cy, '#f08030', 40, 300);
+            world.fx.burst(player.x, player.cy, '#fff4c8', 24, 220);
+            world.fx.whiteFlash = Math.max(world.fx.whiteFlash, 0.3);
+            world.fx.text(player.x, player.y - 96, '⚔ ASCALON CONSAGRADA — o fogo do Abismo, contra o Abismo!', '#fff4c4');
           }
           dlg = null;
         }
