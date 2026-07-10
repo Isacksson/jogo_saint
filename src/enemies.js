@@ -1397,6 +1397,174 @@ export class SerpenteAntiga extends Dragao {
   }
 }
 
+// ---------- As Tentações: os outros Jorges (fase 3, Ato III/D2) ----------
+//
+// A Serpente não luta a última luta com fogo: luta com futuros. Cada visão é
+// um Jorge dourado que poderia ter sido — e enquanto uma estiver de pé, a
+// mentira a protege. A visão atrai o cavaleiro e cochicha; destruí-la é a
+// recusa ("NÃO."). Jorge vence não pela força, mas por recusar a tentação.
+
+export class Tentacao extends Enemy {
+  constructor(tx, ty) {
+    super(tx, ty);
+    this.hpMax = 70;
+    this.hp = 70;
+    this.xpValue = 40;
+    this.blood = '#c8a860';
+    this.tentacao = true;
+    this.miniNameColor = '#f0d060';
+    this.whisper = '"Fica..."';
+    this.drainT = 0;
+  }
+
+  update(dt, world) {
+    if (!this.alive) return;
+    this.updateCommon(dt, world);
+    if (this.stunT > 0 || this.bindT > 0) return;
+    this.animTime += dt;
+
+    const p = world.player;
+    const dx = this.x - p.x;
+    const dy = this.y - p.y;
+    const dist = Math.hypot(dx, dy) || 1;
+
+    // a tentação atrai: um puxão manso e constante para perto da visão
+    if (p.alive && dist < 340 && p.state !== 'dodge') {
+      p.moveAxis(world.map, (dx / dist) * 60 * dt, 0);
+      p.moveAxis(world.map, 0, (dy / dist) * 60 * dt);
+      if (Math.random() < dt * 6) world.fx.spark(p.x, p.y - 20, '#f0d060');
+    }
+    // de perto ela cochicha — e a Fé escorre
+    if (p.alive && dist < 90) {
+      p.faith = Math.max(0, p.faith - 10 * dt);
+      this.drainT -= dt;
+      if (this.drainT <= 0) {
+        this.drainT = 2;
+        world.fx.text(p.x, p.y - 76, this.whisper, '#f0d060');
+      }
+    }
+  }
+
+  onDeath(world) {
+    world.fx.text(this.x, this.y - 80, '"NÃO."', '#f8d860');
+    world.fx.text(this.x, this.y - 56, 'A visão se desfaz em pó de ouro.', '#e8dcb8');
+    world.fx.burst(this.x, this.y - 20, '#f0d060', 26, 220);
+    const p = world.player;
+    p.faith = Math.min(p.faithMax, p.faith + 15);
+  }
+
+  render(ctx, cam) {
+    if (!this.alive) return;
+    // um outro Jorge, dourado e trêmulo — o que poderia ter sido
+    const frame = buildPlayerSprites().down[Math.floor(this.animTime * 4) % 4];
+    const x = this.x - cam.x, y = this.y - cam.y - 20;
+    const pulse = 0.25 + 0.1 * Math.sin(this.animTime * 3);
+    const g = ctx.createRadialGradient(x, y, 4, x, y, 56);
+    g.addColorStop(0, `rgba(240, 208, 96, ${pulse})`);
+    g.addColorStop(1, 'rgba(240, 208, 96, 0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(x - 56, y - 56, 112, 112);
+    ctx.save();
+    ctx.globalAlpha = 0.8 + 0.15 * Math.sin(this.animTime * 2.4);
+    if (this.flash <= 0) ctx.filter = 'sepia(1) saturate(4) hue-rotate(-12deg) brightness(1.25)';
+    this.renderSprite(ctx, cam, frame);
+    ctx.restore();
+  }
+}
+
+// ---------- A Serpente Tentadora: a fase 3, na sombra de Nicomédia ----------
+//
+// Ferida na Garganta, a Serpente conjura a corte de Diocleciano e oferece a
+// Jorge escapar do martírio. A cada terço da luta ergue uma Tentação — e
+// enquanto a visão estiver de pé, nenhum golpe a alcança.
+
+const TENTACOES = [
+  {
+    hp: 1.01, name: 'A Longa Vida — o Jorge que fugiu', off: [0, 170],
+    whisper: '"Vive, Jorge... envelhece... ninguém precisa saber..."',
+    cry: '"Eu VI Nicomédia, cavaleiro: o ferro, o fogo, a tua cabeça. FICA. Vive."',
+  },
+  {
+    hp: 0.66, name: 'A Púrpura — o Jorge que reinou', off: [-180, -30],
+    whisper: '"General... impérios aos teus pés..."',
+    cry: '"Diocleciano te faria GENERAL. A púrpura, cavaleiro — só pousa a lança."',
+  },
+  {
+    hp: 0.33, name: 'O Repouso — o Jorge que ficou', off: [180, -30],
+    whisper: '"Fica em Silena... amado... em paz..."',
+    cry: '"Então fica em SILENA. Herói. Amado. Em paz. Não é isso a bênção?"',
+  },
+];
+
+export class SerpenteFinal extends Dragao {
+  constructor(tx, ty) {
+    super(tx, ty);
+    this.hpMax = 780;
+    this.hp = 780;
+    this.dmg = 32;
+    this.xpValue = 800;
+    this.blood = '#4a1c3c';
+    this.bossName = 'A SERPENTE ANTIGA, a Tentadora';
+    this.baseFilter = 'hue-rotate(140deg) saturate(1.25) brightness(0.75)';
+    this.flyCry = 'A Serpente Antiga cobre o céu da corte!';
+    this.tentIdx = 0;
+    this.shieldMsgT = 0;
+  }
+
+  takeDamage(dmg, kbX, kbY, world) {
+    if (this.airborne) {
+      world.fx.text(this.x, this.y - 80, 'Fora de alcance!', '#c0b090');
+      return;
+    }
+    // enquanto uma Tentação estiver de pé, a mentira a protege
+    if (world.enemies.some((e) => e.tentacao && e.alive)) {
+      world.fx.burst(this.x, this.y - 24, '#f0d060', 4, 90);
+      if (this.shieldMsgT <= 0) {
+        this.shieldMsgT = 1.2;
+        world.fx.text(this.x, this.y - 84, 'A mentira a protege! Recusa a visão!', '#f090b0');
+      }
+      return;
+    }
+    super.takeDamage(dmg, kbX, kbY, world);
+  }
+
+  update(dt, world) {
+    if (!this.alive) return;
+    this.shieldMsgT = Math.max(0, this.shieldMsgT - dt);
+
+    // a cada terço da luta, uma nova oferta — um novo Jorge dourado
+    const next = TENTACOES[this.tentIdx];
+    if (next && this.hp <= this.hpMax * next.hp) {
+      this.tentIdx++;
+      const t = new Tentacao(0, 0);
+      t.x = this.x + next.off[0];
+      t.y = this.y + next.off[1];
+      t.miniName = next.name;
+      t.whisper = next.whisper;
+      world.enemies.push(t);
+      world.total += 1;
+      sfx('roar');
+      world.fx.addShake(6);
+      world.fx.burst(t.x, t.y - 20, '#f0d060', 24, 220);
+      world.fx.text(this.x, this.y - 96, next.cry, '#f090b0');
+    }
+
+    super.update(dt, world);
+  }
+
+  onDeath(world) {
+    world.flags.serpenteDerrotada = true;
+    sfx('roar');
+    world.fx.addShake(12);
+    world.fx.burst(this.x, this.y - 20, this.blood, 50, 340);
+    world.fx.burst(this.x, this.y - 20, '#f8d860', 30, 260);
+    world.fx.text(this.x, this.y - 110, '"não... eu VI o teu fim... eu vi..."', '#f090b0');
+    world.fx.text(this.x, this.y - 86, '"Viste", diz Jorge. "E eu vou assim mesmo. É isso que tu nunca entendeste."', '#f8d860');
+    world.fx.text(this.x, this.y - 62, 'A SERPENTE ANTIGA É VENCIDA — e as Portas se fecham!', '#f8d860');
+    world.endingT = 4.2; // o epílogo das rosas espera o pó baixar
+  }
+}
+
 // ---------- Bola de fogo do Dragão ----------
 
 export class Fireball {

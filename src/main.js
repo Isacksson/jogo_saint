@@ -12,7 +12,7 @@ import {
   Imundo, ImundoChefe, Amon, Dragao, Serpe,
   Invejoso, Leviata, Possesso, Belzebu, Mamon, Asmodeu, Belfegor,
   Carcereiro, CavaleiroGuerra, CavaleiroConquista, CavaleiroFome, Cobrador,
-  Pretendente, CavaleiroMorte, Arauto, SerpenteAntiga,
+  Pretendente, CavaleiroMorte, Arauto, SerpenteAntiga, SerpenteFinal,
 } from './enemies.js';
 import { initAudio, updateMusic, setMood, toggleMute, sfx } from './audio.js';
 import { Npc } from './npc.js';
@@ -106,6 +106,7 @@ const ENEMY_TYPES = {
   carcereiro: Carcereiro, guerra: CavaleiroGuerra, conquista: CavaleiroConquista,
   fome: CavaleiroFome, cobrador: Cobrador, pretendente: Pretendente,
   morte: CavaleiroMorte, arauto: Arauto, serpente: SerpenteAntiga,
+  serpente_final: SerpenteFinal,
 };
 
 // os Quatro Cavaleiros emboscam a primeira viagem a cada destino (GDD §2.6):
@@ -174,6 +175,7 @@ const world = {
   portals: [],
   kills: 0,
   total: 0,
+  endingT: 0, // contagem para o epílogo, armada pela queda da Serpente (D2)
   flags: {},
   mapStates: {},
 };
@@ -320,6 +322,7 @@ function fullReset(data) {
   dlg = null;
   shop = null;
   roads = null;
+  world.endingT = 0;
 }
 
 let elapsed = 0;
@@ -331,7 +334,8 @@ let shop = null;
 let roads = null;
 let locName = '';
 let locTime = 0;
-let gameState = 'title'; // title | play
+let gameState = 'title'; // title | play | ending
+let endPage = 0;         // página atual do epílogo
 let trans = null;        // transição de mapa com fade
 const FADE = 0.24;       // duração de cada metade do fade (escurecer / clarear)
 let last = performance.now();
@@ -779,6 +783,110 @@ function renderDarkness(cam, mode) {
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
 }
 
+// ---------- o epílogo das rosas (D2, GDD Ato III) ----------
+
+const ENDING_PAGES = [
+  {
+    title: 'AS PORTAS',
+    lines: [
+      'Atrás do último suspiro da Serpente, as grandes Portas rangeram uma última vez',
+      '— e fecharam-se para sempre. O poço da praça voltou a dar água limpa.',
+    ],
+  },
+  {
+    title: 'SILENA',
+    lines: [
+      'A cidade inteira desceu ao rio, e Sabra entrou na água primeiro —',
+      'princesa e catecúmena. Onde se sorteava o tributo, plantou-se um jardim.',
+    ],
+  },
+  {
+    title: 'NICOMÉDIA',
+    lines: [
+      'Jorge partiu sabendo. Diante do imperador recusou o último edito,',
+      'e ao ferro respondeu com o nome que a sombra pedira: Geórgios.',
+      'Recebeu a coroa que púrpura nenhuma compra.',
+    ],
+  },
+  {
+    title: 'A LENDA ÁUREA',
+    rose: true,
+    lines: ['Onde seu sangue caiu, floresceu uma rosa.'],
+    credits: [
+      'Jorge e o Dragão — um conto da Legenda Áurea e das hagiografias',
+      'arte: Ninja Adventure Pack (CC0) · feito em JavaScript puro',
+      'FIM',
+    ],
+  },
+];
+
+// a rosa que floresce onde o sangue cai — desenhada, não carregada
+function renderRose(cx, cy, s) {
+  // caule e folhas
+  ctx.strokeStyle = '#3a6a30';
+  ctx.lineWidth = 4 * s;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy + 70 * s);
+  ctx.quadraticCurveTo(cx - 8 * s, cy + 30 * s, cx, cy);
+  ctx.stroke();
+  ctx.fillStyle = '#3a6a30';
+  ctx.beginPath();
+  ctx.ellipse(cx - 12 * s, cy + 40 * s, 12 * s, 5 * s, -0.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(cx + 11 * s, cy + 52 * s, 11 * s, 5 * s, 0.5, 0, Math.PI * 2);
+  ctx.fill();
+  // pétalas em rosácea, de fora para dentro
+  for (let ring = 2; ring >= 0; ring--) {
+    const r = (8 + ring * 7) * s;
+    const n = 5 + ring * 2;
+    ctx.fillStyle = ['#d83648', '#a81e30', '#7c1424'][ring];
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + ring * 0.5;
+      ctx.beginPath();
+      ctx.ellipse(cx + Math.cos(a) * r * 0.55, cy + Math.sin(a) * r * 0.55, r * 0.62, r * 0.42, a, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.fillStyle = '#e84a5c';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 6 * s, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function renderEnding() {
+  ctx.fillStyle = '#0c0a08';
+  ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+  const pg = ENDING_PAGES[endPage];
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#e8c860';
+  ctx.globalAlpha = 0.5;
+  ctx.fillRect(VIEW_W / 2 - 160, 96, 320, 1);
+  ctx.globalAlpha = 1;
+  ctx.font = 'bold 30px Georgia, serif';
+  ctx.fillText(pg.title, VIEW_W / 2, 138);
+  if (pg.rose) renderRose(VIEW_W / 2, 230, 1.4);
+  ctx.fillStyle = '#d8ccaa';
+  ctx.font = 'italic 17px Georgia, serif';
+  const y0 = pg.rose ? 348 : 216;
+  pg.lines.forEach((ln, i) => ctx.fillText(ln, VIEW_W / 2, y0 + i * 30));
+  if (pg.credits) {
+    ctx.fillStyle = '#9a8a62';
+    ctx.font = '14px Georgia, serif';
+    pg.credits.forEach((ln, i) => ctx.fillText(ln, VIEW_W / 2, 404 + i * 24));
+  }
+  const pulse = 0.55 + 0.45 * Math.sin(elapsed * 3);
+  ctx.globalAlpha = pulse;
+  ctx.fillStyle = '#f0e0b0';
+  ctx.font = 'bold 15px Georgia, serif';
+  ctx.fillText(
+    endPage < ENDING_PAGES.length - 1 ? 'E — continuar' : 'E — voltar a Silena',
+    VIEW_W / 2, 486
+  );
+  ctx.restore();
+}
+
 // tela de título
 function renderTitleScreen() {
   ctx.fillStyle = '#0c0a08';
@@ -821,6 +929,27 @@ function frame(now) {
   last = now;
   elapsed += dt;
   locTime = Math.max(0, locTime - dt);
+  window.gameState = gameState; // exposto para testes automatizados
+
+  // o epílogo das rosas: páginas de narração até os créditos
+  if (gameState === 'ending') {
+    updateMusic();
+    setMood('peace');
+    if (input.wasPressed('interact') || input.wasPressed('attack')) {
+      endPage++;
+      if (endPage >= ENDING_PAGES.length) {
+        // pós-jogo: Silena batizada espera o cavaleiro
+        gameState = 'play';
+        enterMap('silena', 22, 14);
+        saveGame(world);
+        world.fx.text(world.player.x, world.player.y - 60, 'Silena, livre — e a lenda continua.', '#f8d860');
+      }
+    }
+    if (gameState === 'ending') renderEnding();
+    input.endFrame();
+    requestAnimationFrame(frame);
+    return;
+  }
 
   if (gameState === 'title') {
     if (input.wasPressed('interact')) {
@@ -998,6 +1127,17 @@ function frame(now) {
     world.fx.update(dt);
     if (player.alive) checkPortals();
     camera.follow(player.x, player.y, dt, world.map);
+
+    // a vitória final abre caminho para o epílogo (armada em SerpenteFinal)
+    if (world.endingT > 0) {
+      world.endingT -= dt;
+      if (world.endingT <= 0) {
+        world.endingT = 0;
+        endPage = 0;
+        gameState = 'ending';
+        sfx('level');
+      }
+    }
 
     if (!player.alive) {
       deathTime += dt;

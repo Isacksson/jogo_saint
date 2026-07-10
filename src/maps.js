@@ -187,7 +187,13 @@ export const MAP_DEFS = {
       {
         tx: 25, ty: 17, name: 'Princesa Sabra',
         sprite: 'sabra',
-        lines: (flags) => flags.ascalonForjada
+        lines: (flags) => flags.serpenteDerrotada
+          ? [
+            'Voltaste. E as Portas... fecharam-se. Eu senti a terra suspirar de alívio.',
+            'Silena inteira pede o batismo, cavaleiro. O rio vai ficar pequeno para tanta gente.',
+            '(Ela sorri, entre lágrimas.) E tu vais mesmo... para Nicomédia. Vai. Que as rosas floresçam onde teu sangue cair, Jorge.',
+          ]
+          : flags.ascalonForjada
           ? [
             'Ascalon... Vejo-a brilhar daqui, cavaleiro. Os sete mártires numa só haste.',
             'O poço da praça. As mães ouvem sussurros subindo dele à noite — as Portas esperam por ti, lá embaixo.',
@@ -1605,6 +1611,62 @@ export const MAP_DEFS = {
     ],
     portals: [
       { x: 15, y: 2, w: 5, h: 1, to: 'portas_abismo', tx: 17, ty: 28 },
+      // o fundo que a Serpente guardava: a descida à sombra de Nicomédia (D2)
+      { x: 16, y: 31, w: 2, h: 1, to: 'nicomedia', tx: 17, ty: 3 },
+    ],
+  },
+
+  // ---------- a Sombra de Nicomédia: a corte conjurada pela Serpente (D2) ----------
+  nicomedia: {
+    name: 'Nicomédia — a Sombra da Corte',
+    w: 36, h: 30,
+    base: T.CWALL, outside: T.CWALL, gateFloor: T.STONE,
+    dark: 'torch', mood: 'dark',
+    generate(m) {
+      const rand = rng(303);
+      m.fillRect(14, 2, 8, 3, T.STONE);       // o desembarque da escada
+      m.fillRect(6, 5, 24, 21, T.STONE);      // a grande corte de mármore
+      m.fillRect(16, 5, 4, 21, T.ROSEFLOOR);  // o tapete de púrpura da ilusão
+      m.fillRect(13, 5, 10, 3, T.TREASURE);   // o estrado do trono, coberto de ouro
+      // colunatas espectrais
+      for (const cy of [10, 14, 18, 22]) {
+        m.set(9, cy, T.CWALL);
+        m.set(12, cy, T.CWALL);
+        m.set(23, cy, T.CWALL);
+        m.set(26, cy, T.CWALL);
+      }
+      // a ilusão racha nas bordas: o Abismo aparece por baixo do mármore
+      m.fillRect(6, 5, 2, 2, T.LAVA);
+      m.fillRect(28, 5, 2, 2, T.LAVA);
+      m.fillRect(6, 24, 3, 2, T.LAVA);
+      m.fillRect(27, 24, 3, 2, T.LAVA);
+      // ossadas sob a púrpura: o preço da corte
+      for (let i = 0; i < 12; i++) {
+        const x = Math.floor(rand() * m.w);
+        const y = Math.floor(rand() * m.h);
+        if (m.get(x, y) === T.STONE && rand() < 0.6) m.set(x, y, T.BONES);
+      }
+    },
+    spawns: [['serpente_final', 18, 19]],
+    altars: [[15, 3]],
+    npcs: [
+      {
+        tx: 17, ty: 6, name: 'A Sombra de Diocleciano',
+        ghost: true, sprite: 'teodoro', grantFlag: 'nomePedido',
+        lines: (flags) => flags.serpenteDerrotada
+          ? ['O trono está vazio. A púrpura, desfeita, é só cinza sobre o mármore.']
+          : flags.nomePedido
+          ? ['"GEÓRGIOS." A sombra saboreia o nome como um vinho. "Nicomédia te espera, cavaleiro."']
+          : [
+            'No trono, uma púrpura sem corpo dentro. A voz vem de todos os lados e de nenhum.',
+            '"Chegaste. O pregoeiro tinha razão: eu andava perguntando pelo teu nome, cavaleiro dos milagres."',
+            '"Dize-o. Em Nicomédia haverá lugar para ele — no ouro de um estandarte... ou no mármore de um túmulo. A escolha sempre foi tua."',
+            '"GEÓRGIOS", respondes. E a sombra sorri sem boca. "Até breve, então."',
+          ],
+      },
+    ],
+    portals: [
+      { x: 14, y: 2, w: 8, h: 1, to: 'garganta', tx: 16, ty: 30 },
     ],
   },
 };

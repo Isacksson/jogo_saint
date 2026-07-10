@@ -306,8 +306,26 @@ cada. Segue o roadmap do GDD §6 (T15–T26); as fossas são reaproveitadas, nã
       da Garganta se escancara (escada pronta para o D2). Corrigido: sombra do
       Dragão com raio negativo em altitude alta (clamp). Testado (16 asserções
       + 2 screenshots). Sem erros.
-- [ ] **D2 — Nicomédia e a Tentação** — eco final de Diocleciano, fase 3 da Serpente,
-      epílogo das rosas, créditos. *(GDD T28)*
+- [x] **D2 — Nicomédia e a Tentação** — eco final de Diocleciano, fase 3 da
+      Serpente, epílogo das rosas, créditos *(GDD T28)* — **`nicomedia`**
+      ("a Sombra da Corte", sob o fundo da Garganta): corte de mármore com
+      tapete de púrpura (ROSEFLOOR), estrado de ouro (TREASURE), colunatas, e a
+      ilusão rachando em lava nas bordas. **A Sombra de Diocleciano** (NPC
+      fantasma no trono) fecha o fio dos editos pedindo o NOME de Jorge
+      ("GEÓRGIOS", `flags.nomePedido`; falas mudam pós-vitória). **Fase 3 = a
+      Tentação** (`SerpenteFinal extends Dragao`, 780 hp): a cada terço da
+      luta ergue uma **`Tentacao`** — um Jorge dourado que poderia ter sido
+      (A Longa Vida / A Púrpura / O Repouso; sprite do jogador tingido de
+      ouro) que ATRAI o cavaleiro (60 px/s ≤340) e cochicha drenando Fé de
+      perto; **enquanto a visão vive, a Serpente é invulnerável** ("A mentira
+      a protege!") — destruí-la é a recusa ('"NÃO."', +15 Fé); `world.total`
+      cresce por visão (sem vitória prematura). Vencida: `serpenteDerrotada`,
+      `world.endingT` arma o **epílogo** — novo `gameState 'ending'` com 4
+      páginas (AS PORTAS / SILENA / NICOMÉDIA / A LENDA ÁUREA) com **rosa
+      procedural** + créditos (Ninja Adventure Pack CC0); o fecho devolve a
+      Silena batizada (pós-jogo salvo, Sabra com falas finais).
+      `window.gameState` exposto para testes. Testado (15 asserções + 2
+      screenshots, verde na 1ª execução). Sem erros.
 - [ ] **D3 — Balanceamento e polish final** — curva de dano/vida/preços, tela de vitória. *(GDD T29)*
 
 ---
